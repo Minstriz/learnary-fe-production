@@ -38,20 +38,19 @@ function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="w-full px-4 md:px-16 py-4 bg-white text-black shadow-md">
+    <nav className="w-full px-4 md:px-10 py-2 bg-white text-black shadow-md">
       <div className="container mx-auto flex items-center justify-between">
         {/* Logo */}
-        <h1 className="text-3xl font-black">Learnary</h1>
-
+        <h1 className="text-3xl font-rockwell">Learnary</h1>
         {/* Desktop content */}
         {!isMobile && (
           <>
-            <ul className="flex space-x-9 text-lg font-light">
+            <ul className="flex space-x-9 text-md ">
               {links.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="hover:text-gray-500 transition-colors"
+                    className="font-ruda transition-all hover:font-ruda-bold hover:text-lg hover:bg-gray-200 rounded-full px-4 py-4"
                   >
                     {link.name}
                   </Link>
@@ -83,9 +82,16 @@ function Navbar() {
       </div>
 
       {/* Mobile Menu Content */}
-      {isMobile && isOpen && (
-        <div className="mt-4 px-4 space-y-4">
-          <ul className="space-y-2 text-lg font-light">
+      {isMobile && (
+        <div
+          className={`
+            mt-4 px-4 space-y-4
+            transition-all duration-300 ease-in-out
+            ${isOpen ? 'opacity-100 scale-100 max-h-[500px]' : 'opacity-0 scale-95 max-h-0 overflow-hidden'}
+          `}
+          style={{ transitionProperty: 'opacity, transform, max-height' }}
+        >
+          <ul className="space-y-2 text-md font-ruda">
             {links.map((link) => (
               <li key={link.name}>
                 <Link

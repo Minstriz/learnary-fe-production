@@ -1,0 +1,21 @@
+{
+  "Navbar": {
+    "home": "Trang chủ",
+    "explore": "Khám phá khóa học",
+    "teach": "Trở thành giảng viên"
+  },
+  "Topic": {
+    "category_health": "Sức khoẻ",
+    "category_technology": "Công Nghệ",
+    "category_ai": "Trí Tuệ Nhân Tạo",
+    "category_mobile": "Phần mềm di động",
+    "category_photography": "Nghệ thuật chụp ảnh",
+    "category_hiring": "Hiring",
+    "title_health": "Học cách cải thiện sức khoẻ, đời sống của bạn.",
+    "title_technology": "Các khoá học về công nghệ.",
+    "title_ai": "Các khoá học nổi bật nhất về Trí Tuệ Nhân Tạo",
+    "title_mobile": "Khám phá các khoá học lập trình phần mềm di động tốt nhất",
+    "title_photography": "Bí quyết tạo ra những bức ảnh nghệ thuật nhất.",
+    "title_hiring": "Hiring for a Staff Software Engineer"
+  }
+}

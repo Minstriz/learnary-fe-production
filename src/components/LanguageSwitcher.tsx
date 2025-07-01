@@ -43,7 +43,7 @@ export default function LanguageSwitcherSlide() {
   return (
     <div
       onClick={toggleLang}
-      className={`relative flex items-center w-40 h-12 border-2 ${
+      className={`relative flex items-center w-40 h-12 border-3 ${
         isVi ? "border-[#A62D12]" : "border-[#0F1697]"
       } rounded-full cursor-pointer overflow-hidden px-4`}
     >
@@ -87,7 +87,7 @@ export default function LanguageSwitcherSlide() {
         }}
       >
         {isVi ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 font-roboto-condensed-bold">
             <Image
               src={"/images/vietnam-flag.png"}
               height={15}
@@ -97,7 +97,7 @@ export default function LanguageSwitcherSlide() {
             Tiếng Việt
           </div>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 font-roboto-condensed-bold">
             <Image
               src={"/images/english-flag.png"}
               height={15}

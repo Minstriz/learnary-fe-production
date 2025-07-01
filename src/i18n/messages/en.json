@@ -1,0 +1,21 @@
+{
+  "Navbar": {
+    "home": "Home",
+    "explore": "Explore Courses",
+    "teach": "Become an Instructor"
+  },
+  "Topic": {
+    "category_health": "Health",
+    "category_technology": "Technology",
+    "category_ai": "Artificial Intelligence",
+    "category_mobile": "Mobile Software",
+    "category_photography": "Photography",
+    "category_hiring": "Hiring",
+    "title_health": "Learn how to improve your health and life.",
+    "title_technology": "Technology courses.",
+    "title_ai": "Top courses about Artificial Intelligence.",
+    "title_mobile": "Explore the best mobile software programming courses.",
+    "title_photography": "Secrets to creating the most artistic photos.",
+    "title_hiring": "Hiring for a Staff Software Engineer"
+  }
+}
