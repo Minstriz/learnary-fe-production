@@ -10,8 +10,10 @@ import {
   ShoppingBagIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
+
 import { useTranslations } from "next-intl";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import Image from 'next/image'
 
 export const NavbarLinks = () => {
   const t = useTranslations("Navbar");
@@ -29,6 +31,10 @@ export const NavbarLinks = () => {
       name: t("teach"),
       href: "/contact",
     },
+    {
+      name: t("detail"),
+      href:"/course-detail"
+    }
   ];
 };
 
@@ -38,11 +44,11 @@ function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="w-full px-4 md:px-10 py-2 bg-white text-black shadow-md">
+    <nav className="w-full px-4 md:px-10 bg-white text-black shadow-md sticky top-0 z-1000">
       <div className="container mx-auto flex items-center justify-between">
-        {/* Logo */}
-        <h1 className="text-3xl font-rockwell">Learnary</h1>
-        {/* Desktop content */}
+        <div className="flex justify-center h-full w-fit">
+          <Link href={'/'}><Image width={120} height={100} alt='logo' src={"/Logo/Logo-Black-NoBG.svg"}/></Link>
+        </div>
         {!isMobile && (
           <>
             <ul className="flex space-x-9 text-md ">
@@ -69,7 +75,7 @@ function Navbar() {
           </>
         )}
 
-        {/* Mobile Menu Toggle */}
+
         {isMobile && (
           <button onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? (
@@ -81,7 +87,7 @@ function Navbar() {
         )}
       </div>
 
-      {/* Mobile Menu Content */}
+
       {isMobile && (
         <div
           className={`
