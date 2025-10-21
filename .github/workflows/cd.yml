@@ -1,0 +1,24 @@
+name: CD Frontend
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH into EC2 and deploy frontend
+        uses: appleboy/ssh-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKER_USERNAME }}/learnary-frontend:latest
+            docker stop learnary_fe || true
+            docker rm learnary_fe || true
+            docker run -d --name learnary_fe -p 3001:3000 ${{ secrets.DOCKER_USERNAME }}/learnary-frontend:latest
