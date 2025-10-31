@@ -2,7 +2,8 @@
   "Navbar": {
     "home": "Home",
     "explore": "Explore Courses",
-    "teach": "Become an Instructor"
+    "teach": "Become an Instructor",
+    "detail":"Detail"
   },
   "Topic": {
     "category_health": "Health",
