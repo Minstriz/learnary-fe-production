@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const BACKEND_URL = 'http://localhost:4000';
+const BACKEND_URL = process.env.BACKEND_URL;
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -82,7 +82,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="ban@email.com"
+                placeholder="email@email.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

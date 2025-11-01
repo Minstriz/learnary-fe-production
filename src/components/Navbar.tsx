@@ -85,9 +85,6 @@ function Navbar() {
   return (
     <nav className="w-full px-4 md:px-10 bg-white text-black shadow-md sticky top-0 z-1000">
       <div className="container mx-auto flex items-center justify-between">
-        {/* Logo */}
-        <h1 className="text-3xl font-rockwell">Learnary</h1>
-
         {/* --- NỘI DUNG DESKTOP --- */}
         <div className="flex justify-center h-full w-fit">
           <Link href={'/'}><Image width={120} height={100} alt='logo' src={"/Logo/Logo-Black-NoBG.svg"}/></Link>
