@@ -25,7 +25,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
-  const BACKEND_URL = process.env.BACKEND_URL;
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
   // Xử lý đăng nhập bằng Email/Pass
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -39,7 +40,6 @@ export default function LoginPage() {
         password
       });
       login(response.data.token);
-
       router.push('/');
     } catch (err) {
       if (isAxiosError(err)) {
@@ -56,17 +56,16 @@ export default function LoginPage() {
   const handleGoogleSignIn = () => {
     setIsLoading(true);
     window.location.href = `${BACKEND_URL}/api/auth/google`;
+
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950">
       <Card className="w-full max-w-sm">
         <form onSubmit={handleSubmit}>
-
           <CardHeader className="pb-4">
             <CardTitle className="text-2xl text-center">Đăng nhập</CardTitle>
           </CardHeader>
-
           <CardContent className="flex flex-col gap-6">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
