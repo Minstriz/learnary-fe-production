@@ -4,7 +4,8 @@
     "explore": "Khám phá khóa học",
     "teach": "Trở thành giảng viên",
     "detail":"Chi Tiết",
-    "login" : "Đăng nhập"
+    "login" : "Đăng nhập",
+    "logout":"Đăng xuất"
   },
   "Topic": {
     "category_health": "Sức khoẻ",

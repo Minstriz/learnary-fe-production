@@ -4,7 +4,8 @@
     "explore": "Explore Courses",
     "teach": "Become an Instructor",
     "detail":"Detail",
-    "login": "Login"
+    "login": "Login",
+    "logout":"Logout"
   },
   "Topic": {
     "category_health": "Health",
