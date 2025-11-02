@@ -3,7 +3,8 @@
     "home": "Trang chủ",
     "explore": "Khám phá khóa học",
     "teach": "Trở thành giảng viên",
-    "detail":"Chi Tiết"
+    "detail":"Chi Tiết",
+    "login" : "Đăng nhập"
   },
   "Topic": {
     "category_health": "Sức khoẻ",

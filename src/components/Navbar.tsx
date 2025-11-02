@@ -44,27 +44,19 @@ function Navbar() {
   const isMobile = useIsMobile();
   const links = NavbarLinks();
   const [isOpen, setIsOpen] = useState(false);
-
-  // Lấy trạng thái đăng nhập từ Context
   const { isLoggedIn, user, logout, isLoading } = useAuth();
   const t = useTranslations("Navbar"); 
 
-  /**
-   */
   const renderAuthLinks = () => {
     if (isLoading) {
       return <div className="h-6 w-24 animate-pulse rounded bg-gray-200" />;
     }
-
-    // Đã đăng nhập
     if (isLoggedIn && user) {
       return (
         <>
-          {/* Link đến Profile (dùng icon User) */}
           <Link href="/profile" title={user.fullName}>
             <UserIcon className="h-6 w-6 cursor-pointer hover:text-blue-600" />
           </Link>
-          {/* Nút Đăng xuất */}
           <button onClick={logout} title={t("logout")}>
             <ArrowRightOnRectangleIcon className="h-6 w-6 cursor-pointer hover:text-red-600" />
           </button>
@@ -74,7 +66,6 @@ function Navbar() {
 
     return (
       <>
-        {/* Link đến trang Đăng nhập  */}
         <Link href="/login" title={t("login")}>
           <UserIcon className="h-6 w-6 cursor-pointer hover:text-blue-600" />
         </Link>
@@ -85,13 +76,11 @@ function Navbar() {
   return (
     <nav className="w-full px-4 md:px-10 bg-white text-black shadow-md sticky top-0 z-1000">
       <div className="container mx-auto flex items-center justify-between">
-        {/* --- NỘI DUNG DESKTOP --- */}
         <div className="flex justify-center h-full w-fit">
           <Link href={'/'}><Image width={120} height={100} alt='logo' src={"/Logo/Logo-Black-NoBG.svg"}/></Link>
         </div>
         {!isMobile && (
           <>
-            {/* Links (Home, Explore...) */}
             <ul className="flex space-x-9 text-md ">
               {links.map((link) => (
                 <li key={link.name}>
@@ -105,11 +94,9 @@ function Navbar() {
               ))}
             </ul>
 
-            {/* Icons (Search, Auth, Cart...) */}
             <div className="flex items-center space-x-6">
               <MagnifyingGlassIcon className="h-6 w-6 cursor-pointer" />
               
-              {/* GỌI HÀM RENDER AUTH (cho Desktop) */}
               {renderAuthLinks()}
               
               <ShoppingBagIcon className="h-6 w-6 cursor-pointer" />
@@ -130,7 +117,6 @@ function Navbar() {
         )}
       </div>
 
-      {/* --- NỘI DUNG MOBILE --- */}
       {isMobile && (
         <div
           className={`
@@ -140,7 +126,7 @@ function Navbar() {
           `}
           style={{ transitionProperty: 'opacity, transform, max-height' }}
         >
-          {/* Links (Mobile) */}
+
           <ul className="space-y-2 text-md font-ruda">
             {links.map((link) => (
               <li key={link.name}>
@@ -155,17 +141,14 @@ function Navbar() {
             ))}
           </ul>
 
-          {/* Icons (Mobile) */}
           <div className="flex items-center space-x-6">
             <MagnifyingGlassIcon className="h-6 w-6 cursor-pointer" />
             
-            {/* GỌI HÀM RENDER AUTH (cho Mobile) */}
             {renderAuthLinks()}
 
             <ShoppingBagIcon className="h-6 w-6 cursor-pointer" />
           </div>
 
-          {/* Language Switcher (Mobile) */}
           <div>
             <LanguageSwitcher />
           </div>

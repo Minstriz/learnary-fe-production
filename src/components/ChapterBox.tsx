@@ -9,6 +9,7 @@ import {
 import LessonList from './LessonList'
 import ChapterLesson from '@/Mock/MockData/ChapterLesson.json'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { ScrollArea , ScrollBar} from "@/components/ui/scroll-area"
 export type LessonRawData = {
     lesson_id: string
     chapter_id: string
@@ -59,29 +60,36 @@ const ChapterBox: React.FC<ChapterBoxProps> = ({
         )
     }
     return (
-        <div className={`container ${isMobile ? `w-full` : `w-fit`}`}>
-            <Accordion type='single' collapsible className={`${isMobile ? `w-full justify-items-center`:'w-[450px]'} p-2 cursor-pointer flex flex-col gap-1 h-fit`}>
-                {chapters.map((chapters, index) => {
-                    const totalLesson = chapters.lessons.length;
-                    const countCompletedLesson = chapters.lessons.filter(lessons => lessons.is_completed).length;
-                    return (
-                        <AccordionItem key={chapters.chapter_id} value={`item-${index}`} className='border-[0.5] rounded'>
-                            <AccordionTrigger className='cursor-pointer pl-4 pr-4 '>
-                                <span className='font-semibold'>
-                                    {chapters.chapter_title}
-                                </span>
-                                <span className='text-[13px] ml-auto font-roboto-condensed text-gray-500 '>
-                                    {countCompletedLesson}/{totalLesson} bài học
-                                </span>
-                            </AccordionTrigger>
-                            <AccordionContent className=''>
-                                <LessonList></LessonList>
-                            </AccordionContent>
-                        </AccordionItem>
-                    )
-                })}
-            </Accordion>
-        </div>
+        <ScrollArea className='h-screen w-[500px]'>
+            <div className={`container ${isMobile ? `w-full` : `w-fit`}`}>
+                <Accordion type='single' collapsible className={`${isMobile ? `w-full justify-items-center` : 'w-[470px]'} p-2 cursor-pointer flex flex-col gap-1 h-fit`}>
+                    <ScrollArea className='w-[500px] h-[calc(100vh-100px)] rounded-md'>
+                        {chapters.map((chapters, index) => {
+                            const totalLesson = chapters.lessons.length;
+                            const countCompletedLesson = chapters.lessons.filter(lessons => lessons.is_completed).length;
+                            return (
+                                <AccordionItem key={chapters.chapter_id} value={`item-${index}`} className='border-[0.2] mb-1 rounded'>
+                                    <AccordionTrigger className='cursor-pointer pl-4 pr-4 '>
+                                        <span className='font-semibold text-[16px]'>
+                                            {chapters.chapter_title}
+                                        </span>
+                                        <span className='text-[13px] ml-auto font-roboto-condensed text-gray-500 '>
+                                            {countCompletedLesson}/{totalLesson} bài học
+                                        </span>
+                                    </AccordionTrigger>
+                                    <AccordionContent className=''>
+                                        <LessonList></LessonList>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            )
+                        })}
+                         <ScrollBar orientation='vertical'></ScrollBar>
+                    </ScrollArea>
+                </Accordion>
+            </div>
+            <ScrollBar orientation='vertical'></ScrollBar>
+        </ScrollArea>
+
     )
 }
 

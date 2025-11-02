@@ -24,17 +24,17 @@ type LessonProps = {
 export const Lesson: React.FC<LessonProps> = ({
     lesson_id,
     title,
-    videoUrl,
+    /* videoUrl, */
     duration, 
-    thumbnailUrl,
+    /* thumbnailUrl, */
     isCompleted = false,
     isLocked = false,
-    progress = 0,
+    /* progress = 0, */
     badge,
     onHightLight = false,
     isLoading = false,
     onplay,
-    onToggleComplete,
+    /* onToggleComplete, */
     onOpen,
     onLockClick
 }) => {
@@ -57,11 +57,11 @@ export const Lesson: React.FC<LessonProps> = ({
             <div 
                 onClick={handleClick} 
                 className={`
-                    flex group w-full md:w-[400px] border border-gray-300 
+                    flex group w-full md:w-[400px] border-b border-gray-300 
                     min-h-[50px] justify-start gap-3 py-2 px-3 items-center 
-                    hover:shadow-md transition rounded-lg hover:bg-gray-800
+                    hover:shadow-md transition rounded-sm hover:bg-gray-800
                     
-                    ${onHightLight ? 'bg-gray-800 ' : ''}
+                    ${onHightLight ? 'bg-gray-800 rounded-lg' : ''}
                     ${isLocked ? 'opacity-60 cursor-not-allowed' : 'hover:cursor-pointer'}
                     ${isCompleted ? '' : ''}
                 `}

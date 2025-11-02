@@ -43,7 +43,7 @@ export type LessonListProps = {
 const LessonList: React.FC<LessonListProps> = ({
     items = ListLessonRaw as LessonRawData[],
     currentId,
-    totalCount,
+    /* totalCount, */
     emptyState = "Không có bài học nào"
 }) => {
 
@@ -78,17 +78,10 @@ const LessonList: React.FC<LessonListProps> = ({
     }
     return (
         <div className="container flex flex-col px-5 w-fit ">
-            {/*                             <AccordionTrigger className='cursor-pointer pl-4 pr-4 '>
-                                <span className='font-semibold'>
-                                    {chapters.chapter_title}
-                                </span>
-                                <span className='text-[13px] font-roboto-condensed text-gray-500 '>
-                                    {countCompletedLesson}/{totalLesson} bài h */}
             <div className="flex flex-col gap-1">
                 {items.map((lesson) => (
                     <Lesson
                         key={lesson.lesson_id}
-
                         lesson_id={lesson.lesson_id}
                         title={lesson.title}
                         videoUrl={lesson.video_url}

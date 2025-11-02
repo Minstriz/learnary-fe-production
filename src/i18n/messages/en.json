@@ -3,7 +3,8 @@
     "home": "Home",
     "explore": "Explore Courses",
     "teach": "Become an Instructor",
-    "detail":"Detail"
+    "detail":"Detail",
+    "login": "Login"
   },
   "Topic": {
     "category_health": "Health",
