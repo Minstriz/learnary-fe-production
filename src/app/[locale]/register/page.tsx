@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import axios, { isAxiosError } from 'axios';
+import { isAxiosError } from 'axios';
+import api from '@/app/lib/axios';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const BACKEND_URL = 'http://localhost:4000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export default function SignUpPage() {
   const [fullName, setFullName] = useState('');
@@ -24,7 +25,7 @@ export default function SignUpPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -35,14 +36,15 @@ export default function SignUpPage() {
       return;
     }
 
-    setIsLoading(true);
+    setIsSubmitting(true);
 
     try {
-      await axios.post(`${BACKEND_URL}/api/auth/register`, { 
+      await api.post(`/auth/register`, { 
         fullName, 
         email, 
         password 
       });
+      console.log("hehe",`${BACKEND_URL}/api/auth/register`)
       alert('Đăng ký thành công! Vui lòng đăng nhập.');
       router.push('/login');
 
@@ -53,7 +55,7 @@ export default function SignUpPage() {
         setError('Không thể đăng ký. Vui lòng thử lại.');
       }
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false); 
     }
   };
 
@@ -80,7 +82,7 @@ export default function SignUpPage() {
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
             </div>
             <div className="grid gap-2">
@@ -92,7 +94,7 @@ export default function SignUpPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
             </div>
             <div className="grid gap-2">
@@ -103,7 +105,7 @@ export default function SignUpPage() {
                 required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={isSubmitting}
                 placeholder="••••••••"
               />
             </div>
@@ -115,7 +117,7 @@ export default function SignUpPage() {
                 required 
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={isSubmitting}
                 placeholder="••••••••"
               />
             </div>
@@ -127,8 +129,8 @@ export default function SignUpPage() {
           </CardContent>
 
           <CardFooter className="flex-col gap-4 pt-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Đang tạo...' : 'Đăng ký'}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Đang tạo...' : 'Đăng ký'}
             </Button>
             
             <div className="text-center text-sm">
