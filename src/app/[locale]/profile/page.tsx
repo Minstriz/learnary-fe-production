@@ -37,13 +37,22 @@ type UserProps = {
   role?: string,
   last_login?: Date
 }
+type InstructorProps =  UserProps & {
+  instructor_id: string,
+  is_verified: boolean,
+  wallet_id?: string, //tam thoi null
+  status: "Active" | "Inactive" | "Suspended"
+} 
 type UpdateUserData = Omit<UserProps, "user_id" | "role" | "isActive" | "last_login" | "email">
+type UpdateInstructorData = Omit<InstructorProps,"instructor_id" | "wallet_id" | "is_verified" | "status" | "email">
+
 export default function ProfilePage() {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const [userInfo, setUserInfo] = useState<UserProps | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [errors, setErrors] = useState<Partial<Record<keyof UpdateUserData, string>>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<UpdateUserData>({
     fullName: "",
@@ -62,6 +71,48 @@ export default function ProfilePage() {
     }
   };
 
+
+  const validateForm = (): boolean => {
+    const newErrors: Partial<Record<keyof UpdateUserData, string>> = {};
+    if (!formData.fullName || formData.fullName.trim().length < 2) {
+      newErrors.fullName = "Họ tên phải có ít nhất 2 ký tự";
+    }
+
+    if (formData.phone && formData.phone.trim()) {
+      const phoneRegex = /^(0|\+84)[0-9]{9,10}$/;
+      if (!phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
+        newErrors.phone = "Số điện thoại không hợp lệ (VD: 0912345678)";
+      }
+    }
+
+    if (formData.dateOfBirth) {
+      const birthDate = new Date(formData.dateOfBirth);
+      const today = new Date();
+      if (birthDate > today) {
+        newErrors.dateOfBirth = "Ngày sinh không được trong tương lai";
+      }
+      const age = today.getFullYear() - birthDate.getFullYear();
+      if (age < 13) {
+        newErrors.dateOfBirth = "Bạn phải ít nhất 13 tuổi";
+      }
+    }
+    if (formData.address && formData.address.trim().length > 0 && formData.address.trim().length < 5) {
+      newErrors.address = "Địa chỉ phải có ít nhất 5 ký tự";
+    }
+    if (formData.city && formData.city.trim().length > 0 && formData.city.trim().length < 2) {
+      newErrors.city = "Tên thành phố phải có ít nhất 2 ký tự";
+    }
+    if (formData.nation && formData.nation.trim().length > 0 && formData.nation.trim().length < 2) {
+      newErrors.nation = "Tên quốc gia phải có ít nhất 2 ký tự";
+    }
+    if (formData.bio && formData.bio.length > 500) {
+      newErrors.bio = "Tiểu sử không được vượt quá 500 ký tự";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -77,7 +128,7 @@ export default function ProfilePage() {
 
     try {
       const userId = userInfo?.user_id || user?.id || '';
-      const halfUserId = userId.slice(0, Math.floor(userId.length / 2)); 
+      const halfUserId = userId.slice(0, Math.floor(userId.length / 2));
       const fileExtension = file.name.split('.').pop() || 'jpg';
       // halfUserId.duoifile
       const newFileName = `${halfUserId}.${fileExtension}`;
@@ -104,11 +155,11 @@ export default function ProfilePage() {
         avatar: avatarUrlWithTimestamp
       }));
       // Cập nhật userInfo để hiển thị ngay
-      setUserInfo(prev => prev ?  { 
+      setUserInfo(prev => prev ? {
         ...prev,
         avatar: avatarUrlWithTimestamp
       } : prev)
-      
+
       toast.success("Cập nhật avatar thành công!");
       setIsUploadingAvatar(false);
     } catch (error) {
@@ -141,6 +192,12 @@ export default function ProfilePage() {
 
   const handleSubmitEdit = async () => {
     if (!user) return;
+
+    if (!validateForm()) {
+      toast.error("Vui lòng kiểm tra lại thông tin!");
+      return;
+    }
+
     await handleEditInfo(user.id, formData);
   }
 
@@ -149,8 +206,15 @@ export default function ProfilePage() {
       ...prev,
       [field]: value
     }));
+
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined
+      }));
+    }
   }
-  
+
   useEffect(() => {
     const takeUserInfo = async () => {
       try {
@@ -221,19 +285,14 @@ export default function ProfilePage() {
                     <div className={`flex ${isMobile ? 'flex-col items-center text-center' : 'flex-row items-end'} gap-6`}>
 
                       <div className={`${isMobile ? '-mt-16' : '-mt-20'} relative group`}>
-                        <Avatar 
-                          className={`${isMobile ? 'h-24 w-24' : 'h-32 w-32'} border-4 border-white shadow-lg`}
-                        >
+                        <Avatar className={`${isMobile ? 'h-24 w-24' : 'h-32 w-32'} border-4 border-white shadow-lg`}>
                           <AvatarImage src={formData.avatar || userInfo?.avatar} alt="User avatar" style={{ objectFit: "cover" }} />
                           <AvatarFallback className="text-2xl font-roboto-bold">
                             {userInfo.fullName.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        
-                        <div 
-                          onClick={handleAvatarClick}
-                          className={`absolute inset-0 ${isMobile ? 'h-24 w-24' : 'h-32 w-32'} rounded-full bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center cursor-pointer z-10`}
-                        >
+
+                        <div onClick={handleAvatarClick} className={`absolute inset-0 ${isMobile ? 'h-24 w-24' : 'h-32 w-32'} rounded-full bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center cursor-pointer z-10`}>
                           <CameraIcon className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                         </div>
 
@@ -244,7 +303,7 @@ export default function ProfilePage() {
                           onChange={handleAvatarUpload}
                           className="hidden"
                         />
-                        
+
                         {/* load animation upload ảnh */}
                         {isUploadingAvatar && (
                           <div className={`absolute inset-0 ${isMobile ? 'h-24 w-24' : 'h-32 w-32'} rounded-full bg-opacity-50 flex items-center justify-center`}>
@@ -345,39 +404,32 @@ export default function ProfilePage() {
 
                             <div className="flex gap-3">
                               {!isEditing ? (
-                                <Button onClick={() => setIsEditing(true)} className="bg-[#371D8C] cursor-pointer hover:bg-[#2a1567] text-white font-roboto-bold" >
+                                <Button onClick={() => setIsEditing(true)} className="bg-[#371D8C] cursor-pointer hover:bg-[#2a1567] text-white font-roboto-bold">
                                   Chỉnh sửa
                                 </Button>
                               ) : (
-                                <>
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setIsEditing(false);
-                                      if (userInfo) {
-                                        setFormData({
-                                          fullName: userInfo.fullName || "",
-                                          phone: userInfo.phone,
-                                          avatar: userInfo.avatar || "",
-                                          dateOfBirth: userInfo.dateOfBirth,
-                                          address: userInfo.address || "",
-                                          city: userInfo.city || "",
-                                          nation: userInfo.nation || "",
-                                          bio: userInfo.bio || ""
-                                        });
-                                      }
-                                    }}
-                                    className="font-roboto-bold text-red-700 cursor-pointer border border-red-700 hover:text-white hover:bg-red-700 "
-                                  >
+                                <div className="flex gap-2">
+                                  <Button variant="outline" onClick={() => {
+                                    setIsEditing(false);
+                                    if (userInfo) {
+                                      setFormData({
+                                        fullName: userInfo.fullName || "",
+                                        phone: userInfo.phone,
+                                        avatar: userInfo.avatar || "",
+                                        dateOfBirth: userInfo.dateOfBirth,
+                                        address: userInfo.address || "",
+                                        city: userInfo.city || "",
+                                        nation: userInfo.nation || "",
+                                        bio: userInfo.bio || ""
+                                      });
+                                    }
+                                  }} className="font-roboto-bold text-red-700 cursor-pointer border border-red-700 hover:text-white hover:bg-red-700">
                                     Hủy
                                   </Button>
-                                  <Button
-                                    onClick={handleSubmitEdit}
-                                    className="bg-[#289b31] cursor-pointer hover:bg-[#71c278] text-white font-roboto-bold"
-                                  >
+                                  <Button onClick={handleSubmitEdit} className="bg-[#289b31] cursor-pointer hover:bg-[#71c278] text-white font-roboto-bold">
                                     Lưu thay đổi
                                   </Button>
-                                </>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -386,11 +438,16 @@ export default function ProfilePage() {
                             <div>
                               <Label className="text-gray-400 font-roboto text-sm mb-1">Họ và tên</Label>
                               {isEditing ? (
-                                <Input
-                                  value={formData.fullName}
-                                  onChange={(e) => handleInputChange('fullName', e.target.value)}
-                                  className="font-roboto-bold text-gray-800"
-                                />
+                                <div>
+                                  <Input
+                                    value={formData.fullName}
+                                    onChange={(e) => handleInputChange('fullName', e.target.value)}
+                                    className={`font-roboto-bold text-gray-800 ${errors.fullName ? 'border-red-500' : ''}`}
+                                  />
+                                  {errors.fullName && (
+                                    <p className="text-red-500 text-xs mt-1 font-roboto">{errors.fullName}</p>
+                                  )}
+                                </div>
                               ) : (
                                 <p className="font-roboto-bold text-gray-800">{userInfo.fullName}</p>
                               )}
@@ -404,13 +461,18 @@ export default function ProfilePage() {
                             <div>
                               <Label className="text-gray-400 font-roboto text-sm mb-1">Số điện thoại</Label>
                               {isEditing ? (
-                                <Input
-                                  type="text"
-                                  value={formData.phone || ""}
-                                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                                  className="font-roboto-bold text-gray-800"
-                                  placeholder="Nhập số điện thoại"
-                                />
+                                <div>
+                                  <Input
+                                    type="text"
+                                    value={formData.phone || ""}
+                                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                                    className={`font-roboto-bold text-gray-800 ${errors.phone ? 'border-red-500' : ''}`}
+                                    placeholder="Nhập số điện thoại"
+                                  />
+                                  {errors.phone && (
+                                    <p className="text-red-500 text-xs mt-1 font-roboto">{errors.phone}</p>
+                                  )}
+                                </div>
                               ) : (
                                 <p className="font-roboto-bold text-gray-800">{userInfo.phone || 'Chưa có'}</p>
                               )}
@@ -419,12 +481,17 @@ export default function ProfilePage() {
                             <div>
                               <Label className="text-gray-400 font-roboto text-sm mb-1">Ngày sinh</Label>
                               {isEditing ? (
-                                <Input
-                                  type="date"
-                                  value={formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString().split('T')[0] : ""}
-                                  onChange={(e) => handleInputChange('dateOfBirth', e.target.value ? new Date(e.target.value) : undefined)}
-                                  className="font-roboto-bold text-gray-800"
-                                />
+                                <div>
+                                  <Input
+                                    type="date"
+                                    value={formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString().split('T')[0] : ""}
+                                    onChange={(e) => handleInputChange('dateOfBirth', e.target.value ? new Date(e.target.value) : undefined)}
+                                    className={`font-roboto-bold text-gray-800 ${errors.dateOfBirth ? 'border-red-500' : ''}`}
+                                  />
+                                  {errors.dateOfBirth && (
+                                    <p className="text-red-500 text-xs mt-1 font-roboto">{errors.dateOfBirth}</p>
+                                  )}
+                                </div>
                               ) : (
                                 <p className="font-roboto-bold text-gray-800">
                                   {userInfo.dateOfBirth ? new Date(userInfo.dateOfBirth).toLocaleDateString('vi-VN') : 'Chưa có'}
@@ -435,11 +502,16 @@ export default function ProfilePage() {
                             <div>
                               <Label className="text-gray-400 font-roboto text-sm mb-1">Địa chỉ</Label>
                               {isEditing ? (
-                                <Input
-                                  value={formData.address || ""}
-                                  onChange={(e) => handleInputChange('address', e.target.value)}
-                                  className="font-roboto-bold text-gray-800"
-                                />
+                                <div>
+                                  <Input
+                                    value={formData.address || ""}
+                                    onChange={(e) => handleInputChange('address', e.target.value)}
+                                    className={`font-roboto-bold text-gray-800 ${errors.address ? 'border-red-500' : ''}`}
+                                  />
+                                  {errors.address && (
+                                    <p className="text-red-500 text-xs mt-1 font-roboto">{errors.address}</p>
+                                  )}
+                                </div>
                               ) : (
                                 <p className="font-roboto-bold text-gray-800">{userInfo.address || 'Chưa có'}</p>
                               )}
@@ -448,11 +520,16 @@ export default function ProfilePage() {
                             <div>
                               <Label className="text-gray-400 font-roboto text-sm mb-1">Thành phố</Label>
                               {isEditing ? (
-                                <Input
-                                  value={formData.city || ""}
-                                  onChange={(e) => handleInputChange('city', e.target.value)}
-                                  className="font-roboto-bold text-gray-800"
-                                />
+                                <div>
+                                  <Input
+                                    value={formData.city || ""}
+                                    onChange={(e) => handleInputChange('city', e.target.value)}
+                                    className={`font-roboto-bold text-gray-800 ${errors.city ? 'border-red-500' : ''}`}
+                                  />
+                                  {errors.city && (
+                                    <p className="text-red-500 text-xs mt-1 font-roboto">{errors.city}</p>
+                                  )}
+                                </div>
                               ) : (
                                 <p className="font-roboto-bold text-gray-800">{userInfo.city || 'Chưa có'}</p>
                               )}
@@ -461,11 +538,12 @@ export default function ProfilePage() {
                             <div>
                               <Label className="text-gray-400 font-roboto text-sm mb-1">Quốc gia</Label>
                               {isEditing ? (
-                                <Input
-                                  value={formData.nation || ""}
-                                  onChange={(e) => handleInputChange('nation', e.target.value)}
-                                  className="font-roboto-bold text-gray-800"
-                                />
+                                <div>
+                                  <Input value={formData.nation || ""} onChange={(e) => handleInputChange('nation', e.target.value)} className={`font-roboto-bold text-gray-800 ${errors.nation ? 'border-red-500' : ''}`} />
+                                  {errors.nation && (
+                                    <p className="text-red-500 text-xs mt-1 font-roboto">{errors.nation}</p>
+                                  )}
+                                </div>
                               ) : (
                                 <p className="font-roboto-bold text-gray-800">{userInfo.nation || 'Chưa có'}</p>
                               )}
@@ -473,14 +551,22 @@ export default function ProfilePage() {
 
                             {(userInfo.bio || isEditing) && (
                               <div className={isMobile ? '' : 'col-span-2'}>
-                                <Label className="text-gray-400 font-roboto text-sm mb-1">Tiểu sử</Label>
+                                <Label className="text-gray-400 font-roboto text-sm mb-1">
+                                  Tiểu sử {formData.bio && `(${formData.bio.length}/500)`}
+                                </Label>
                                 {isEditing ? (
-                                  <Textarea
-                                    value={formData.bio || ""}
-                                    onChange={(e) => handleInputChange('bio', e.target.value)}
-                                    className="font-roboto text-gray-800 min-h-[100px]"
-                                    placeholder="Giới thiệu về bản thân..."
-                                  />
+                                  <div>
+                                    <Textarea
+                                      value={formData.bio || ""}
+                                      onChange={(e) => handleInputChange('bio', e.target.value)}
+                                      className={`font-roboto text-gray-800 min-h-[100px] ${errors.bio ? 'border-red-500' : ''}`}
+                                      placeholder="Giới thiệu về bản thân..."
+                                      maxLength={500}
+                                    />
+                                    {errors.bio && (
+                                      <p className="text-red-500 text-xs mt-1 font-roboto">{errors.bio}</p>
+                                    )}
+                                  </div>
                                 ) : (
                                   <p className="font-roboto text-gray-800">{userInfo.bio}</p>
                                 )}
@@ -499,11 +585,8 @@ export default function ProfilePage() {
                                 <p className="font-roboto-bold text-gray-800">Mật khẩu</p>
                                 <p className="text-gray-400 font-roboto text-sm">Cập nhật lần cuối: N/A</p>
                               </div>
-                              <Button
-                                variant="outline"
-                                className="border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white font-roboto-bold cursor-pointer"
-                              >
-                                Thay đổi
+                              <Button variant="outline" className="border-2  text-gray-800 border-gray-400   hover:text-black border-dashed hover:border-gray-900 font-roboto-bold cursor-pointer">
+                                Đổi mật khẩu
                               </Button>
                             </div>
 
@@ -536,6 +619,10 @@ export default function ProfilePage() {
                                 <p className="text-gray-400 font-roboto text-xs break-all">{userInfo.user_id}</p>
                               </div>
                             </div>
+
+                            <Button variant="outline" className="border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white font-roboto-bold cursor-pointer">
+                              Đăng xuất
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -559,7 +646,7 @@ export default function ProfilePage() {
                             </div>
                             <div>
                               <p className="text-gray-400 font-roboto text-sm mb-1">Số điện thoại</p>
-                              <p className="font-roboto-bold text-gray-800">{userInfo.phone || 'Chưa có'}</p>
+                              <p className="font-roboto italic text-gray-800">{userInfo.phone || 'Chưa có'}</p>
                             </div>
                             <div>
                               <p className="text-gray-400 font-roboto text-sm mb-1">Ngày sinh</p>

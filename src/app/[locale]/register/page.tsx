@@ -122,7 +122,6 @@ export default function SignUpPage() {
               />
             </div>
 
-            {/* Hiển thị lỗi API */}
             {error && (
               <p className="text-sm text-center text-red-600">{error}</p>
             )}

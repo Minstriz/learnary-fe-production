@@ -2,10 +2,10 @@
   "Navbar": {
     "home": "Home",
     "explore": "Explore Courses",
-    "teach": "Become an Instructor",
+    "instructor": "Become an Instructor",
     "detail":"Learning Space",
     "login": "Login",
-     "logout":"Logout"
+    "logout":"Logout"
   },
   "Topic": {
     "category_health": "Health",
