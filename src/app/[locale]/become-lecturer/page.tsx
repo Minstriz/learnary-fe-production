@@ -22,13 +22,15 @@ interface Specialization {
   specialization_id: string;
   instructor_id?: string;
   specialization_name: string;
-  isVerified: boolean; // API trả về isVerified (camelCase)
+  isVerified: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
 
 interface QualificationHistory {
-  qualification_id: string;
+  instructor_qualification_id: string;
+  instructor_id?: string;
+  specialization_id?: string;
   specialization_name: string;
   type: "Degree" | "Certificate";
   title: string;
@@ -64,17 +66,18 @@ export default function BecomeInstructorPage() {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const [loadingSpecializations, setLoadingSpecializations] = useState(true);
-  
+
   const [showAddSpecDialog, setShowAddSpecDialog] = useState(false);
   const [newSpecializationName, setNewSpecializationName] = useState("");
-  
+
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const [hasPendingQualification, setHasPendingQualification] = useState(false);
   const [qualificationHistory, setQualificationHistory] = useState<QualificationHistory[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  
+
   const [qualification, setQualification] = useState<InstructorQualificationForm>({
     specialization_name: "",
     type: "Degree",
@@ -94,9 +97,12 @@ export default function BecomeInstructorPage() {
       try {
         const response = await api.get('/instructor-qualifications/my-qualifications');
         if (response.data && Array.isArray(response.data.data)) {
-          const existingSpecs = response.data.data.map(
-            (q: { specialization_name: string }) => q.specialization_name
-          );
+          const qualifications = response.data.data;
+          /* cấu trúc array.some((element) -> condition) */
+          const hasPending = qualifications.some((q: QualificationHistory) => q.status === "Pending");
+          setHasPendingQualification(hasPending);
+
+          const existingSpecs = qualifications.map((q: { specialization_name: string }) => q.specialization_name);
           setExistingQualifications(existingSpecs);
         }
       } catch (error) {
@@ -111,7 +117,6 @@ export default function BecomeInstructorPage() {
       try {
         setLoadingSpecializations(true);
         const response = await api.get('/specializations');
-  
         if (response.data && Array.isArray(response.data.data)) {
           setSpecializations(response.data.data);
         } else {
@@ -126,19 +131,14 @@ export default function BecomeInstructorPage() {
         setLoadingSpecializations(false);
       }
     };
-
     fetchSpecializations();
   }, []);
 
-  const handleInputChange = (
-    field: keyof InstructorQualificationForm,
-    value: string
-  ) => {
+  const handleInputChange = (field: keyof InstructorQualificationForm, value: string) => {
     setQualification(prev => ({
       ...prev,
       [field]: value
     }));
-
     if (errors[field]) {
       const newErrors = { ...errors };
       delete newErrors[field];
@@ -167,9 +167,10 @@ export default function BecomeInstructorPage() {
       specialization_name: trimmedName
     }));
 
-    toast.success(`Đã chọn chuyên ngành: ${trimmedName}`);
-    toast.info("Chuyên ngành mới sẽ được tạo khi bạn gửi đăng ký và cần admin phê duyệt");
-    
+    toast.success(`Đã chọn chuyên ngành: ${trimmedName}`, {
+      description: "Chuyên ngành mới sẽ được tạo khi bạn gửi đăng ký và cần admin phê duyệt"
+    });
+
     setShowAddSpecDialog(false);
     setNewSpecializationName("");
   };
@@ -186,8 +187,10 @@ export default function BecomeInstructorPage() {
     try {
       const response = await api.get('/instructor-qualifications/my-qualifications');
       if (response.data && Array.isArray(response.data.data)) {
-        setQualificationHistory(response.data.data);
+        const qualifications = response.data.data;
+        setQualificationHistory(qualifications);
       } else {
+        console.error("Response data is not array:", response.data);
         setQualificationHistory([]);
       }
     } catch (error) {
@@ -242,7 +245,7 @@ export default function BecomeInstructorPage() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    
+
     if (selectedFiles.length + files.length > MAX_IMAGES) {
       toast.error(`Chỉ được upload tối đa ${MAX_IMAGES} ảnh!`);
       return;
@@ -264,13 +267,19 @@ export default function BecomeInstructorPage() {
     }
 
     setSelectedFiles(prev => [...prev, ...validFiles]);
-    
+    /* tham khao AI de toi uu on change khi chon image, noted */
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
   const handleRemoveFile = (index: number) => {
+    /* 
+    const newArray = array.filter(element => condition);
+    setSelectedFiles(prev => prev.filter((file, i) => i !== index));
+    file đang chọn để xoá -> index
+    i là index để chạy và tạo mảng mới, gặp index là bỏ không lấy ảnh đó.  
+    */
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -282,18 +291,15 @@ export default function BecomeInstructorPage() {
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-
     if (!qualification.specialization_name || qualification.specialization_name.trim().length === 0) {
       newErrors.specialization_name = "Chuyên ngành không được để trống";
     } else if (existingQualifications.includes(qualification.specialization_name)) {
       newErrors.specialization_name = "Bạn đã đăng ký chuyên ngành này rồi!";
       toast.error("Bạn đã có bằng cấp/chứng chỉ cho chuyên ngành này. Vui lòng chọn chuyên ngành khác!");
     }
-
     if (!qualification.title || qualification.title.trim().length < 3) {
       newErrors.title = "Tiêu đề phải có ít nhất 3 ký tự";
     }
-
     if (!qualification.issue_date) {
       newErrors.issue_date = "Ngày cấp không được để trống";
     } else {
@@ -303,7 +309,6 @@ export default function BecomeInstructorPage() {
         newErrors.issue_date = "Ngày cấp không được trong tương lai";
       }
     }
-
     if (qualification.expire_date) {
       const expireDate = new Date(qualification.expire_date);
       const issueDate = new Date(qualification.issue_date);
@@ -311,37 +316,29 @@ export default function BecomeInstructorPage() {
         newErrors.expire_date = "Ngày hết hạn phải sau ngày cấp";
       }
     }
-
     if (!qualification.issue_place || qualification.issue_place.trim().length < 3) {
       newErrors.issue_place = "Nơi cấp phải có ít nhất 3 ký tự";
     }
-
     if (selectedFiles.length === 0) {
       toast.warning("Bạn chưa upload ảnh minh chứng!");
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!user) {
       toast.error("Bạn phải đăng nhập để đăng ký làm giảng viên!");
       return;
     }
-
     if (!validateForm()) {
       toast.error("Vui lòng kiểm tra lại thông tin!");
       return;
     }
-
     setIsSubmitting(true);
-
     try {
       const formData = new FormData();
-      
       formData.append('specialization_name', qualification.specialization_name);
       formData.append('type', qualification.type);
       formData.append('title', qualification.title);
@@ -364,7 +361,6 @@ export default function BecomeInstructorPage() {
       if (response.data) {
         toast.success("Đăng ký bằng cấp thành công! Vui lòng đợi phê duyệt.");
         toast.info("Sau khi admin phê duyệt, bạn sẽ trở thành giảng viên và có thể tạo khóa học!");
-        
         setQualification({
           specialization_name: "",
           type: "Degree",
@@ -403,31 +399,39 @@ export default function BecomeInstructorPage() {
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-4 mb-3 flex-wrap">
           <h1 className={`font-rosario-bold text-gray-900 ${isMobile ? 'text-2xl' : 'text-4xl'}`}>
-            Đăng ký bằng cấp/chứng chỉ
+            Trở thành giảng viên của Learnary ngay hôm nay!
           </h1>
-          <Button
-            variant="outline"
-            size={isMobile ? "sm" : "default"}
-            onClick={handleViewHistory}
-            className="font-roboto-bold border-purple-300 text-purple-600 hover:bg-purple-50"
-          >
-            <History className="w-4 h-4 mr-2" />
-            Lịch sử đăng ký
-          </Button>
         </div>
         <p className="font-roboto text-gray-600 max-w-2xl mx-auto">
           Chia sẻ kiến thức của bạn với hàng nghìn học viên trên toàn thế giới
         </p>
+        <Button
+          variant="outline"
+          size={isMobile ? "sm" : "default"}
+          onClick={handleViewHistory}
+          className="font-roboto-bold border-purple-300 text-purple-600 hover:bg-purple-50 cursor-pointer mt-5 ">
+          <History className="w-4 h-4 mr-2" />
+          Lịch sử đăng ký
+        </Button>
       </div>
 
       <Alert className="max-w-screen mx-auto mb-6 border-blue-200 bg-blue-50">
         <AlertCircle className="h-4 w-4 text-blue-600" />
         <AlertDescription className="font-roboto text-blue-900">
-          Bạn có thể upload tối đa <strong>6 ảnh</strong> minh chứng (JPG, PNG, PDF), mỗi file tối đa <strong>10MB</strong> <strong>Bạn chỉ có thể tạo 1 đơn đăng ký bằng cấp/chứng chỉ đang chờ phê duyệt</strong>
+          Bạn có thể upload tối đa <strong>6 ảnh</strong> minh chứng (JPG, PNG, PDF), mỗi file tối đa <strong>10MB</strong>. <strong>Bạn chỉ có thể tạo 1 đơn đăng ký đang chờ phê duyệt</strong>
         </AlertDescription>
       </Alert>
 
-      <form onSubmit={handleSubmit} className={`max-w-screen mx-auto ${isMobile ? 'space-y-4' : 'space-y-6'}`}>
+      {hasPendingQualification && (
+        <Alert className="max-w-screen mx-auto mb-6 border-amber-500 bg-amber-50">
+          <Clock className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="font-roboto text-amber-900">
+            <strong>Bạn đã có đơn đăng ký đang chờ phê duyệt!</strong> Vui lòng đợi admin xét duyệt trước khi tạo đơn mới. Bạn có thể xem chi tiết trong <button onClick={handleViewHistory} className="underline font-bold hover:text-amber-700">Lịch sử đăng ký</button>.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <form onSubmit={handleSubmit} className={`max-w-screen mx-auto ${isMobile ? 'space-y-4' : 'space-y-6'} ${hasPendingQualification ? 'opacity-60 pointer-events-none' : ''}`}>
         <Card className="border-2 border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="flex flex-col h-fit p-5 bg-linear-to-r from-purple-100 to-blue-100">
             <div className="flex items-center gap-3">
@@ -451,22 +455,24 @@ export default function BecomeInstructorPage() {
                 <Label className="text-gray-700 font-roboto-bold mb-2">
                   Loại <span className="text-red-500">*</span>
                 </Label>
-                <Select 
-                  value={qualification.type} 
+                <Select
+
+                  value={qualification.type}
                   onValueChange={(value: "Degree" | "Certificate") => handleInputChange('type', value)}
+
                 >
-                  <SelectTrigger className={`font-roboto ${errors.type ? 'border-red-500' : ''}`}>
+                  <SelectTrigger className={`font-roboto  cursor-pointer ${errors.type ? 'border-red-500' : ''}`}>
                     <SelectValue placeholder="Chọn loại" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Degree" className="font-roboto">
-                      <div className="flex items-center gap-2">
+                    <SelectItem value="Degree" className="font-roboto ">
+                      <div className="flex items-center gap-2 cursor-pointer">
                         <GraduationCap className="w-4 h-4" />
                         Bằng cấp (Degree)
                       </div>
                     </SelectItem>
                     <SelectItem value="Certificate" className="font-roboto">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2  cursor-pointer">
                         <Award className="w-4 h-4" />
                         Chứng chỉ (Certificate)
                       </div>
@@ -479,12 +485,12 @@ export default function BecomeInstructorPage() {
               </div>
 
               <div>
-                <Label className="text-gray-700 font-roboto-bold mb-2">
+                <Label className="text-gray-700 font-roboto-bold mb-2 ">
                   Chuyên ngành <span className="text-red-500">*</span>
                 </Label>
-                
-                <Select 
-                  value={qualification.specialization_name} 
+
+                <Select
+                  value={qualification.specialization_name}
                   onValueChange={(value) => {
                     if (value === "__add_new__") {
                       setShowAddSpecDialog(true);
@@ -493,18 +499,18 @@ export default function BecomeInstructorPage() {
                     }
                   }}
                 >
-                  <SelectTrigger className={`font-roboto ${errors.specialization_name ? 'border-red-500' : ''}`}>
+                  <SelectTrigger className={`font-roboto \ cursor-pointer ${errors.specialization_name ? 'border-red-500' : ''}`}>
                     <SelectValue placeholder={loadingSpecializations ? "Đang tải..." : "Chọn chuyên ngành"} />
                   </SelectTrigger>
                   <SelectContent>
                     {specializations.map((spec) => {
                       const alreadyRegistered = existingQualifications.includes(spec.specialization_name);
-                      
+
                       return (
-                        <SelectItem 
-                          key={spec.specialization_id} 
-                          value={spec.specialization_name} 
-                          className="font-roboto"
+                        <SelectItem
+                          key={spec.specialization_id}
+                          value={spec.specialization_name}
+                          className="font-roboto  cursor-pointer"
                           disabled={alreadyRegistered}
                         >
                           {spec.specialization_name}
@@ -517,12 +523,12 @@ export default function BecomeInstructorPage() {
                         </SelectItem>
                       );
                     })}
-                    
+
                     {specializations.length > 0 && (
                       <div className="border-t border-gray-200 my-1"></div>
                     )}
-                    
-                    <SelectItem value="__add_new__" className="font-roboto-bold text-purple-600">
+
+                    <SelectItem value="__add_new__" className="font-roboto-bold text-purple-600 cursor-pointer">
                       <div className="flex items-center gap-2">
                         <Plus className="w-4 h-4" />
                         Thêm chuyên ngành mới
@@ -544,11 +550,11 @@ export default function BecomeInstructorPage() {
                 <Label className="text-gray-700 font-roboto-bold mb-2">
                   Tiêu đề bằng cấp/chứng chỉ <span className="text-red-500">*</span>
                 </Label>
-                <Input 
-                  value={qualification.title} 
-                  onChange={(e) => handleInputChange('title', e.target.value)} 
-                  placeholder="VD: Cử nhân Khoa học Máy tính, Chứng chỉ Google Cloud..." 
-                  className={`font-roboto ${errors.title ? 'border-red-500' : ''}`} 
+                <Input
+                  value={qualification.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  placeholder="VD: Cử nhân Khoa học Máy tính, Chứng chỉ Google Cloud..."
+                  className={`font-roboto ${errors.title ? 'border-red-500' : ''}`}
                 />
                 {errors.title && (
                   <p className="text-red-500 text-xs mt-1 font-roboto">{errors.title}</p>
@@ -559,11 +565,11 @@ export default function BecomeInstructorPage() {
                 <Label className="text-gray-700 font-roboto-bold mb-2">
                   Nơi cấp <span className="text-red-500">*</span>
                 </Label>
-                <Input 
-                  value={qualification.issue_place} 
-                  onChange={(e) => handleInputChange('issue_place', e.target.value)} 
-                  placeholder="VD: Đại học Bách Khoa, Google, AWS..." 
-                  className={`font-roboto ${errors.issue_place ? 'border-red-500' : ''}`} 
+                <Input
+                  value={qualification.issue_place}
+                  onChange={(e) => handleInputChange('issue_place', e.target.value)}
+                  placeholder="VD: Đại học Bách Khoa, Google, AWS..."
+                  className={`font-roboto ${errors.issue_place ? 'border-red-500' : ''}`}
                 />
                 {errors.issue_place && (
                   <p className="text-red-500 text-xs mt-1 font-roboto">{errors.issue_place}</p>
@@ -574,11 +580,11 @@ export default function BecomeInstructorPage() {
                 <Label className="text-gray-700 font-roboto-bold mb-2">
                   Ngày cấp <span className="text-red-500">*</span>
                 </Label>
-                <Input 
-                  type="date" 
-                  value={qualification.issue_date} 
-                  onChange={(e) => handleInputChange('issue_date', e.target.value)} 
-                  className={`font-roboto ${errors.issue_date ? 'border-red-500' : ''}`} 
+                <Input
+                  type="date"
+                  value={qualification.issue_date}
+                  onChange={(e) => handleInputChange('issue_date', e.target.value)}
+                  className={`font-roboto ${errors.issue_date ? 'border-red-500' : ''}`}
                 />
                 {errors.issue_date && (
                   <p className="text-red-500 text-xs mt-1 font-roboto">{errors.issue_date}</p>
@@ -589,11 +595,11 @@ export default function BecomeInstructorPage() {
                 <Label className="text-gray-700 font-roboto-bold mb-2">
                   Ngày hết hạn <span className="text-gray-400">(Không bắt buộc)</span>
                 </Label>
-                <Input 
-                  type="date" 
-                  value={qualification.expire_date || ''} 
-                  onChange={(e) => handleInputChange('expire_date', e.target.value)} 
-                  className={`font-roboto ${errors.expire_date ? 'border-red-500' : ''}`} 
+                <Input
+                  type="date"
+                  value={qualification.expire_date || ''}
+                  onChange={(e) => handleInputChange('expire_date', e.target.value)}
+                  className={`font-roboto ${errors.expire_date ? 'border-red-500' : ''}`}
                 />
                 {errors.expire_date && (
                   <p className="text-red-500 text-xs mt-1 font-roboto">{errors.expire_date}</p>
@@ -620,7 +626,7 @@ export default function BecomeInstructorPage() {
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={selectedFiles.length >= MAX_IMAGES}
-                  className="border-2 border-dashed border-purple-400 text-purple-600 hover:bg-purple-50 font-roboto-bold"
+                  className="border-2 border-dashed border-purple-400 text-purple-600 hover:bg-purple-50 font-roboto-bold cursor-pointer"
                 >
                   <Upload className="w-5 h-5 mr-2" />
                   Thêm ảnh
@@ -674,16 +680,18 @@ export default function BecomeInstructorPage() {
         </Card>
 
         <div className="flex justify-center pt-4">
-          <Button 
-            type="submit" 
-            disabled={isSubmitting} 
-            className={`bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-roboto-bold ${isMobile ? 'w-full' : 'w-auto px-12'} py-6 text-lg shadow-lg`}
+          <Button
+            type="submit"
+            disabled={isSubmitting || hasPendingQualification}
+            className={`bg-linear-to-r from-purple-600 cursor-pointer to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-roboto-bold ${isMobile ? 'w-full' : 'w-auto px-12'} py-6 text-lg shadow-lg ${hasPendingQualification ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {isSubmitting ? (
               <div className="flex items-center">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                 Đang xử lý...
               </div>
+            ) : hasPendingQualification ? (
+              "Đã có đơn đang chờ duyệt"
             ) : (
               "Gửi đăng ký"
             )}
@@ -702,7 +710,7 @@ export default function BecomeInstructorPage() {
               Nhập tên chuyên ngành của bạn. Chuyên ngành sẽ cần được admin phê duyệt sau khi bạn gửi đăng ký.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="py-4">
             <Label htmlFor="new-spec-name" className="text-gray-700 font-roboto-bold mb-2 block">
               Tên chuyên ngành <span className="text-red-500">*</span>
@@ -739,7 +747,7 @@ export default function BecomeInstructorPage() {
             <Button
               type="button"
               onClick={handleAddNewSpecialization}
-              className="bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-roboto-bold"
+              className="bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-roboto-bold cursor-pointer"
             >
               Xác nhận
             </Button>
@@ -773,7 +781,7 @@ export default function BecomeInstructorPage() {
             ) : (
               <div className="space-y-4">
                 {qualificationHistory.map((qual, index) => (
-                  <Card key={qual.qualification_id} className="border-2 hover:shadow-md transition-shadow">
+                  <Card key={qual.instructor_qualification_id} className="border-2 hover:shadow-md transition-shadow">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
@@ -798,7 +806,7 @@ export default function BecomeInstructorPage() {
                         {getStatusBadge(qual.status)}
                       </div>
                     </CardHeader>
-                    
+
                     <CardContent className="space-y-3">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                         <div className="flex items-center gap-2 text-gray-700">
@@ -807,7 +815,7 @@ export default function BecomeInstructorPage() {
                             <strong>Nơi cấp:</strong> {qual.issue_place}
                           </span>
                         </div>
-                        
+
                         <div className="flex items-center gap-2 text-gray-700">
                           <Calendar className="w-4 h-4 text-gray-500" />
                           <span className="font-roboto">
@@ -848,13 +856,8 @@ export default function BecomeInstructorPage() {
                           </p>
                           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                             {qual.images.map((imageUrl, imgIndex) => (
-                              <div key={`${qual.qualification_id}-img-${imgIndex}`} className="relative w-full aspect-square rounded border overflow-hidden group cursor-pointer hover:ring-2 hover:ring-purple-400 transition-all">
-                                <Image
-                                  src={imageUrl}
-                                  alt={`Minh chứng ${imgIndex + 1}`}
-                                  fill
-                                  className="object-cover"
-                                />
+                              <div key={`${qual.instructor_qualification_id}-img-${imgIndex}`} className="relative w-full aspect-square rounded border overflow-hidden group cursor-pointer hover:ring-2 hover:ring-purple-400 transition-all">
+                                <Image src={imageUrl} alt={`Minh chứng ${imgIndex + 1}`} fill className="object-cover"/>
                                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
                                   <span className="text-white opacity-0 group-hover:opacity-100 text-xs font-roboto-bold">
                                     #{imgIndex + 1}
@@ -866,7 +869,6 @@ export default function BecomeInstructorPage() {
                         </div>
                       )}
                     </CardContent>
-                    
                     {index < qualificationHistory.length - 1 && (
                       <Separator className="mt-4" />
                     )}
@@ -877,12 +879,7 @@ export default function BecomeInstructorPage() {
           </ScrollArea>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowHistoryDialog(false)}
-              className="font-roboto-bold"
-            >
+            <Button type="button" variant="outline" onClick={() => setShowHistoryDialog(false)}className="font-roboto-bold cursor-pointer">
               Đóng
             </Button>
           </DialogFooter>
