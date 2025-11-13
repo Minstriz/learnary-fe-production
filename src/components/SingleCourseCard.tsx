@@ -125,7 +125,7 @@ const SingleCourseCard: React.FC<SingleCourseCardProps> = ({ course }) => {
               </div>
               <div className={buttonWrapperClass}>
                 <Button asChild>
-                  <Link href={`/courses/${dataCourse.slug}`}>
+                  <Link /* href={`/courses/${dataCourse.slug}`} */ href={`/course-detail`}>
                     Chi tiết khoá học
                   </Link>
                 </Button>

@@ -20,5 +20,16 @@
     "title_mobile": "Explore the best mobile software programming courses.",
     "title_photography": "Secrets to creating the most artistic photos.",
     "title_hiring": "Hiring for a Staff Software Engineer"
+  },
+  "Course-Detail-Tab": {
+    "overview":"Overview",
+    "curriculum":"Curriculum",
+    "instructor":"Instructor",
+    "reviews":"Reviews"
+  },
+    "Course-Detail-Sidebar": {
+    "btnEnroll":"Enroll Now",
+    "btnCard":"Add to cart",
+    "courseIncludes":"This course includes:"
   }
 }

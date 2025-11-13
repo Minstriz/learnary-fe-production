@@ -20,5 +20,16 @@
     "title_mobile": "Khám phá các khoá học lập trình phần mềm di động tốt nhất",
     "title_photography": "Bí quyết tạo ra những bức ảnh nghệ thuật nhất.",
     "title_hiring": "Hiring for a Staff Software Engineer"
+  },
+  "Course-Detail-Tab": {
+    "overview":"Tổng quan",
+    "curriculum":"Danh sách bài học",
+    "instructor":"Giảng viên",
+    "reviews":"Đánh giá"
+  },
+  "Course-Detail-Sidebar": {
+    "btnEnroll":"Học ngay",
+    "btnCard":"Thêm vào giỏ hàng",
+    "courseIncludes":"Khóa học bao gồm:"
   }
 }

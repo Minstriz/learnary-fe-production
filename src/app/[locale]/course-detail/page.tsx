@@ -1,179 +1,175 @@
-"use client"
-import React, { useEffect, useRef, useState } from 'react'
-import ChapterBox, { MockChapterData } from '@/components/ChapterBox'
-import { useIsMobile } from '@/hooks/useIsMobile'
-import "plyr/dist/plyr.css";
-import ListLesson from '@/Mock/MockData/ListLesson.json';
-import Video from "@/components/Video"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from '@/components/ui/textarea';
+"use client";
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-interface LessonProps {
-  lesson_id: string,
-  chapter_id: string,
-  title: string,
-  video_url: string,
-  is_completed: boolean,
-  duration: string,
-  thumbnail_url: string,
-  is_locked: boolean,
-  progress: number,
-  badge?: string,
-  created_at: string,
-  updated_at: string,
-}
+import CourseHeader from '@/components/CourseHeader';
+import CourseTabs from '@/components/CourseTabs';
+import CourseOverview from '@/components/CourseOverview';
+import CourseCurriculum from '@/components/CourseCurriculum';
+import InstructorInfo from '@/components/InstructorInfo';
+import ReviewsList from '@/components/ReviewsList';
+import CourseSidebar from '@/components/CourseSidebar';
+import api from '@/app/lib/axios';
+import mockCourseDetail from '@/Mock/MockData/CourseDetail.json';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
-interface CourseDetailPageProps {
-  current_lesson?: LessonProps,
-  all_lessons?: LessonProps[]
-}
+type CourseData = typeof mockCourseDetail;
 
-const CourseDetailPage = ({ current_lesson, all_lessons }: CourseDetailPageProps = {}) => {
-  const isMobile = useIsMobile();
-  const playerRef = useRef<Plyr | null>(null);
-  const [pageIsLoading, setPageIsLoading] = useState<boolean>(true);
-  const lessons = all_lessons || (ListLesson as LessonProps[]);
-  const currentLesson = current_lesson || lessons[0];
+export default function CourseDetailPage() {
+    const params = useParams();
+    const courseId = params?.id || 'course_001';
+    const isMobile = useIsMobile();
+    const [courseData, setCourseData] = useState<CourseData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-  const setupPlayer = async () => {
-    if (!playerRef.current) {
-      const Plyr = await import('plyr');
-      playerRef.current = new Plyr.default("#player", {
-        quality: {
-          options: [360, 720, 1080, 2160],
-          default: 1080,
-        },
-      });
+    useEffect(() => {
+        const fetchCourseData = async () => {
+            setIsLoading(true);
+            setError(null);
+            try {
+                const response = await api.get(`/courses/${courseId}`);
+                if (response.data && response.status === 200) {
+                    setCourseData(response.data);
+                } else {
+                    console.log('No data received, using mock data');
+                    setCourseData(mockCourseDetail);
+                    setError('Không thể lấy khoá học từ server, đang dùng data mẫu!');
+                }
+            } catch {
+                console.log('Using mock data as fallback');
+                setCourseData(mockCourseDetail);
+                setError('Không thể lấy khoá học từ server, đang dùng data mẫu!');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchCourseData();
+    }, [courseId]);
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            </div>
+        );
     }
-  }
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setupPlayer().then(() => {
-        setPageIsLoading(false)
-      })
-    }, 500)
-    return () => {
-      if (playerRef.current) {
-        playerRef.current.destroy();
-      }
-      clearTimeout(timer);
+
+    if (!courseData) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <p className="font-roboto text-gray-600">Course not found</p>
+            </div>
+        );
     }
-  }, []);
 
-  return isMobile ? (
-    <div className={`flex h-full ${isMobile ? 'w-full flex-col' : 'w-full'}`}>
-      {!pageIsLoading ? (
-        <div>
-          <div className="flex flex-col">
-            <div className="breadcrumb ml-5 pt-5">
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink href="/">Home</BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbLink href="/">Khu vực học tập</BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>Bài học đầu đời</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
+    const formatPrice = (priceValue: number) => {
+        return new Intl.NumberFormat('vi-VN').format(priceValue) + ' ₫';
+    };
+
+    return (
+
+        <div className="min-h-screen bg-white">
+            
+            <CourseHeader
+                category_name={courseData.category_name}
+                title={courseData.title}
+                description={courseData.description}
+                rating={courseData.rating}
+                total_reviews={courseData.total_reviews}
+                total_students={courseData.total_students}
+                created_by={courseData.created_by}
+                last_updated={courseData.last_updated}
+                available_language={courseData.available_language}
+                level_name={courseData.level_name}
+            />
+
+            {error && (
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mx-4 md:mx-10 mt-6">
+                    <p className="font-roboto text-yellow-700">{error}</p>
+                </div>
+            )}
+            <div className={`${isMobile ? 'breadcrumb ml-5 pt-5' : 'breadcrumb  ml-15 pt-5'}`}>
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/">Khám phá khoá học</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>{courseData.slug}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
             </div>
-            <div className={`video grow h-fit text-center m-3 rounded border-3`}>
-              <Video video_url={currentLesson.video_url}></Video>
-            </div>
-            <div className="tab mt-3">
-              <Tabs defaultValue="account" className="w-full">
-                <TabsList className='mb-2 ml-5'>
-                  <TabsTrigger value="account" className='pl-5'>Ghi chú</TabsTrigger>
-                  <TabsTrigger value="password" className='pl-5'>Ghi cô</TabsTrigger>
-                </TabsList>
-                <TabsContent value="account" className=' mb-10 pl-8'>Bạn chưa có ghi chú nào ở bài học này</TabsContent>
-                <TabsContent value="password" className='pl-5 mb-10'>
-                  <form action="" className='flex gap-5 justify-baseline flex-col'>
-                    <Textarea placeholder='Thêm ghi chú của bạn vào đây...'></Textarea>
-                    <Button className='cursor-pointer inline-block align-bottom'>Ghi chú</Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
+            <div className="max-w-7xl mx-auto px-4 md:px-10 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2">
+                        <CourseTabs>
+                            <TabsContent value="overview" className="mt-6">
+                                <CourseOverview
+                                    what_you_learn={courseData.what_you_learn}
+                                    requirement={courseData.requirement}
+                                />
+                            </TabsContent>
+
+                            <TabsContent value="curriculum" className="mt-6">
+                                <CourseCurriculum
+                                    chapters={courseData.chapters}
+                                    total_lectures={courseData.total_lectures}
+                                    total_duration={`${courseData.total_hours} hours`}
+                                />
+                            </TabsContent>
+
+                            <TabsContent value="instructor" className="mt-6">
+                                <InstructorInfo instructor={courseData.instructor} />
+                            </TabsContent>
+
+                            <TabsContent value="reviews" className="mt-6">
+                                <ReviewsList
+                                    rating={courseData.rating}
+                                    total_reviews={courseData.total_reviews}
+                                    rating_distribution={courseData.rating_distribution}
+                                    reviews={courseData.reviews}
+                                />
+                            </TabsContent>
+                        </CourseTabs>
+                    </div>
+
+                    <div className="hidden lg:block">
+                        <CourseSidebar
+                            thumbnail={courseData.thumbnail}
+                            price={courseData.price}
+                            original_price={courseData.original_price}
+                            sale_off={courseData.sale_off}
+                            includes={courseData.includes}
+                        />
+                    </div>
+                </div>
             </div>
 
-          </div>
-          <div className='ChapterBox flex justify-center items-center w-full'>
-            <ChapterBox chapters={MockChapterData} emptyState={'Chưa có bài học nào'}></ChapterBox>
-          </div>
-        </div>
-      ) : (
-        <div className='w-full h-full flex items-center justify-center'>
-          <Skeleton className="w-[100px] h-[100px] bg-amber-600 rounded-full" />
-        </div>
-      )}
-    </div>
-  ) : (
-    <div className={`flex flex-col w-full h-screen pl-10 pr-20 pb-20 pt-5`}>
-      {!pageIsLoading ? (
-        <div className='flex flex-col'>
-          <div className="breadcrumb ml-5 pb-5">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/">Home</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/">Khu vực học tập</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Bài học đầu đời</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-          <div className={`chapter_video_frame flex ${isMobile ? 'w-full flex-col' : 'w-full gap-5'}`}>
-            <ChapterBox chapters={MockChapterData} emptyState={'Chưa có bài học nào'}></ChapterBox>
-            <div className="flex flex-col">
-              <div className={`video w-full h-fit text-center m-3 rounded border-3`}>
-                <Video video_url={currentLesson.video_url}></Video>
-              </div>
-              <div className="tab mt-5 ml-5">
-                <Tabs defaultValue="account" className="w-full">
-                  <TabsList>
-                    <TabsTrigger value="account" className='pl-5'>Ghi chú</TabsTrigger>
-                    <TabsTrigger value="password" className='pl-5'>Thêm ghi chú mới</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="account" className='pl-5 pt-3'>Bạn chưa có ghi chú nào ở bài học này</TabsContent>
-                  <TabsContent value="password" className='pl-5'>
-                    <form action="" className='flex gap-5 justify-baseline'>
-                      <Textarea placeholder='Thêm ghi chú của bạn vào đây...'></Textarea>
-                      <Button className='cursor-pointer inline-block align-bottom'>Ghi chú</Button>
-                    </form>
-                  </TabsContent>
-                </Tabs>
-              </div>
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-50">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col">
+                        <span className="font-roboto-condensed-bold text-2xl">{formatPrice(courseData.price)}</span>
+                        {courseData.original_price && (
+                            <span className="font-roboto text-sm text-gray-500 line-through">
+                                {formatPrice(courseData.original_price)}
+                            </span>
+                        )}
+                    </div>
+                    <Button className="bg-black cursor-pointer font-roboto-bold px-8 py-6">
+                        Enroll Now
+                    </Button>
+                </div>
             </div>
-          </div>
         </div>
-
-      ) : (
-        <div className='w-full h-full flex items-center justify-center'>
-          <Skeleton className="w-[300px] h-[300px] bg-amber-600 rounded-full" />
-        </div>
-      )}
-    </div>
-  )
+    );
 }
-
-export default CourseDetailPage

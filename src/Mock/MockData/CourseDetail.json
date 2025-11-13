@@ -1,0 +1,225 @@
+{
+  "course_id": "course_001",
+  "category_id": "cat_001",
+  "category_name": "Lập Trình Web",
+  "level_id": "lvl_001",
+  "level_name": "Cơ Bản",
+  "instructor_id": "inst_001",
+  "status": "Published",
+  "title": "React & TypeScript - Từ Cơ Bản Đến Nâng Cao",
+  "slug": "react-typescript-co-ban-den-nang-cao",
+  "description": "Khóa học React và TypeScript toàn diện, từ cơ bản đến nâng cao. Học cách xây dựng ứng dụng web hiện đại với React Hooks, Context API, Redux Toolkit và TypeScript.",
+  "thumbnail": "https://learnary-courses.s3.ap-southeast-2.amazonaws.com/thumbnail/2.jpg",
+  "price": 1999000,
+  "original_price": 2999000,
+  "sale_off": 30,
+  "hot": true,
+  "rating": 4.8,
+  "total_reviews": 12453,
+  "total_students": 85234,
+  "requirement": "Biết HTML, CSS, JavaScript cơ bản",
+  "available_language": "Vietnamese",
+  "total_hours": 52,
+  "total_lectures": 69,
+  "total_sections": 10,
+  "last_updated": "October 2025",
+  "created_by": "Sarah Johnson",
+  "created_at": "2024-01-15T00:00:00Z",
+  "updated_at": "2024-01-15T00:00:00Z",
+  "what_you_learn": [
+    "Build 10+ real-world web applications from scratch",
+    "Create responsive websites with HTML5, CSS3, and Tailwind CSS",
+    "Work with APIs and async JavaScript",
+    "Debug and test your code effectively",
+    "Master modern JavaScript ES6+ features and best practices",
+    "Understand React fundamentals, hooks, and state management",
+    "Deploy your applications to production",
+    "Build a professional portfolio of projects"
+  ],
+  "includes": [
+    {
+      "icon": "PlayCircle",
+      "text": "52 hours on-demand video"
+    },
+    {
+      "icon": "FileText",
+      "text": "15 coding exercises"
+    },
+    {
+      "icon": "Award",
+      "text": "Certificate of completion"
+    },
+    {
+      "icon": "Infinity",
+      "text": "Full lifetime access"
+    },
+    {
+      "icon": "Smartphone",
+      "text": "Access on mobile and TV"
+    },
+    {
+      "icon": "Download",
+      "text": "Downloadable resources"
+    }
+  ],
+  "instructor": {
+    "instructor_id": "inst_001",
+    "user_id": "user123",
+    "full_name": "Sarah Johnson",
+    "avatar": "https://learnary-courses.s3.ap-southeast-2.amazonaws.com/thumbnail/2.jpg",
+    "bio": "Sarah is a passionate educator and experienced software engineer with over 10 years in web development. She has worked with major tech companies and has taught over 200,000 students worldwide. Her teaching style focuses on practical, project-based learning that prepares students for real-world development scenarios.",
+    "title": "Senior Web Developer & Instructor",
+    "rating": 4.7,
+    "total_reviews": 45280,
+    "total_students": 203450,
+    "total_courses": 12,
+    "specializations": [
+      {
+        "specialization_id": "spec123",
+        "specialization_name": "Software Engineering"
+      },
+      {
+        "specialization_id": "spec124",
+        "specialization_name": "Web Development"
+      }
+    ],
+    "certifications": ["Expert Certified"]
+  },
+  "chapters": [
+    {
+      "chapter_id": "ch_001_01",
+      "course_id": "course_001",
+      "chapter_title": "Getting Started",
+      "total_lectures": 8,
+      "total_duration": "2hr 5min",
+      "lessons": [
+        {
+          "lesson_id": "ls_001_01_01",
+          "chapter_id": "ch_001_01",
+          "lesson_title": "Introduction to the course and learning path",
+          "video_url": "https://example.com/videos/course1/ch1/lesson1.mp4",
+          "duration": "15:30",
+          "is_completed": false,
+          "is_preview": true
+        },
+        {
+          "lesson_id": "ls_001_01_02",
+          "chapter_id": "ch_001_01",
+          "lesson_title": "What is React? Why learn React?",
+          "video_url": "https://example.com/videos/course1/ch1/lesson2.mp4",
+          "duration": "22:45",
+          "is_completed": false,
+          "is_preview": false
+        },
+        {
+          "lesson_id": "ls_001_01_03",
+          "chapter_id": "ch_001_01",
+          "lesson_title": "What is TypeScript? Benefits of TypeScript",
+          "video_url": "https://example.com/videos/course1/ch1/lesson3.mp4",
+          "duration": "18:20",
+          "is_completed": false,
+          "is_preview": false
+        },
+        {
+          "lesson_id": "ls_001_01_04",
+          "chapter_id": "ch_001_01",
+          "lesson_title": "Installing Node.js and npm",
+          "video_url": "https://example.com/videos/course1/ch1/lesson4.mp4",
+          "duration": "12:15",
+          "is_completed": false,
+          "is_preview": false
+        }
+      ]
+    },
+    {
+      "chapter_id": "ch_001_02",
+      "course_id": "course_001",
+      "chapter_title": "HTML Fundamentals",
+      "total_lectures": 12,
+      "total_duration": "3hr 20min",
+      "lessons": [
+        {
+          "lesson_id": "ls_001_02_01",
+          "chapter_id": "ch_001_02",
+          "lesson_title": "Basic data types in TypeScript",
+          "video_url": "https://example.com/videos/course1/ch2/lesson1.mp4",
+          "duration": "25:15",
+          "is_completed": false,
+          "is_preview": false
+        },
+        {
+          "lesson_id": "ls_001_02_02",
+          "chapter_id": "ch_001_02",
+          "lesson_title": "Interface and Type in TypeScript",
+          "video_url": "https://example.com/videos/course1/ch2/lesson2.mp4",
+          "duration": "28:40",
+          "is_completed": false,
+          "is_preview": false
+        }
+      ]
+    },
+    {
+      "chapter_id": "ch_001_03",
+      "course_id": "course_001",
+      "chapter_title": "CSS Styling and Layout",
+      "total_lectures": 15,
+      "total_duration": "4hr 10min",
+      "lessons": []
+    },
+    {
+      "chapter_id": "ch_001_04",
+      "course_id": "course_001",
+      "chapter_title": "JavaScript Essentials",
+      "total_lectures": 18,
+      "total_duration": "5hr 15min",
+      "lessons": []
+    },
+    {
+      "chapter_id": "ch_001_05",
+      "course_id": "course_001",
+      "chapter_title": "Advanced JavaScript",
+      "total_lectures": 16,
+      "total_duration": "4hr 45min",
+      "lessons": []
+    }
+  ],
+  "reviews": [
+    {
+      "review_id": "rev_001",
+      "user_id": "user_456",
+      "user_name": "Michael Chen",
+      "user_avatar": "https://learnary-courses.s3.ap-southeast-2.amazonaws.com/thumbnail/2.jpg",
+      "rating": 5,
+      "comment": "This is hands down the best web development course I've taken. Sarah's teaching style is clear, engaging, and practical. The projects are challenging but rewarding, and I now feel confident building my own websites. Highly recommended for anyone starting their web dev journey!",
+      "helpful_count": 234,
+      "created_at": "2 weeks ago"
+    },
+    {
+      "review_id": "rev_002",
+      "user_id": "user_789",
+      "user_name": "Emily Rodriguez",
+      "user_avatar": "https://learnary-courses.s3.ap-southeast-2.amazonaws.com/thumbnail/2.jpg",
+      "rating": 5,
+      "comment": "Excellent course! Very comprehensive and well-structured.",
+      "helpful_count": 189,
+      "created_at": "1 month ago"
+    },
+    {
+      "review_id": "rev_003",
+      "user_id": "user_321",
+      "user_name": "David Kim",
+      "user_avatar": "https://learnary-courses.s3.ap-southeast-2.amazonaws.com/thumbnail/2.jpg",
+      "rating": 4,
+      "comment": "Great content but could use more practice exercises.",
+      "helpful_count": 76,
+      "created_at": "3 weeks ago"
+    }
+  ],
+  "rating_distribution": {
+    "5_star": 75,
+    "4_star": 15,
+    "3_star": 6,
+    "2_star": 3,
+    "1_star": 1
+  }
+}

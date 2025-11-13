@@ -34,7 +34,7 @@ export const NavbarLinks = () => {
     },
     {
       name: t("detail"),
-      href: "/course-detail"
+      href: "/course-learn"
     }
   ];
 };
