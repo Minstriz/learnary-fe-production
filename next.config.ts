@@ -2,6 +2,7 @@ import { withNextVideo } from "next-video/process";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -28,6 +29,15 @@ const nextConfig: NextConfig = {
   //   locales:['en','vi'],
   //   defaultLocale:'vi',
   // } 
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        // Sửa port 8000 và prefix /api/v1 cho đúng với Backend của bạn
+        destination: 'http://localhost:4000/api/v1/:path*', 
+      },
+    ];
+  },
 };
 
 const withNextIntl = createNextIntlPlugin();
