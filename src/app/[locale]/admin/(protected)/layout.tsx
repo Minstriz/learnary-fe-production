@@ -8,11 +8,11 @@ import { useAuth } from "@/app/context/AuthContext";
 import { AppSidebar } from "@/components/features/app-sidebar";
 import {
   SidebarInset,
+  SidebarProvider,
   SidebarTrigger, 
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { AppBreadcrumb } from "@/components/features/app-breadcumb";
-// import { SpinnerLoading } from "@/components/LoadingSpinner"; // Bạn có thể thêm
 
 export default function ProtectedAdminLayout({
   children,
@@ -37,14 +37,13 @@ export default function ProtectedAdminLayout({
   if (isLoading || !isLoggedIn || user?.role !== "ADMIN") {
     return (
       <div className="flex h-screen w-full items-center justify-center">
-        {/* <SpinnerLoading /> */}
         <p>Đang xác thực quyền admin...</p>
       </div>
     );
   }
 
   return (
-    <>
+    <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 ...">
@@ -56,6 +55,6 @@ export default function ProtectedAdminLayout({
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
       </SidebarInset>
-    </>
+    </SidebarProvider>
   );
 }

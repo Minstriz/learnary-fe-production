@@ -49,7 +49,7 @@ import { CreateCategoryForm } from "@/components/CreateCategoryForm";
 import { ToasterConfirm } from "@/components/ToasterConfimer";
 import { z } from "zod";
 
-export const UserChema = z.object({
+export const UserSchema = z.object({
   user_id: z.string(),
   email: z.string().email(),
   fullName: z.string(),
@@ -66,7 +66,7 @@ export const UserChema = z.object({
   last_login: z.string().nullable(),
   isActive: z.boolean(),
 });
-type User = z.infer<typeof UserChema>
+type User = z.infer<typeof UserSchema>
 
 function UserPages() {
   const [sorting, setSorting] = useState<SortingState>([])
@@ -89,10 +89,10 @@ function UserPages() {
       let parsedUsers: User[] = [];
 
       if (apiData.success && Array.isArray(apiData.data)) {
-        parsedUsers = UserChema.array().parse(apiData.data)
+        parsedUsers = UserSchema.array().parse(apiData.data)
         toast.info(`Đã tải lên ${apiData.data.length} người dùng`)
       } else if (Array.isArray(apiData)) {
-        parsedUsers = UserChema.array().parse(apiData)
+        parsedUsers = UserSchema.array().parse(apiData)
         toast.success(`Đã tải lên ${apiData.length} người dùng`)
       }
       else {
@@ -148,7 +148,7 @@ function UserPages() {
   const columns: ColumnDef<User>[] = [
     {
       id: "select",
-      header: ({ table }) => ( // [SỬA] Thêm return () và sửa thẻ đóng
+      header: ({ table }) => (
         <Checkbox checked={
           table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
@@ -182,13 +182,13 @@ function UserPages() {
       cell: ({ row }) => {
         const user = row.original
         return (
-          <>
+          <div>
             <div className="flex items-center justify-between w-full">
               <div className="space-y-1">
                 <div className="font-medium">{user.fullName}</div>
               </div>
             </div>
-          </>
+          </div>
         )
       }
     },
@@ -265,7 +265,7 @@ function UserPages() {
           <Skeleton className="h-4 w-[250px]" />
           <Skeleton className="h-4 w-[150px]" />
           <Skeleton className="h-4 w-[100px]" />
-          <Skeleton className="h-4 w-[80px]" />
+          <Skeleton className="h-4 w-20" />
           <Skeleton className="h-4 w-[120px]" />
           <Skeleton className="h-4 w-[60px]" />
         </div>

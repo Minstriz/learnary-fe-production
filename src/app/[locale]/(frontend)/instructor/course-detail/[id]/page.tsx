@@ -156,7 +156,7 @@ export default function CourseDetailPage() {
                   <AccordionItem value={chapter.chapter_id} key={chapter.chapter_id}>
                     <AccordionTrigger className="text-base font-medium px-4 hover:no-underline hover:bg-muted/50 rounded-md">
                       <div className="flex items-center gap-2 text-left">{chapter.chapter_title}</div>
-                      <span className="ml-auto text-sm text-muted-foreground font-normal mr-4 flex-shrink-0">
+                      <span className="ml-auto text-sm text-muted-foreground font-normal mr-4 shrink-0">
                         {(chapter.lessons?.length || 0) + (chapterQuiz ? 1 : 0)} mục
                       </span>
                     </AccordionTrigger>
@@ -174,18 +174,18 @@ export default function CourseDetailPage() {
                               className={`flex items-center gap-3 p-3 rounded-md transition-colors border ${canPlay ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed'} ${isSelected ? 'bg-primary/10 border-primary/30' : 'border-transparent hover:bg-muted/80'}`}
                           >
                             {isSelected && canPlay ? (
-                              <PauseCircle className="h-5 w-5 text-primary animate-pulse flex-shrink-0" />
+                              <PauseCircle className="h-5 w-5 text-primary animate-pulse shrink-0" />
                             ) : canPlay ? (
-                              <PlayCircle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                              <PlayCircle className="h-5 w-5 text-muted-foreground shrink-0" />
                             ) : (
-                              <Lock className="h-4 w-4 text-muted-foreground/50 flex-shrink-0" />
+                              <Lock className="h-4 w-4 text-muted-foreground/50 shrink-0" />
                             )}
                             <span className={`flex-1 text-sm font-medium line-clamp-2 ${isSelected ? 'text-primary' : ''}`}>
                               {lesson.title}
                             </span>
-                            <span className="text-xs text-muted-foreground flex-shrink-0">{lesson.duration || '00:00'}</span>
+                            <span className="text-xs text-muted-foreground shrink-0">{lesson.duration || '00:00'}</span>
                             {canPlay && (
-                              <Badge variant={isSelected ? "default" : "secondary"} className="text-[10px] px-2 py-0.5 flex-shrink-0">
+                              <Badge variant={isSelected ? "default" : "secondary"} className="text-[10px] px-2 py-0.5 shrink-0">
                                 {isSelected ? 'Đang xem' : 'Xem thử'}
                               </Badge>
                             )}
@@ -198,7 +198,7 @@ export default function CourseDetailPage() {
                             <Dialog>
                               <DialogTrigger asChild>
                                 <div className="flex items-center gap-3 p-3 rounded-md bg-orange-50/50 border border-orange-100/50 cursor-pointer hover:bg-orange-100/50 transition-colors">
-                                  <FileQuestion className="h-5 w-5 text-orange-500 flex-shrink-0" />
+                                  <FileQuestion className="h-5 w-5 text-orange-500 shrink-0" />
                                   <div className="flex-1 flex flex-col">
                                       <span className="text-sm font-medium text-orange-900">
                                           Bài kiểm tra: {chapterQuiz.title}
@@ -227,7 +227,7 @@ export default function CourseDetailPage() {
                                              key={option.option_id} 
                                              className={`flex items-start gap-3 p-3 rounded-md border bg-white ${option.is_correct ? 'border-green-300 bg-green-50/50' : 'border-slate-200'}`}
                                           >
-                                            <span className={`flex items-center justify-center w-6 h-6 rounded-full border text-xs font-bold flex-shrink-0 ${option.is_correct ? 'bg-green-100 border-green-300 text-green-700' : 'bg-slate-100 border-slate-300 text-slate-600'}`}>
+                                            <span className={`flex items-center justify-center w-6 h-6 rounded-full border text-xs font-bold shrink-0 ${option.is_correct ? 'bg-green-100 border-green-300 text-green-700' : 'bg-slate-100 border-slate-300 text-slate-600'}`}>
                                               {String.fromCharCode(65 + oIndex)}
                                             </span>
                                             <span className="text-sm pt-0.5">{option.option_content}</span>
@@ -274,7 +274,7 @@ export default function CourseDetailPage() {
           </Card>
           <Card className="shadow-sm">
              <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                <div className="relative h-16 w-16 min-w-[4rem]">
+                <div className="relative h-16 w-16 min-w-16">
                   {/* <Image
                     src={course.instructor?.user?.avatar || '/default-avatar.png'}
                     alt={course.instructor?.user?.fullName || 'Giảng viên'}

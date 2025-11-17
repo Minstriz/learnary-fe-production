@@ -15,6 +15,7 @@ interface AuthUser {
   email: string;
   role: string;
   fullName: string;
+  avatar?: string;
 }
 
 interface AuthContextType {
@@ -22,10 +23,9 @@ interface AuthContextType {
   token: string | null;
   isLoggedIn: boolean;
   isLoading: boolean; 
-  login: (accessToken: string) => AuthUser | null;
+  login: (accessToken: string) => void;
   logout: () => void;
 }
-
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -36,25 +36,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const checkAuthOnLoad = async () => {
+      const existingToken = sessionStorage.getItem('accessToken');
+      
+      // Nếu KHÔNG có token -> skip luôn, không gọi API
+      if (!existingToken) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Nếu CÓ token -> gọi refresh để verify
       try {
         const response = await api.post('/auth/refresh');
         const { accessToken } = response.data;
-      
         const decodedUser = jwtDecode<AuthUser>(accessToken);
         setUser(decodedUser);
         setToken(accessToken);
         sessionStorage.setItem('accessToken', accessToken); 
-      } catch (error) {
+      } catch {
+        // Refresh failed -> xóa token cũ
         setUser(null);
         setToken(null);
         sessionStorage.removeItem('accessToken'); 
-        console.error("Không thể refresh token khi tải trang:", error);
       } finally {
         setIsLoading(false);
       }
     };
+    
     checkAuthOnLoad();  
-  }, []);
+  }, []); // Chỉ chạy 1 lần khi mount
 
   const logout = useCallback(async() => {
     try {
@@ -77,11 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(decodedUser);
       setToken(newAccessToken);
       sessionStorage.setItem('accessToken', newAccessToken);
-      return decodedUser;
     } catch (error) {
       console.error("Lỗi giải mã token:", error);
       logout();
-      return null;
     }
   }, [logout]);
   
