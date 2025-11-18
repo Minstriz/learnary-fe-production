@@ -22,6 +22,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, ChevronLeft, Save, Send, PlusCircle, Trash2, GripVertical, Video, FileQuestion, Plus, X, Pencil } from 'lucide-react';
+import { VideoUploadDialog } from '@/components/VideoUploadDialog';
 import { useAuth } from '@/app/context/AuthContext';
 
 type Category = { category_id: string; category_name: string; };
@@ -351,31 +352,36 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                 <AccordionContent className="p-4 bg-slate-50/30 space-y-3">
                                     {/* Danh sách bài học */}
                                     {chapter.lessons.map((lesson, lIdx) => (
-                                        <div key={lesson.lesson_id} className="flex items-center gap-3 p-3 bg-white border rounded-md shadow-sm group">
-                                            <GripVertical className="text-slate-300 cursor-move" size={18} />
-                                            <div className="p-2 bg-blue-50 text-blue-600 rounded-md">
-                                                <Video size={18} />
-                                                <Input
-                                                    className="border-transparent shadow-none font-medium focus-visible:ring-0 px-0 h-auto py-1 flex-1 hover:underline focus:no-underline"
-                                                    value={lesson.title}
-                                                    onChange={(e) => updateCourseState(d => d.chapter[cIdx].lessons[lIdx].title = e.target.value)}
-                                                    placeholder="Tên bài học"
-                                                />
-                                                <Button variant="ghost" size="icon" className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteLesson(cIdx, lIdx)}>
-                                                    <Trash2 size={16} />
-                                                </Button>
-                                            </div>
-                                            <div className="space-y-2 pl-9">
-                                                    <Label htmlFor={`video-${lesson.lesson_id}`} className="text-xs text-muted-foreground">
-                                                        Video URL
-                                                    </Label>
-                                                    <Input 
-                                                        id={`video-${lesson.lesson_id}`}
-                                                        className="text-xs font-mono text-slate-500 bg-slate-50" 
-                                                        placeholder="Dán link video (Youtube, Vimeo, S3...)" 
-                                                        value={videoStaging[lesson.lesson_id] || ''}
-                                                        onChange={(e) => handleVideoUrlChange(lesson.lesson_id, e.target.value)}
+                                        <div key={lesson.lesson_id} className="flex items-start gap-3 p-3 bg-white border rounded-md shadow-sm group">
+                                            <GripVertical className="text-slate-300 cursor-move mt-3" size={18} />
+                                            <div className="flex-1 space-y-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="p-2 bg-blue-50 text-blue-600 rounded-md">
+                                                        <Video size={18} />
+                                                    </div>
+                                                    <Input
+                                                        className="border-transparent shadow-none font-medium focus-visible:ring-0 px-2 h-auto py-1 flex-1 hover:underline focus:no-underline"
+                                                        value={lesson.title}
+                                                        onChange={(e) => updateCourseState(d => d.chapter[cIdx].lessons[lIdx].title = e.target.value)}
+                                                        placeholder="Tên bài học"
                                                     />
+                                                    <Button variant="ghost" size="icon" className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteLesson(cIdx, lIdx)}>
+                                                        <Trash2 size={16} />
+                                                    </Button>
+                                                </div>
+                                                
+                                                <div className="flex items-center gap-2 pl-10">
+                                                    <VideoUploadDialog
+                                                        lessonId={lesson.lesson_id}
+                                                        currentVideoUrl={videoStaging[lesson.lesson_id]}
+                                                        onUploadSuccess={(videoUrl) => handleVideoUrlChange(lesson.lesson_id, videoUrl)}
+                                                    />
+                                                    {videoStaging[lesson.lesson_id] && (
+                                                        <span className="text-xs text-green-600 flex items-center gap-1">
+                                                            ✓ Đã có video
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
