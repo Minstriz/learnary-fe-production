@@ -27,19 +27,21 @@ export default function CreateCoursePage() {
     title: '', category_id: '', level_id: '', description: '',
     price: 0, requirement: '', first_chapter_name: ''
   });
-
-  
-
   useEffect(() => {
     const initData = async () => {
-      try {
+      try {        
         const [catRes, lvlRes] = await Promise.all([api.get('/categories'), api.get('/levels')]);
         const catData = Array.isArray(catRes.data.data) ? catRes.data.data : (Array.isArray(catRes.data) ? catRes.data : []);
         const lvlData = Array.isArray(lvlRes.data.data) ? lvlRes.data.data : (Array.isArray(lvlRes.data) ? lvlRes.data : []);
         setCategories(catData.map((c: ApiCategory) => ({ id: c.category_id, name: c.category_name })));
         setLevels(lvlData.map((l: ApiLevel) => ({ id: l.level_id, name: l.level_name })));
       } catch (err) { 
-        if (isAxiosError(err)) { setError(err.response?.data?.message || 'Không thể tải dữ liệu ban đầu'); } 
+        console.error("Error loading initial data:", err);
+        if (isAxiosError(err)) { 
+          console.error("Response status:", err.response?.status);
+          console.error("Response data:", err.response?.data);
+          setError(err.response?.data?.message || 'Không thể tải dữ liệu ban đầu'); 
+        } 
         else { setError('Lỗi không xác định'); }}
       finally { setIsInitializing(false); }
     };

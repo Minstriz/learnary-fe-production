@@ -124,7 +124,7 @@ export default function BecomeInstructorPage() {
           toast.error("Định dạng dữ liệu không đúng");
         }
       } catch (error) {
-        console.error("❌ Lỗi khi tải chuyên ngành:", error);
+        console.error("Lỗi khi tải chuyên ngành:", error);
         toast.error("Không thể tải danh sách chuyên ngành");
         setSpecializations([]);
       } finally {

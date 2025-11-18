@@ -7,7 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 import api from '@/app/lib/axios';
 import { isAxiosError } from 'axios';
 
-// --- UI Components ---
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,11 +22,10 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, ChevronLeft, Save, Send, PlusCircle, Trash2, GripVertical, Video, FileQuestion, Plus, X, Pencil } from 'lucide-react';
+import { useAuth } from '@/app/context/AuthContext';
 
-// --- 1. TYPES ---
 type Category = { category_id: string; category_name: string; };
 type Level = { level_id: string; level_name: string; };
-
 type Option = { option_id?: string; option_content: string; is_correct: boolean; };
 type Question = { question_id?: string; title: string; options: Option[]; };
 type Quiz = { quiz_id?: string; title: string; questions: Question[]; };
@@ -69,8 +67,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     const [levels, setLevels] = useState<Level[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-
-    // --- FETCH DATA ---
+    const {user} = useAuth();
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -107,7 +104,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
             }
         };
         fetchData();
-    }, [courseId]);
+    }, [courseId, user]);
 
     // --- HELPER UPDATE STATE ---
     const updateCourseState = (callback: (currentCourse: Course) => void) => {

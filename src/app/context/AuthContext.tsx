@@ -49,7 +49,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const response = await api.post('/auth/refresh');
         const { accessToken } = response.data;
         const decodedUser = jwtDecode<AuthUser>(accessToken);
-        setUser(decodedUser);
+        
+        // Trim whitespace từ backend
+        const cleanUser: AuthUser = {
+          id: decodedUser.id.trim(),
+          email: decodedUser.email.trim(),
+          role: decodedUser.role.trim(),
+          fullName: decodedUser.fullName.trim(),
+          avatar: decodedUser.avatar?.trim(),
+        };
+        
+        setUser(cleanUser);
         setToken(accessToken);
         sessionStorage.setItem('accessToken', accessToken); 
       } catch {
@@ -83,7 +93,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback((newAccessToken: string) => {
     try {
       const decodedUser = jwtDecode<AuthUser>(newAccessToken);
-      setUser(decodedUser);
+      const cleanUser: AuthUser = {
+        id: decodedUser.id.trim(),
+        email: decodedUser.email.trim(),
+        role: decodedUser.role.trim(),
+        fullName: decodedUser.fullName.trim(),
+        avatar: decodedUser.avatar?.trim(),
+      };
+      
+      setUser(cleanUser);
       setToken(newAccessToken);
       sessionStorage.setItem('accessToken', newAccessToken);
     } catch (error) {

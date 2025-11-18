@@ -16,8 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import api from '@/app/lib/axios';
 import { isAxiosError } from 'axios'; // [SỬA] Dùng isAxiosError
-
-// [SỬA] Lỗi chính tả Pubished -> Published
+import { useAuth } from '@/app/context/AuthContext';
 type Course = {
   course_id: string;
   title: string;
@@ -27,7 +26,6 @@ type Course = {
   updatedAt: string;
 };
 
-// [SỬA] Lỗi chính tả Pubished -> Published
 type FilterStatus = 'all' | 'Draft' | 'Pending' | 'Published';
 
 export default function MyCoursesPage() {
@@ -36,11 +34,13 @@ export default function MyCoursesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+   const { user } = useAuth();
 
   useEffect(() => {
     const fetchMyCourses = async () => {
       try {
         setIsLoading(true);
+
         const res = await api.get('/courses/instructor/my-courses');
         setAllCourses(res.data);
       } catch (err) {
