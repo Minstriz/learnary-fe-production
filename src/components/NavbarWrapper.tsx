@@ -15,9 +15,9 @@ export default function NavbarWrapper({ children, locale }: NavbarWrapperProps) 
   const shouldShowNavbar = !routesWithoutNavbar.includes(pathWithoutLocale);
 
   return (
-    <>
+    <div>
       {shouldShowNavbar && <Navbar />}
       {children}
-    </>
+    </div>
   );
 }

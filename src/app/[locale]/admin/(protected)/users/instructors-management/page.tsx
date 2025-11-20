@@ -22,7 +22,8 @@ import {
   UserX, 
   MoreHorizontal,
   Mail,
-  Phone 
+  Phone,
+  RefreshCcw 
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -30,10 +31,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
  enum VerifyStatus  {
-    Active = "Active",
-    Inactive = "Inactive",
-    Suspended = "Suspended"
+  Active = "Active",
+  Inactive = "Inactive",
+  Suspended = "Suspended"
 } 
 export const UserSchema = z.object({
   user_id: z.string(),
@@ -171,20 +173,30 @@ export default function InstructorManagement() {
           <Button
             variant={filterActive === null ? "default" : "outline"}
             onClick={() => setFilterActive(null)}
+            className='cursor-pointer hover:bg-gray-300'
           >
             Tất cả
           </Button>
           <Button
             variant={filterActive === true ? "default" : "outline"}
             onClick={() => setFilterActive(true)}
+            className='cursor-pointer hover:bg-gray-300'
           >
             Đang hoạt động
           </Button>
           <Button
             variant={filterActive === false ? "default" : "outline"}
             onClick={() => setFilterActive(false)}
+            className='cursor-pointer hover:bg-gray-300'
           >
             Đã khóa
+          </Button>
+          <Button
+            variant={"outline"}
+            onClick={()=> fetchInstructors()}
+            className='cursor-pointer hover:bg-gray-300'
+          >
+            <RefreshCcw></RefreshCcw> Reload
           </Button>
         </div>
       </div>

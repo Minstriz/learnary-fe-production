@@ -250,8 +250,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
             {/* --- HEADER STICKY --- */}
             <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b px-6 py-4 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-4">
-                    <Link href="/instructor/my-courses">
-                        <Button variant="ghost" size="icon"><ChevronLeft /></Button>
+                    <Link href="/instructor/my-courses" className=''>
+                        <Button variant="ghost" size="icon" className=' hover:bg-gray-300 cursor-pointer'><ChevronLeft /></Button>
                     </Link>
                     <div>
                         <h1 className="text-xl font-bold text-slate-900 truncate max-w-md">{course.title}</h1>
@@ -264,7 +264,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => handleAction('save')} disabled={isSaving || course.status !== 'Draft'}>
+                    <Button variant="outline" onClick={() => handleAction('save')} disabled={isSaving || course.status !== 'Draft'} className='cursor-pointer hover:bg-gray-200'>
                         <Save className="w-4 h-4 mr-2" /> Lưu nháp
                     </Button>
                     <Button onClick={() => handleAction('submit')} disabled={isSaving || course.status !== 'Draft'}>
@@ -273,10 +273,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 </div>
             </div>
 
-            {/* --- MAIN CONTENT --- */}
             <div className="container mx-auto max-w-7xl p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
-                {/* CỘT TRÁI: THÔNG TIN CHUNG */}
                 <div className="lg:col-span-4 space-y-6">
                     <Card>
                         <CardHeader>
@@ -325,9 +323,9 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
 
                 {/* CỘT PHẢI: NỘI DUNG KHÓA HỌC */}
                 <div className="lg:col-span-8 space-y-6">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between ">
                         <h2 className="text-2xl font-bold text-slate-800">Nội dung</h2>
-                        <Button size="sm" onClick={handleAddChapter}><PlusCircle className="w-4 h-4 mr-2" /> Thêm chương</Button>
+                        <Button size="lg" onClick={handleAddChapter} className='cursor-pointer'><PlusCircle className="w-4 h-4 mr-2 " /> Thêm chương</Button>
                     </div>
 
                     <Accordion type="multiple" className="w-full space-y-4" defaultValue={course.chapter.map(c => c.chapter_id)}>

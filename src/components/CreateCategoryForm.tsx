@@ -15,15 +15,16 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { slugify } from "@/utils/utils"
-import { apiFetch } from '@/lib/api'
+import api from "@/app/lib/axios";
 const categorySchema = z.object({
     category_name: z.string().min(3, "Tên danh mục phải có ít nhất 3 ký tự"),
     slug: z.string().min(0, "slug phải có ít nhất 5 ký tự")
 })
-
+type CreateCategoryFormProps = {
+  onSuccess?: () => void;
+};
 type CategoryFormData = z.infer<typeof categorySchema>
-export function CreateCategoryForm() {
-    const userLoggedInToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImE2ZTAwODQ0LWFlZmMtNGQ1OS05ZTdjLTZkNTlmYzllNWM1ZiIsImVtYWlsIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3NTk3MzI0ODEsImV4cCI6MTc1OTczNjA4MX0.UMRLZ2lX6ZoMvdrOioEHpPVG6z0x8i0odqnmlNEBPGE'
+export function CreateCategoryForm({onSuccess}: CreateCategoryFormProps) {
     const [isLoading, setIsLoading] = useState(false)
     const form = useForm<CategoryFormData>({
         resolver: zodResolver(categorySchema),
@@ -45,20 +46,17 @@ export function CreateCategoryForm() {
             const categoryData = {
                 ...values,
             }
-            const response = await apiFetch('/api/categories/create', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${userLoggedInToken}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(categoryData)
+            const response = await api.post("/categories/create", {
+                category_name:categoryData.category_name,
+                slug:categoryData.slug,
             })
-            if (!response.ok) {
+            if (!response) {
                 toast.error("Tạo danh mục thất bại, vui lòng kiểm tra lại")
-                throw new Error(`HTTP Error, status: ${response.status}`)
+                throw new Error(`HTTP Error, status: ${response}`)
             } else {
                 toast.success("Tạo danh mục thành công")
                 form.reset()
+                if(onSuccess) onSuccess();
             }
         } catch (error) {
             console.error('Error creating course', error)
@@ -71,11 +69,10 @@ export function CreateCategoryForm() {
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
                 <div className='flex space-x-7 w-full gap-7 flex-col '>
-                    {/* CATEGORY NAME */}
                     <FormField
-                        control={form.control} /* liên kết input của field này với use form phía trên */
+                        control={form.control} 
                         name="category_name"
-                        render={({ field }) => ( /* render ra UI */
+                        render={({ field }) => ( 
                             <FormItem className='flex flex-col gap-3'>
                                 <FormLabel className='pl-2'>Tên danh mục</FormLabel>
                                 <FormControl>
@@ -85,7 +82,7 @@ export function CreateCategoryForm() {
                             </FormItem>
                         )}
                     />
-                    {/* Slug */}
+
                     <FormField
                         control={form.control}
                         name="slug"

@@ -35,6 +35,10 @@ export const NavbarLinks = () => {
     {
       name: t("detail"),
       href: "/course-learn"
+    },
+    {
+      name: t("admin"),
+      href: "/admin-side"
     }
   ];
 };
