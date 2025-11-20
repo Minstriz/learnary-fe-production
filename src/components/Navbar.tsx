@@ -26,7 +26,7 @@ export const NavbarLinks = () => {
     },
     {
       name: t("explore"),
-      href: "/about",
+      href: "/explore-courses",
     },
     {
       name: t("instructor"),
