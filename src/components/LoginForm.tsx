@@ -10,6 +10,7 @@ import { toast } from "react-hot-toast"
 import { useAuth } from "@/app/context/AuthContext"
 import api from "@/app/lib/axios"
 import { isAxiosError } from "axios"
+import { jwtDecode } from "jwt-decode"
 // import Link from "next/link"
 
 export default function LoginForm() {
@@ -33,8 +34,10 @@ export default function LoginForm() {
 
         try {
             const response = await api.post(`/auth/login`, { email, password });
-            const user = login(response.data.accessToken); 
-            if (user?.role === "ADMIN" && pathname.includes("/admin/login")) {
+            login(response.data.accessToken);
+            const decoded = jwtDecode<{ role: string }>(response.data.accessToken);
+            
+            if (decoded?.role === "ADMIN" && pathname.includes("/admin/login")) {
                 toast.success("Đăng nhập thành công!");
                 window.location.href = '/admin/dashboard';
                 // router.push(`/${locale}/admin/dashboard`);

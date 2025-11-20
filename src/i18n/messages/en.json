@@ -5,7 +5,8 @@
     "instructor": "Become an Instructor",
     "detail":"Learning Space",
     "login": "Login",
-    "logout":"Logout"
+    "logout":"Logout",
+    "admin":"Admin"
   },
   "Topic": {
     "category_health": "Health",

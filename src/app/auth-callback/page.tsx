@@ -1,10 +1,10 @@
 "use client"; 
 
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext'; 
 
-export default function AuthCallbackPage() {
+function AuthCallback() {
   const router = useRouter();
   const searchParams = useSearchParams(); 
   const { login } = useAuth(); 
@@ -23,5 +23,17 @@ export default function AuthCallbackPage() {
     <div className="min-h-screen flex items-center justify-center">
       <p className="text-lg font-medium">Đang xử lý đăng nhập...</p>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-lg font-medium">Đang tải...</p>
+      </div>
+    }>
+      <AuthCallback />
+    </Suspense>
   );
 }

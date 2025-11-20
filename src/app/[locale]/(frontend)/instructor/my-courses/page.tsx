@@ -16,7 +16,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import api from '@/app/lib/axios';
 import { isAxiosError } from 'axios'; // [SỬA] Dùng isAxiosError
-import { useAuth } from '@/app/context/AuthContext';
 type Course = {
   course_id: string;
   title: string;
@@ -34,7 +33,6 @@ export default function MyCoursesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-   const { user } = useAuth();
 
   useEffect(() => {
     const fetchMyCourses = async () => {

@@ -16,6 +16,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+
 interface LessonProps {
   lesson_id: string,
   chapter_id: string,
@@ -31,17 +32,12 @@ interface LessonProps {
   updated_at: string,
 }
 
-interface CourseDetailPageProps {
-  current_lesson?: LessonProps,
-  all_lessons?: LessonProps[]
-}
-
-const CourseDetailPage = ({ current_lesson, all_lessons }: CourseDetailPageProps = {}) => {
+const CourseDetailPage = () => {
   const isMobile = useIsMobile();
   const playerRef = useRef<Plyr | null>(null);
   const [pageIsLoading, setPageIsLoading] = useState<boolean>(true);
-  const lessons = all_lessons || (ListLesson as LessonProps[]);
-  const currentLesson = current_lesson || lessons[0];
+  const lessons = ListLesson as LessonProps[];
+  const currentLesson = lessons[0];
 
   const setupPlayer = async () => {
     if (!playerRef.current) {

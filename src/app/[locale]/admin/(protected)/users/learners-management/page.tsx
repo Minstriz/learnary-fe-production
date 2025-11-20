@@ -59,52 +59,47 @@ const _UserSchema = z.object({
 
 type User = z.infer<typeof _UserSchema>;
 
-type Instructor = User & {
+type Learner = User & {
   totalCourses?: number;
-  totalStudents?: number;
-  rating?: number;
-  instructor_id?: string;
-  isVerified?: boolean;
+  learner_id?: string;
   status: VerifyStatus;
 };
 
-export default function InstructorManagement() {
-  const [instructors, setInstructors] = useState<Instructor[]>([]);
+export default function LearnerManagement() {
+  const [learners, setLearners] = useState<Learner[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterActive, setFilterActive] = useState<boolean | null>(null);
 
   useEffect(() => {
-    fetchInstructors();
+    fetchLearners();
   }, []);
 
-  const fetchInstructors = async () => {
+  const fetchLearners = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get("/instructors");
+      const response = await api.get("/learners");
       const rawData = response.data.data || [];
       
-      // Map data instructor
-      const mappedData: Instructor[] = rawData.map((item: {
-        instructor_id: string;
+      // Map data learner
+      const mappedData: Learner[] = rawData.map((item: {
+        learner_id: string;
         user_id: string;
-        isVerified: boolean;
         status: string;
         user: {
           email: string;
           fullName: string;
           avatar: string | null;
         };
-      }) => ({
+            }) => ({
         user_id: item.user_id.trim(),
-        instructor_id: item.instructor_id.trim(),
+        learner_id: item.learner_id.trim(),
         email: item.user.email.trim(),
         fullName: item.user.fullName,
         avatar: item.user.avatar,
-        role: "INSTRUCTOR" as const,
+        role: "LEARNER" as const,
         isActive: item.status === "Active",
-        isVerified: item.isVerified,
-        status: item.status as VerifyStatus, // cast string sang enum
+        status: item.status as VerifyStatus,
         gender: "OTHER" as const,
         phone: null,
         dateOfBirth: null,
@@ -115,9 +110,9 @@ export default function InstructorManagement() {
         bio: null,
         last_login: null,
       }));
-      setInstructors(mappedData);
+      setLearners(mappedData);
     } catch (error) {
-      console.error("Lỗi khi tải danh sách instructors:", error);
+      console.error("Lỗi khi tải danh sách learners:", error);
     } finally {
       setIsLoading(false);
     }
@@ -126,9 +121,9 @@ export default function InstructorManagement() {
   const handleToggleActive = async (userId: string, currentStatus: boolean) => {
     try {
       await api.patch(`/users/${userId}`, { isActive: !currentStatus });
-      setInstructors(prev =>
-        prev.map(inst =>
-          inst.user_id === userId ? { ...inst, isActive: !currentStatus } : inst
+      setLearners(prev =>
+        prev.map(learner =>
+          learner.user_id === userId ? { ...learner, isActive: !currentStatus } : learner
         )
       );
     } catch (error) {
@@ -136,11 +131,11 @@ export default function InstructorManagement() {
     }
   };
 
-  const filteredInstructors = instructors.filter((instructor) => {
+  const filteredLearners = learners.filter((learner) => {
     const matchSearch =
-      instructor.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      instructor.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchActive = filterActive === null || instructor.isActive === filterActive;
+      learner.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      learner.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchActive = filterActive === null || learner.isActive === filterActive;
     return matchSearch && matchActive;
   });
 
@@ -156,8 +151,8 @@ export default function InstructorManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Quản lý Giảng viên</h1>
-          <p className="text-gray-500 mt-1">Tổng số: {instructors.length} giảng viên</p>
+          <h1 className="text-3xl font-bold">Quản lý Học viên</h1>
+          <p className="text-gray-500 mt-1">Tổng số: {learners.length} học viên</p>
         </div>
       </div>
 
@@ -195,7 +190,7 @@ export default function InstructorManagement() {
           </Button>
           <Button
             variant={"outline"}
-            onClick={()=> fetchInstructors()}
+            onClick={()=> fetchLearners()}
             className='cursor-pointer hover:bg-gray-300'
           >
             <RefreshCcw></RefreshCcw> Reload
@@ -207,28 +202,27 @@ export default function InstructorManagement() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Giảng viên</TableHead>
+              <TableHead>Học viên</TableHead>
               <TableHead>Liên hệ</TableHead>
               <TableHead>Thống kê</TableHead>
               <TableHead>Trạng thái</TableHead>
-              <TableHead>Kiểm duyệt</TableHead>
               <TableHead className="text-right">Hành động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredInstructors.map((instructor) => (
-              <TableRow key={instructor.user_id}>
+            {filteredLearners.map((learner) => (
+              <TableRow key={learner.user_id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar>
-                      <AvatarImage src={instructor.avatar || undefined} />
+                      <AvatarImage src={learner.avatar || undefined} />
                       <AvatarFallback>
-                        {instructor.fullName.charAt(0).toUpperCase()}
+                        {learner.fullName.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium">{instructor.fullName}</p>
-                      <p className="text-sm text-gray-500">{instructor.bio || "Chưa có mô tả"}</p>
+                      <p className="font-medium">{learner.fullName}</p>
+                      <p className="text-sm text-gray-500">{learner.bio || "Chưa có mô tả"}</p>
                     </div>
                   </div>
                 </TableCell>
@@ -237,12 +231,12 @@ export default function InstructorManagement() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm">
                       <Mail className="h-3 w-3 text-gray-400" />
-                      {instructor.email}
+                      {learner.email}
                     </div>
-                    {instructor.phone && (
+                    {learner.phone && (
                       <div className="flex items-center gap-2 text-sm">
                         <Phone className="h-3 w-3 text-gray-400" />
-                        {instructor.phone}
+                        {learner.phone}
                       </div>
                     )}
                   </div>
@@ -250,23 +244,15 @@ export default function InstructorManagement() {
 
                 <TableCell>
                   <div className="text-sm space-y-1">
-                    <p>Khóa học: {instructor.totalCourses || 0}</p>
-                    <p>Học viên: {instructor.totalStudents || 0}</p>
-                    {instructor.rating && <p>⭐ {instructor.rating.toFixed(1)}</p>}
+                    <p>Khóa học: {learner.totalCourses || 0}</p>
                   </div>
                 </TableCell>
 
                 <TableCell>
-                  <Badge className={instructor.isVerified ? 'bg-green-700 text-white' : 'bg-red-500 text-white'}>
-                    {instructor.isVerified ? "Đã phê duyệt" : "Chưa phê duyệt"}
-                  </Badge>
-                </TableCell>
-
-                <TableCell>
-                  <Badge className={instructor.status == "Active" ? "bg-green-700 text-white" : instructor.status == "Inactive" ? "bg-blue-700 text-white" : "bg-red-700 text-white"} variant={instructor.status ? "default" : "destructive"}>
-                    {instructor.status == VerifyStatus.Active ? "Đang hoạt động" 
-                    : instructor.status == VerifyStatus.Inactive ? "Đang không hoạt động" 
-                    : instructor.status == VerifyStatus.Suspended ? "Đã bị khoá" : "Không truy xuất được thông tin"}
+                  <Badge className={learner.status == "Active" ? "bg-green-700 text-white" : learner.status == "Inactive" ? "bg-blue-700 text-white" : "bg-red-700 text-white"} variant={learner.status ? "default" : "destructive"}>
+                    {learner.status == VerifyStatus.Active ? "Đang hoạt động" 
+                    : learner.status == VerifyStatus.Inactive ? "Đang không hoạt động" 
+                    : learner.status == VerifyStatus.Suspended ? "Đã bị khoá" : "Không truy xuất được thông tin"}
                   </Badge>
                 </TableCell>
 
@@ -282,10 +268,10 @@ export default function InstructorManagement() {
                       <DropdownMenuItem>Xem khóa học</DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() =>
-                          handleToggleActive(instructor.user_id, instructor.isActive)
+                          handleToggleActive(learner.user_id, learner.isActive)
                         }
                       >
-                        {instructor.isActive ? (
+                        {learner.isActive ? (
                           <div>
                             <UserX className="mr-2 h-4 w-4" />
                             Khóa tài khoản

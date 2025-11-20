@@ -3,7 +3,6 @@ import React from 'react'
 import Image from 'next/image'
 import { BackgroundBeamsWithCollision } from '@/components/ui/background-hero'
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { Button } from './ui/button';
 export default function Hero() {
     const isMobile = useIsMobile();
     return (

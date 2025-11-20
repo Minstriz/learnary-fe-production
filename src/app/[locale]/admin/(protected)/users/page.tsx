@@ -1,449 +1,561 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import api from "@/app/lib/axios";
-import { isAxiosError } from "axios";
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-  VisibilityState,
-} from "@tanstack/react-table"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Plus, RefreshCw, User } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { toast } from "sonner"
-import { CreateCategoryForm } from "@/components/CreateCategoryForm";
-import { ToasterConfirm } from "@/components/ToasterConfimer";
+
+import React, { useEffect, useState } from 'react';
 import { z } from "zod";
+import api from "@/app/lib/axios";
+import {
+   Table,
+   TableBody,
+   TableCell,
+   TableHead,
+   TableHeader,
+   TableRow,
+} from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import {
+   Select,
+   SelectContent,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+} from "@/components/ui/select";
+import {
+   Search,
+   MoreHorizontal,
+   Mail,
+   Phone,
+   RefreshCcw,
+   CircleFadingArrowUpIcon,
+} from "lucide-react";
+import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+   Dialog,
+   DialogContent,
+   DialogHeader,
+   DialogTitle,
+} from "@/components/ui/dialog"
+import { toast } from "sonner"
 
-export const UserSchema = z.object({
-  user_id: z.string(),
-  email: z.string().email(),
-  fullName: z.string(),
-  gender: z.enum(["MALE", "FEMALE", "OTHER"]),
-  role: z.enum(["ADMIN", "INSTRUCTOR", "LEARNER"]),
-  phone: z.union([z.string(), z.number()]).nullable(),
-  avatar: z.string().url().nullable(),
-  dateOfBirth: z.string().nullable(),
-  address: z.string().nullable(),
-  city: z.string().nullable(),
-  country: z.string().nullable(),
-  nation: z.string().nullable(),
-  bio: z.string().nullable(),
-  last_login: z.string().nullable(),
-  isActive: z.boolean(),
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _UserSchema = z.object({
+   user_id: z.string(),
+   email: z.string().email(),
+   fullName: z.string(),
+   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
+   role: z.enum(["ADMIN", "INSTRUCTOR", "LEARNER"]),
+   phone: z.union([z.string(), z.number()]).nullable(),
+   avatar: z.string().url().nullable(),
+   dateOfBirth: z.string().nullable(),
+   address: z.string().nullable(),
+   city: z.string().nullable(),
+   country: z.string().nullable(),
+   nation: z.string().nullable(),
+   bio: z.string().nullable(),
+   last_login: z.string().nullable(),
+   isActive: z.boolean(),
 });
-type User = z.infer<typeof UserSchema>
 
-function UserPages() {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = useState({})
-  const [user, setUser] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [open, setOpen] = useState(false)
+type User = z.infer<typeof _UserSchema>;
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true)
-      setError(null)
+export default function UserManagement() {
+   const [users, setUser] = useState<User[]>([]);
+   const [isLoading, setIsLoading] = useState(true);
+   const [searchTerm, setSearchTerm] = useState("");
+   const [filterActive, setFilterActive] = useState<boolean | null>(null);
+   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+   const [isSaving, setIsSaving] = useState<boolean>(false);
+   const [selectedUser, setSelecteduser] = useState<User | null>(null);
+   const [editMode, setEditMode] = useState(false);
+   const [editData, setEditData] = useState<Partial<User>>({});
+   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+   useEffect(() => {
+      fetchUsers();
+   }, []);
 
-      const res = await api.get("/api/users");
-      const apiData = res.data
+   const openDialog = (user: User) => {
+      setSelecteduser(user);
+      setEditData(user);
+      setEditMode(false); 
+      setIsDialogOpen(true);
+      setAvatarFile(null);
+      setAvatarPreview(null);
+   }
+   const closeDialog = () => {
+      setSelecteduser(null);
+      setEditData({});
+      setEditMode(false);
+      setIsDialogOpen(false);
+      setAvatarFile(null);
+      setAvatarPreview(null);
+   }
 
-      let parsedUsers: User[] = [];
+   const fetchUsers = async () => {
+      try {
+         setIsLoading(true);
+         const response = await api.get("/users");
+         const rawData = response.data || [];
+         // Map data
+         const mappedData: User[] = rawData.map((item: {
+            user_id: string,
+            email: string,
+            fullName: string,
+            gender: string,
+            role: string,
+            phone: null,
+            avatar: string,
+            dateOfBirth: null,
+            address: null,
+            city: null,
+            country: null,
+            nation: null,
+            bio: null,
+            isActive: boolean,
+            last_login: null,
+         }) => ({
+            user_id: item.user_id.trim(),
+            email: item.email.trim(),
+            fullName: item.fullName,
+            avatar: item.avatar,
+            role: item.role,
+            gender: item.gender,
+            phone: null,
+            dateOfBirth: null,
+            address: null,
+            city: null,
+            country: null,
+            nation: null,
+            bio: null,
+            last_login: null,
+            isActive: item.isActive,
+         }));
+         setUser(mappedData);
+      } catch (error) {
+         console.error("Lỗi khi tải danh sách người dùng:", error);
+      } finally {
+         setIsLoading(false);
+      }
+   };
+   const reload = async (): Promise<void> => {
+      fetchUsers();
+   }
+   const handleChange = (field: keyof User, value: string | boolean | null | undefined) => {
+      setEditData((prev) => ({
+         ...prev,
+         [field]: value,
+      }))
+   }
 
-      if (apiData.success && Array.isArray(apiData.data)) {
-        parsedUsers = UserSchema.array().parse(apiData.data)
-        toast.info(`Đã tải lên ${apiData.data.length} người dùng`)
-      } else if (Array.isArray(apiData)) {
-        parsedUsers = UserSchema.array().parse(apiData)
-        toast.success(`Đã tải lên ${apiData.length} người dùng`)
-      }
-      else {
-        throw new Error("Data from API is not formated")
-      }
-      setUser(parsedUsers);
+   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-    } catch (error) {
-      console.error("Lỗi khi tải danh sách người dùng", error)
+      if (!file.type.startsWith('image/')) {
+         toast.error('Vui lòng chọn file ảnh hợp lệ!');
+         return;
+      }
 
-      if (isAxiosError(error)) {
-        const errorMsg = error.response?.data?.message || "Lỗi khi tra cứu danh sách người dùng";
-        setError(errorMsg);
-        toast.error(errorMsg);
-      } else if (error instanceof z.ZodError) {
-        const zodError = "Dữ liệu người dùng nhận về không hợp lệ";
-        setError(zodError);
-        toast.error(zodError);
-        console.error("Zod validation error:", error.issues);
-      } else {
-        const genericError = "Lỗi không xác định, vui lòng thử lại";
-        setError(genericError);
-        toast.error(genericError);
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-  const handleDeleteUser = async (user_id: string) => {
-    ToasterConfirm({
-      title: "Xoá người dùng",
-      description: "Hành động này không thể hoàn tác. Bạn chắc chắn muốn xoá người dùng này?",
-      confirmText: "Xoá người dùng này",
-      cancelText: "Huỷ",
-      onConfirm: async () => {
-        try {
-          const res = await api.delete(`/api/users/delete/${user_id}`)
-          const apiData = res.data
-          if (!apiData.success) throw new Error(apiData.message)
-          setUser((prev) => prev.filter((c) => c.user_id !== user_id))
-          toast.success("Đã xoá người dùng thành công")
-        } catch (err) {
-          console.log(err)
-          if (isAxiosError(err)) {
-            toast.error(err.response?.data?.message || "Không thể xoá người dùng");
-          } else {
-            toast.error("Không thể xoá người dùng, vui lòng thử lại");
-          }
-        }
-      },
-    })
-  }
-  const columns: ColumnDef<User>[] = [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox checked={
-          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label='Select all'
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label='Select row'
-        ></Checkbox>
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: "fullName",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Tên người dùng
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
-      cell: ({ row }) => {
-        const user = row.original
-        return (
-          <div>
-            <div className="flex items-center justify-between w-full">
-              <div className="space-y-1">
-                <div className="font-medium">{user.fullName}</div>
-              </div>
-            </div>
-          </div>
-        )
-      }
-    },
-    {
-      accessorKey: "role",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Vai trò
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-         )
-      },
-      cell: ({ row }) => {
-        const user = row.original
-        return (
-          <div className="flex items-center justify-between w-full">
-            <div className="space-y-1">
-              <div className="font-medium">{user.role}</div>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Hành động</DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={() => navigator.clipboard.writeText(user.user_id)}
-                >
-                  Copy ID
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Xem chi tiết</DropdownMenuItem>
-              	<DropdownMenuItem>Chỉnh sửa</DropdownMenuItem>
-                <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteUser(user.user_id)}>
-                  Xóa người dùng
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )
-      }
-    }
-  ]
-  const table = useReactTable({
-    data: user,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
-  })
-  const LoadingSkeleton = () => (
-    <div className="space-y-4">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center space-x-4">
-          <Skeleton className="h-4 w-4" />
-          <Skeleton className="h-4 w-[250px]" />
-          <Skeleton className="h-4 w-[150px]" />
-          <Skeleton className="h-4 w-[100px]" />
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-4 w-[120px]" />
-          <Skeleton className="h-4 w-[60px]" />
-        </div>
-      ))}
-    </div>
-  )
-  useEffect(() => {
-    fetchUsers()
-  }, [])
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+         toast.error('Kích thước ảnh không được vượt quá 5MB!');
+         return;
+      }
 
-  return (
-    <div className='space-y-6'>
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col">
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2 justify-start w-full pb-2">
-                <Button
-                  variant="outline"
-                  className="cursor-pointer"
-                  onClick={fetchUsers}
-                  disabled={loading}
-              	>
-                  <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                  Làm mới
-                </Button>
+      setAvatarFile(file);
+      const url = URL.createObjectURL(file);
+      setAvatarPreview(url);
+   }
 
-                <Dialog open={open} onOpenChange={setOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="cursor-pointer">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Thêm người dùng
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle className="flex justify-center pb-5">Tạo người dùng mới</DialogTitle>
-                    </DialogHeader>
-                    <CreateCategoryForm></CreateCategoryForm>
-                  </DialogContent>
-                </Dialog>
-              </div>
-        	</div>
-          </div>
-          <CardDescription className="pl-2">
-            {loading ? "Đang tải..." : `Tổng cộng ${user.length} người dùng trong hệ thống`}
-            {error && (
-              <span className="text-red-500 ml-2">({error})</span>
-            )}
-          </CardDescription>
-        </CardHeader>
+   const submitChange = async () => {
+      if (!selectedUser) return;
+      try {
+         setIsSaving(true);
+         if (avatarFile) {
+            const formData = new FormData();
+            formData.append('avatar', avatarFile);
+            const avatarResponse = await api.post(`/users/upload-avatar/${selectedUser.user_id}`, formData, {
+               headers: {
+                  'Content-Type': 'multipart/form-data',
+               },
+            });
+            const newAvatarUrl = avatarResponse.data.data?.avatar || avatarResponse.data.avatar;
+            if (newAvatarUrl) {
+               editData.avatar = newAvatarUrl;
+            }
+         }
+         if (editData.role && editData.role !== selectedUser.role) {
+            await api.patch(`/users/update-role/${selectedUser.user_id}`, {
+               role: editData.role
+            });
+         }
+         // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         const { role: _role, avatar: string, ...otherData } = editData;
+         if (Object.keys(otherData).length > 0) {
+            await api.patch(`/users/update-info/${selectedUser.user_id}`, otherData);
+         }
 
-      	<CardContent>
-          <div className="flex items-center py-4">
-            <div className="flex w-full justify-start gap-5">
-              <CardTitle>Danh sách người dùng</CardTitle>
-              <Input
-                placeholder="Tìm kiếm người dùng ..."
-                value={(table.getColumn("fullName")?.getFilterValue() as string) ?? ""}
-                onChange={(event) =>
-            	    table.getColumn("fullName")?.setFilterValue(event.target.value)
-                }
-                className="max-w-sm"
-              />
-            </div>
-          	<DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto cursor-pointer">
-                  Cột hiển thị <ChevronDown className="ml-2 h-4 w-4" />
-  	            </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {table
-                	.getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize"
-                      	checked={column.getIsVisible()}
-                        onCheckedChange={(value) =>
-                          column.toggleVisibility(!!value)
-                        }
-                      >
-                      	{column.id}
-                      </DropdownMenuCheckboxItem>
-                    )
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div className="rounded-md border">
-          {loading ? (
-              <div className="p-4">
-              	<LoadingSkeleton />
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => {
-                       return (
-                          <TableHead key={header.id}>
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-  	                        )}
-                          </TableHead>
-                      )
-                      })}
-                    </TableRow>
-                  ))}
-              	</TableHeader>
-              	<TableBody>
-                  {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-            	        <TableRow
-                        key={row.id}
-                        data-state={row.getIsSelected() && "selected"}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
-                            {flexRender(
-              	              cell.column.columnDef.cell,
-                            	cell.getContext()
-                            )}
-            	            </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-              	  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={columns.length}
-                      	className="h-24 text-center"
-                      >
-                        {error ? "Không thể tải dữ liệu" : "Không có người dùng nào"}
-                     </TableCell>
-                	</TableRow>
-              	  )}
-              	</TableBody>
-              </Table>
-            )}
-          </div>
-          {!loading && (
-  	        <div className="flex items-center justify-end space-x-2 py-4">
-              <div className="flex-1 text-sm text-muted-foreground">
-            	  {table.getFilteredSelectedRowModel().rows.length} trong{" "}
-                {table.getFilteredRowModel().rows.length} hàng được chọn.
-              </div>
-              <div className="space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                	onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-              	>
-                  Trước
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                	onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-              	>
-                  Sau
-            	  </Button>
-              </div>
-            </div>
-          )}
-      	</CardContent>
-  	</Card>
-  </div>
-  )
+         setUser((prev) =>
+            prev.map((u) =>
+               u.user_id === selectedUser.user_id ? { ...u, ...editData } : u
+            )
+         );
+         setSelecteduser((prev) => (prev ? { ...prev, ...editData } : null));
+
+         toast.success("Lưu thông tin tài khoản thành công");
+
+         setEditMode(false);
+         setIsDialogOpen(false);
+         setAvatarFile(null);
+         setAvatarPreview(null);
+
+         fetchUsers();
+
+         setIsSaving(false)
+
+      } catch (error) {
+         console.error("Lỗi khi lưu thông tin người dùng", error);
+         toast.error("Lưu thông tin tài khoản thất bại");
+         setIsSaving(false)
+      }
+   }
+   const filteredUsers = users.filter((user) => {
+      const matchSearch =
+         user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchActive = filterActive === null || filterActive === user.isActive === true;
+      return matchSearch && matchActive;
+   });
+
+   if (isLoading) {
+      return (
+         <div className="flex items-center justify-center min-h-screen">
+            <Spinner />
+         </div>
+      );
+   }
+
+   return (
+      <div className="space-y-6 p-4 max-w-screen">
+         <div className="flex flex-col justify-start items-start md:items-start gap-4">
+            <div className='flex flex-col gap-2'>
+               <h1 className="text-3xl font-bold">Quản lý người dùng</h1>
+               <p className="text-gray-500 mt-1">Tổng số: {users.length} người dùng</p>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+               <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                     placeholder="Tìm kiếm theo tên hoặc email..."
+                     value={searchTerm}
+                     onChange={(e) => setSearchTerm(e.target.value)}
+                     className="pl-10"
+                  />
+               </div>
+
+               <div className="flex gap-2 flex-wrap">
+                  <Button
+                     variant={filterActive === null ? "default" : "outline"}
+                     onClick={() => setFilterActive(null)}
+                     className="cursor-pointer hover:bg-gray-300"
+                  >
+                     Tất cả
+                  </Button>
+                  <Button
+                     variant={filterActive === true ? "default" : "outline"}
+                     onClick={() => setFilterActive(true)}
+                     className="cursor-pointer hover:bg-gray-300"
+                  >
+                     Tài khoản đang mở
+                  </Button>
+                  <Button
+                     variant={filterActive === false ? "default" : "outline"}
+                     onClick={() => setFilterActive(false)}
+                     className="cursor-pointer hover:bg-gray-300"
+                  >
+                     Tài khoản bị khoá
+                  </Button>
+                  <Button
+                     variant={"outline"}
+                     onClick={reload}
+                     className="cursor-pointer hover:bg-gray-300"
+                  >
+                     <RefreshCcw /> Reload
+                  </Button>
+               </div>
+            </div>
+         </div>
+
+         <div className="border rounded-lg overflow-x-auto">
+            <Table>
+               <TableHeader>
+                  <TableRow>
+                     <TableHead>Người dùng</TableHead>
+                     <TableHead>Email</TableHead>
+                     <TableHead>Trạng thái</TableHead>
+                     <TableHead className="text-right">Hành động</TableHead>
+                  </TableRow>
+               </TableHeader>
+               <TableBody>
+                  {filteredUsers.map((user) => (
+                     <TableRow key={user.user_id}>
+                        <TableCell>
+                           <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10 shrink-0">
+                                 <AvatarImage src={user.avatar || undefined} className="object-cover" />
+                                 <AvatarFallback>
+                                    {user.fullName.charAt(0).toUpperCase()}
+                                 </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                 <p className="font-medium">{user.fullName}</p>
+                                 <p className="text-sm text-gray-500">{user.bio || "Chưa có mô tả"}</p>
+                              </div>
+                           </div>
+                        </TableCell>
+
+                        <TableCell>
+                           <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm">
+                                 <Mail className="h-3 w-3 text-gray-400" />
+                                 {user.email}
+                              </div>
+                              {user.phone && (
+                                 <div className="flex items-center gap-2 text-sm">
+                                    <Phone className="h-3 w-3 text-gray-400" />
+                                    {user.phone}
+                                 </div>
+                              )}
+                           </div>
+                        </TableCell>
+
+                        <TableCell>
+                           <div className="space-y-1">
+                              {user.isActive ? (
+                                 <Badge variant={"default"} className="bg-green-600">
+                                    Đang mở
+                                 </Badge>
+                              ) : (
+                                 <Badge variant={"destructive"} className="bg-red-600">
+                                    Tài khoản bị khoá
+                                 </Badge>
+                              )}
+                           </div>
+                        </TableCell>
+
+                        <TableCell className="text-right">
+                           <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                 <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                 </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                 <DropdownMenuItem onClick={() => openDialog(user)}>
+                                    Xem chi tiết
+                                 </DropdownMenuItem>
+                                 <DropdownMenuItem>Xem khóa học</DropdownMenuItem>
+                              </DropdownMenuContent>
+                           </DropdownMenu>
+                        </TableCell>
+                     </TableRow>
+                  ))}
+               </TableBody>
+            </Table>
+         </div>
+
+         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="max-w-lg w-full">
+               <DialogHeader>
+                  <DialogTitle>Thông tin tài khoản</DialogTitle>
+               </DialogHeader>
+               <div>
+                  {selectedUser ? (
+                     <div className="space-y-4">
+                        <div className="flex items-center gap-4">
+                           <div className="relative">
+                              <Avatar className="w-16 h-16 shrink-0">
+                                 <AvatarImage src={avatarPreview || selectedUser.avatar || undefined} className="object-cover" />
+                                 <AvatarFallback>
+                                    {selectedUser.fullName.charAt(0).toUpperCase()}
+                                 </AvatarFallback>
+                              </Avatar>
+                              {editMode && (
+                                 <Label htmlFor="avatar-upload" className="absolute -bottom-1 -right-1 cursor-pointer">
+                                    <CircleFadingArrowUpIcon/>
+                                    <input
+                                       id="avatar-upload"
+                                       type="file"
+                                       accept="image/*"
+                                       className="hidden"
+                                       onChange={handleAvatarChange}
+                                    />
+                                 </Label>
+                              )}
+                           </div>
+                           <div className="flex-1">
+                              {!editMode ? (
+                                 <div className="text-lg font-semibold">{selectedUser.fullName}</div>
+                              ) : (
+                                 <div className="space-y-1">
+                                    <Label htmlFor="fullName">Họ và tên</Label>
+                                    <Input
+                                       id="fullName"
+                                       type="text"
+                                       value={editData.fullName || ""}
+                                       onChange={(e) => handleChange("fullName", e.target.value)}
+                                    />
+                                 </div>
+                              )}
+                           </div>
+                        </div>
+
+                        <div>
+                           <label className="block text-sm font-medium mb-1">Email</label>
+                           {!editMode ? (
+                              <div className="text-gray-700">{selectedUser.email}</div>
+                           ) : (
+                              <Input
+                                 type="email"
+                                 value={editData.email || ""}
+                                 disabled
+                                 onChange={(e) => handleChange("email", e.target.value)}
+                              />
+                           )}
+                        </div>
+
+                        <div>
+                           <Label htmlFor="role" className="block text-sm font-medium mb-1">Vai trò</Label>
+                           {!editMode ? (
+                              <Badge
+                                 variant={"default"}
+                                 className="cursor-default select-none"
+                              >
+                                 {selectedUser.role}
+                              </Badge>
+                           ) : (
+                              <Select
+                                 value={editData.role || selectedUser.role}
+                                 onValueChange={(value) => handleChange("role", value)}
+                              >
+                                 <SelectTrigger id="role">
+                                    <SelectValue placeholder="Chọn vai trò" />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                    <SelectItem value="ADMIN">ADMIN</SelectItem>
+                                    <SelectItem value="INSTRUCTOR">INSTRUCTOR</SelectItem>
+                                    <SelectItem value="LEARNER">LEARNER</SelectItem>
+                                 </SelectContent>
+                              </Select>
+                           )}
+                        </div>
+
+                        <div>
+                           <label className="block text-sm font-medium mb-1">Số điện thoại</label>
+                           {!editMode ? (
+                              <div>{selectedUser.phone || "Chưa có"}</div>
+                           ) : (
+                              <Input
+                                 type="tel"
+                                 value={editData.phone || ""}
+                                 onChange={(e) => handleChange("phone", e.target.value)}
+                              />
+                           )}
+                        </div>
+
+                        <div>
+                           <label className="block text-sm font-medium mb-1">Mô tả</label>
+                           {!editMode ? (
+                              <div>{selectedUser.bio || "Chưa có mô tả"}</div>
+                           ) : (
+                              <textarea
+                                 rows={3}
+                                 className="w-full rounded-md border border-gray-300 p-2"
+                                 value={editData.bio || ""}
+                                 onChange={(e) => handleChange("bio", e.target.value)}
+                              />
+                           )}
+                        </div>
+
+                        <div>
+                           <label className="block text-sm font-medium mb-1">Trạng thái</label>
+                           {!editMode ? (
+                              selectedUser.isActive ? (
+                                 <Badge variant={"default"} className="bg-green-600">
+                                    Đang mở
+                                 </Badge>
+                              ) : (
+                                 <Badge variant={"destructive"} className="bg-red-600">
+                                    Tài khoản bị khoá
+                                 </Badge>
+                              )
+                           ) : (
+                              <select
+                                 className="w-full rounded-md border border-gray-300 p-2"
+                                 value={editData.isActive ? "true" : "false"}
+                                 onChange={(e) =>
+                                    handleChange("isActive", e.target.value === "true")
+                                 }
+                              >
+                                 <option value="true">Đang mở</option>
+                                 <option value="false">Tài khoản bị khoá</option>
+                              </select>
+                           )}
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-4">
+                           {!editMode ? (
+                              <div className='flex gap-2'>
+                                 <Button variant="outline" onClick={() => setEditMode(true)}>
+                                    Sửa
+                                 </Button>
+                                 <Button variant="ghost" onClick={closeDialog}>
+                                    Đóng
+                                 </Button>
+                              </div>
+                           ) : (
+                              <div className='flex gap-2'>
+                                 {!isSaving ? (
+                                    <Button variant="default" onClick={submitChange} className='cursor-pointer'>
+                                       Lưu
+                                    </Button>
+                                 ) : (
+                                    <Button size="sm" variant={'outline'} disabled>
+                                       <Spinner></Spinner> Submitting
+                                    </Button>
+                                 )}
+                                 <Button
+                                    variant="outline"
+                                    className='cursor-pointer'
+                                    onClick={() => {
+                                       setEditData(selectedUser);
+                                       setEditMode(false);
+                                    }}
+                                 >
+                                    Huỷ
+                                 </Button>
+                              </div>
+                           )}
+                        </div>
+                     </div>
+                  ) : (
+                     <div>
+                        <p className="text-xl text-red-600">Lỗi khi lấy thông tin người dùng</p>
+                     </div>
+                  )}
+               </div>
+            </DialogContent>
+         </Dialog>
+      </div>
+   );
 }
-
-export default UserPages

@@ -26,7 +26,7 @@ const courseSchema = z.object({
     slug: z.string().min(3, "Slug không hợp lệ").toLowerCase(),
     description: z.string().min(10, "Mô tả tối thiểu 10 ký tự"),
     thumbnail: z.string().url("Phải là URL hợp lệ"),
-    price: z.coerce.number().min(0, "Giá phải >= 0"),
+    price: z.number().min(0, "Giá phải >= 0"),
     category_id: z.string().uuid("Category không hợp lệ"),
     level_id: z.string().uuid("Level không hợp lệ"),
     instructor_id: z.string().uuid("Instructor không hợp lệ"),

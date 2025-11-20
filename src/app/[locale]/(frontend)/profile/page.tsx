@@ -37,14 +37,14 @@ type UserProps = {
   role?: string,
   last_login?: Date
 }
-type InstructorProps =  UserProps & {
+/* type InstructorProps =  UserProps & {
   instructor_id: string,
   is_verified: boolean,
   wallet_id?: string, //tam thoi null
   status: "Active" | "Inactive" | "Suspended"
-} 
+}  */
 type UpdateUserData = Omit<UserProps, "user_id" | "role" | "isActive" | "last_login" | "email">
-type UpdateInstructorData = Omit<InstructorProps,"instructor_id" | "wallet_id" | "is_verified" | "status" | "email">
+/* type UpdateInstructorData = Omit<InstructorProps,"instructor_id" | "wallet_id" | "is_verified" | "status" | "email"> */
 
 export default function ProfilePage() {
   const isMobile = useIsMobile();

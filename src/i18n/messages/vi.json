@@ -5,7 +5,8 @@
     "instructor": "Trở thành giảng viên",
     "detail":"Khu vực học tập",
     "login" : "Đăng nhập",
-    "logout":"Đăng xuất"
+    "logout":"Đăng xuất",
+    "admin":"Admin Side"
   },
   "Topic": {
     "category_health": "Sức khoẻ",

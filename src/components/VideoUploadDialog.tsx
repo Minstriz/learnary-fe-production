@@ -111,7 +111,7 @@ export function VideoUploadDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {triggerButton || (
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="cursor-pointer hover:bg-gray-300">
             <Upload className="w-4 h-4 mr-2" />
             {currentVideoUrl ? "Thay đổi video" : "Upload video"}
           </Button>
@@ -200,7 +200,7 @@ export function VideoUploadDialog({
           )}
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)}  disabled={isUploading}>
+            <Button variant="outline" className=" hover:bg-gray-300 cursor-pointer" onClick={() => setOpen(false)}  disabled={isUploading}>
               Hủy
             </Button>
             <Button onClick={handleUpload} disabled={!selectedFile || isUploading}>
@@ -210,7 +210,7 @@ export function VideoUploadDialog({
                   Đang upload...
                 </div>
               ) : (
-                <div>
+                <div className="flex cursor-pointer">
                   <Upload className="w-4 h-4 mr-2" />
                   Upload
                 </div>

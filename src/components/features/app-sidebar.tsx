@@ -69,7 +69,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: Users,
       isActive: pathname.startsWith(`${adminBasePath}/users`),
       items: [
-        { title: "Tất cả user", url: `${adminBasePath}/users` },
+        { title: "Quản lý người dùng", url: `${adminBasePath}/users` },
         { title: "Quản lý giảng viên", url: `${adminBasePath}/users/instructors-management` },
         { title: "Quản lý học viên", url: `${adminBasePath}/users/learners-management` }
       ],
