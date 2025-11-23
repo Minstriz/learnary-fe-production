@@ -92,7 +92,6 @@ export default function LearnerManagement() {
           courseCount: item._count.learner_courses,
           joinedDate: item.enrolledAt
         }));
-
         setLearners(mappedData);
       }
     } catch (error) {

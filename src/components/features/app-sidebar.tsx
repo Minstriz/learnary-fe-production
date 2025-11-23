@@ -64,6 +64,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       ],
     },
     {
+      title: "Levels",
+      url: `${adminBasePath}/levels`,
+      icon: SquareStack,
+      isActive: pathname.startsWith(`${adminBasePath}/levels`),
+      items: [
+        { title: "Tất cả cấp độ", url: `${adminBasePath}/levels` },
+      ],
+    },
+    {
       title: "Users",
       url: `${adminBasePath}/users`,
       icon: Users,
