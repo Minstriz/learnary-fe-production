@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from "@/app/context/AuthContext";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 // import { Toaster } from "@/components/ui/sonner";
@@ -18,6 +19,7 @@ type CommonType = { id: string; name: string };
 
 export default function CreateCoursePage() {
   const router = useRouter();
+  const { user, isLoggedIn, isLoading: isAuthLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +30,13 @@ export default function CreateCoursePage() {
     price: 0, requirement: '', first_chapter_name: ''
   });
   useEffect(() => {
+    if (isAuthLoading) return;
+
+    if (!isLoggedIn || user?.role !== "INSTRUCTOR") {
+      alert('Bạn không có quyền truy cập trang này.');
+      router.push(`/`); 
+      return;
+    }
     const initData = async () => {
       try {        
         const [catRes, lvlRes] = await Promise.all([api.get('/categories'), api.get('/levels')]);
@@ -46,7 +55,7 @@ export default function CreateCoursePage() {
       finally { setIsInitializing(false); }
     };
     initData();
-  }, []);
+  }, [isAuthLoading, isLoggedIn, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +83,13 @@ export default function CreateCoursePage() {
   };
 
   if (isInitializing) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" size={40} /></div>;
-
+  if (isAuthLoading || isInitializing) {
+    return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="animate-spin text-primary" size={40} />
+        </div>
+    );
+  }
   return (
     <div className="max-w-2xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Bắt đầu tạo khóa học mới</h1>

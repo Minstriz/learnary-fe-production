@@ -68,8 +68,15 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     const [levels, setLevels] = useState<Level[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-    const {user} = useAuth();
+    const { user, isLoggedIn, isLoading: isAuthLoading } = useAuth();
     useEffect(() => {
+        if (isAuthLoading) return;
+
+        if (!isLoggedIn || user?.role !== "INSTRUCTOR") {
+        alert('Bạn không có quyền truy cập trang này.');
+        router.push(`/`); 
+        return;
+        }
         const fetchData = async () => {
             try {
                 const [cRes, catRes, lvlRes] = await Promise.all([
@@ -81,13 +88,11 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 const newVideoStaging: VideoStaging = {};
 
                 if (courseData.chapter) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    courseData.chapter.forEach((chap: any) => {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        chap.lessons?.forEach((lesson: any) => {
+                    courseData.chapter.forEach((chap: Chapter) => {
+                        chap.lessons?.forEach((lesson: Lesson & { video_url?: string }) => {
                             if (lesson.video_url) {
                                 newVideoStaging[lesson.lesson_id] = lesson.video_url;
-                                delete lesson.video_url; // Xóa khỏi dữ liệu chính
+                                   Reflect.deleteProperty(lesson, 'video_url'); // Xóa khỏi dữ liệu chính
                             }
                         });
                     });
@@ -105,7 +110,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
             }
         };
         fetchData();
-    }, [courseId, user]);
+    }, [courseId, user,isAuthLoading, isLoggedIn, router]);
 
     // --- HELPER UPDATE STATE ---
     const updateCourseState = (callback: (currentCourse: Course) => void) => {
@@ -213,12 +218,9 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 }
 
                 // Gộp 'course' và 'videoStaging'
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const finalPayload = JSON.parse(JSON.stringify(course)) as any;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                finalPayload.chapter.forEach((chap: any) => {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    chap.lessons.forEach((lesson: any) => {
+                const finalPayload = JSON.parse(JSON.stringify(course)) as Course;
+                finalPayload.chapter.forEach((chap: Chapter) => {
+                    chap.lessons.forEach((lesson: Lesson & { video_url?: string }) => {
                         if (videoStaging[lesson.lesson_id]) {
                             lesson.video_url = videoStaging[lesson.lesson_id];
                         }
@@ -244,7 +246,13 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
 
     if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
     if (!course) return <div className="p-10 text-center text-red-500">Không tìm thấy dữ liệu khóa học.</div>;
-
+    if (isAuthLoading) {
+    return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="animate-spin text-primary" size={40} />
+        </div>
+    );
+  }
     return (
         <div className="min-h-screen bg-slate-50/50 pb-32">
             {/* --- HEADER STICKY --- */}

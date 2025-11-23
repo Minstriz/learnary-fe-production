@@ -295,11 +295,11 @@ function UserPages() {
 
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
-                    <Button className="cursor-pointer">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Thêm người dùng
-                    </Button>
-                  </DialogTrigger>
+                     <Button className="cursor-pointer">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Thêm người dùng
+                     </Button>
+                  </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle className="flex justify-center pb-5">Tạo người dùng mới</DialogTitle>

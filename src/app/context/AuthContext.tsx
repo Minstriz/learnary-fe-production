@@ -23,7 +23,7 @@ interface AuthContextType {
   token: string | null;
   isLoggedIn: boolean;
   isLoading: boolean; 
-  login: (accessToken: string) => void;
+  login: (accessToken: string) => AuthUser | null;
   logout: () => void;
 }
 
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = useCallback((newAccessToken: string) => {
+  const login = useCallback((newAccessToken: string) => { 
     try {
       const decodedUser = jwtDecode<AuthUser>(newAccessToken);
       const cleanUser: AuthUser = {
@@ -104,9 +104,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(cleanUser);
       setToken(newAccessToken);
       sessionStorage.setItem('accessToken', newAccessToken);
+      return cleanUser;
     } catch (error) {
       console.error("Lỗi giải mã token:", error);
       logout();
+      return null;
     }
   }, [logout]);
   

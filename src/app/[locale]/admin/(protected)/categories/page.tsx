@@ -8,7 +8,7 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
+  getPaginationRowModel,  
   getSortedRowModel,
   SortingState,
   useReactTable,

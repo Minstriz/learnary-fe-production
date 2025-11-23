@@ -8,11 +8,6 @@ export default createMiddleware(routing);
 
 export const config = {
   matcher: [
-    // Bỏ qua tất cả các đường dẫn không cần i18n
-    // 1. API routes
-    // 2. Các file của Next.js
-    // 3. Đường dẫn auth-callback
-    // 4. Bất kỳ file nào có dấu chấm (ví dụ: favicon.ico, image.png)
     '/((?!api|_next|_vercel|auth-callback|.*\\..*).*)'
   ]
 };

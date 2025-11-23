@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useAuth } from "@/app/context/AuthContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import api from "@/app/lib/axios";
+import type { AxiosError } from 'axios';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -370,10 +371,10 @@ export default function BecomeInstructorPage() {
         });
         setSelectedFiles([]);
       }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Lỗi khi đăng ký:", error);
-      const err = error as { response?: { data?: { message?: string } } };
-      const errorMessage = err.response?.data?.message || "Đăng ký thất bại! Vui lòng thử lại.";
+      const axiosErr = error as AxiosError<{ message?: string }>;
+      const errorMessage = axiosErr?.response?.data?.message || "Đăng ký thất bại! Vui lòng thử lại.";
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
