@@ -16,6 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import api from '@/app/lib/axios';
 import { isAxiosError } from 'axios'; // [SỬA] Dùng isAxiosError
+import { useAuth } from '@/app/context/AuthContext';
+import { Loader2 } from 'lucide-react';
 type Course = {
   course_id: string;
   title: string;
@@ -33,8 +35,16 @@ export default function MyCoursesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { user, isLoggedIn, isLoading: isAuthLoading } = useAuth();
 
   useEffect(() => {
+    if (isAuthLoading) return;
+
+    if (!isLoggedIn || user?.role !== "INSTRUCTOR") {
+      alert('Bạn không có quyền truy cập trang này.');
+      router.push(`/`); 
+      return;
+    }
     const fetchMyCourses = async () => {
       try {
         setIsLoading(true);
@@ -53,7 +63,7 @@ export default function MyCoursesPage() {
       }
     };
     fetchMyCourses();
-  }, []);
+  }, [isAuthLoading, isLoggedIn, user, router]);
 
   const filteredCourses = useMemo(() => {
     if (filter === 'all') return allCourses;
@@ -86,7 +96,13 @@ export default function MyCoursesPage() {
         </CardFooter>
       </Card>
     ));
-
+  if (isAuthLoading) {
+    return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="animate-spin text-primary" size={40} />
+        </div>
+    );
+  }
   return (
     <div className="container mx-auto p-6 space-y-6">
       <h1 className="text-2xl font-bold">Khóa học của tôi</h1>

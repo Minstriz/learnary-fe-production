@@ -14,15 +14,10 @@ import { jwtDecode } from "jwt-decode"
 // import Link from "next/link"
 
 export default function LoginForm() {
-    // const router = useRouter();
     const pathname = usePathname();
-    // const params = useParams();
-    // const searchParams = useSearchParams();
     const { login, logout } = useAuth(); 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    // const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;    
-    // const locale = params.locale || 'vi';
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -40,15 +35,11 @@ export default function LoginForm() {
             if (decoded?.role === "ADMIN" && pathname.includes("/admin/login")) {
                 toast.success("Đăng nhập thành công!");
                 window.location.href = '/admin/dashboard';
-                // router.push(`/${locale}/admin/dashboard`);
             } else {
                 const errMsg = "Bạn không có quyền quản trị.";
                 setError(errMsg);
                 toast.error(errMsg);
                 logout();
-                // Nếu là user, hoặc admin đăng nhập ở trang user
-                // const callbackUrl = searchParams.get('callbackUrl') || `/${locale}`;
-                // router.push(callbackUrl);
             }
         } catch(err) {
             if (isAxiosError(err)) {

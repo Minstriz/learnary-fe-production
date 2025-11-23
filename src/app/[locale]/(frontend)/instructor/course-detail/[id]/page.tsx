@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect} from 'react';
-import { useParams } from 'next/navigation';
+import { useParams,useRouter } from 'next/navigation';
 import Image from 'next/image';
 import api from '@/app/lib/axios';
 import { AxiosError } from 'axios';
-
+import { useAuth } from "@/app/context/AuthContext";
 // Import các component UI
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { BarChart2, Users, PlayCircle, Lock, FileQuestion, Eye, PauseCircle } from 'lucide-react';
+import { BarChart2, Users, PlayCircle, Lock, FileQuestion, Eye, PauseCircle, Loader2  } from 'lucide-react';
 
 import Video from '@/components/Video';
 
@@ -56,8 +56,9 @@ type Course = {
 
 export default function CourseDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
-
+  const {user, isLoggedIn, isLoading: isAuthLoading } = useAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +67,13 @@ export default function CourseDetailPage() {
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isAuthLoading) return;
+
+    if (!isLoggedIn || user?.role !== "INSTRUCTOR") {
+      alert('Bạn không có quyền truy cập trang này.');
+      router.push(`/`); 
+      return;
+    }
     if (!id) return;
     const fetchCourse = async () => {
       try {
@@ -83,7 +91,7 @@ export default function CourseDetailPage() {
       }
     };
     fetchCourse();
-  }, [id]);
+  }, [id, isAuthLoading, isLoggedIn, user, router]);
 
   useEffect(() => {
     if (course && course.chapter) {
@@ -108,7 +116,13 @@ export default function CourseDetailPage() {
   if (isLoading) return <CourseDetailSkeleton />;
   if (error) return <div className="container mx-auto p-6 text-red-500">Lỗi: {error}</div>;
   if (!course) return <div className="container mx-auto p-6">Không tìm thấy khóa học.</div>;
-
+  if (isAuthLoading) {
+    return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="animate-spin text-primary" size={40} />
+        </div>
+    );
+  }
   return (
     <div className="container mx-auto max-w-6xl p-4 md:p-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

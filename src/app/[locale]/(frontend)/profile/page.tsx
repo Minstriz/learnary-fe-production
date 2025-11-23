@@ -4,6 +4,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/app/context/AuthContext";
 import { useEffect, useState, useRef } from "react";
 import api from "@/app/lib/axios";
+import type { AxiosError } from 'axios';
 import Image from "next/image";
 import {
   Breadcrumb,
@@ -37,14 +38,14 @@ type UserProps = {
   role?: string,
   last_login?: Date
 }
-/* type InstructorProps =  UserProps & {
-  instructor_id: string,
-  is_verified: boolean,
-  wallet_id?: string, //tam thoi null
-  status: "Active" | "Inactive" | "Suspended"
-}  */
+// type InstructorProps =  UserProps & {
+//   instructor_id: string,
+//   is_verified: boolean,
+//   wallet_id?: string, //tam thoi null
+//   status: "Active" | "Inactive" | "Suspended"
+// } 
 type UpdateUserData = Omit<UserProps, "user_id" | "role" | "isActive" | "last_login" | "email">
-/* type UpdateInstructorData = Omit<InstructorProps,"instructor_id" | "wallet_id" | "is_verified" | "status" | "email"> */
+// type UpdateInstructorData = Omit<InstructorProps,"instructor_id" | "wallet_id" | "is_verified" | "status" | "email">
 
 export default function ProfilePage() {
   const isMobile = useIsMobile();
@@ -183,11 +184,11 @@ export default function ProfilePage() {
       setIsEditing(false);
       toast.success("Cập nhật hồ sơ thành công")
       return res.data
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: unknown; status?: number }; message?: string };
-      toast.error("Cập nhật hồ sơ thất bại");
-      return err
-    }
+    } catch (error) {
+        const axiosErr = error as AxiosError<{ message?: string }>;
+        toast.error("Cập nhật hồ sơ thất bại");
+        return axiosErr;
+      }
   }
 
   const handleSubmitEdit = async () => {

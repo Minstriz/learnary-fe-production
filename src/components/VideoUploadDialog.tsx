@@ -13,6 +13,7 @@ import {
 import { Upload, X, Video, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import api from "@/app/lib/axios";
+import type { AxiosError } from 'axios';
 import { toast } from "sonner";
 
 interface VideoUploadDialogProps {
@@ -89,10 +90,10 @@ export function VideoUploadDialog({
         setPreviewUrl(null);
         setUploadProgress(0);
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error) {
       console.error("Upload error:", error);
-      toast.error(error.response?.data?.message || "Upload video thất bại!");
+      const axiosErr = error as AxiosError<{ message?: string }>;
+      toast.error(axiosErr?.response?.data?.message || "Upload video thất bại!");
     } finally {
       setIsUploading(false);
     }

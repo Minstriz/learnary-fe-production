@@ -21,10 +21,7 @@ export default function CoreProviders({ children, locale, messages }: Props) {
           <SidebarProvider>
             <HotToaster />
             <SonnerToaster richColors position="top-right" />
-            
-            {/* KHÔNG CÓ NAVBARWRAPPER Ở ĐÂY */}
             {children}
-            
           </SidebarProvider>
         </NextIntlClientProvider>
       </AuthProvider>
