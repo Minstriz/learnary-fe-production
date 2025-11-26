@@ -39,7 +39,8 @@ export const NavbarLinks = () => {
     {
       name: t("admin"),
       href: "/admin-side"
-    }
+    },
+    
   ];
 };
 

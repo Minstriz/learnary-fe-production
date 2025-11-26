@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
       {
         protocol:'https',
         hostname:'learnary-courses.s3.ap-southeast-2.amazonaws.com'
+      },
+      {
+        protocol:'https',
+        hostname:'placebear.com'
       }
     ],
   },

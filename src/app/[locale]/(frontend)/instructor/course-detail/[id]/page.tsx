@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect} from 'react';
-import { useParams,useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import api from '@/app/lib/axios';
 import { AxiosError } from 'axios';
@@ -13,9 +13,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { BarChart2, Users, PlayCircle, Lock, FileQuestion, Eye, PauseCircle, Loader2  } from 'lucide-react';
+import { BarChart2, Users, PlayCircle, Lock, FileQuestion, Eye, PauseCircle, Loader2 } from 'lucide-react';
 
 import Video from '@/components/Video';
+import { toast } from 'sonner';
 
 type Lesson = {
   lesson_id: string;
@@ -58,39 +59,37 @@ export default function CourseDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const {user, isLoggedIn, isLoading: isAuthLoading } = useAuth();
+  const { user, isLoggedIn, isLoading: isAuthLoading } = useAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
-
+  const fetchCourse = async (id:string) => {
+    try {
+      setIsLoading(true);
+      const response = await api.get(`/courses/${id}`);
+      setCourse(response.data);
+    } catch (err) {
+      let errorMessage = 'Không thể tải khóa học';
+      if (err instanceof AxiosError) {
+        errorMessage = err.response?.data?.message || err.message;
+      }
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   useEffect(() => {
     if (isAuthLoading) return;
-
-    if (!isLoggedIn || user?.role !== "INSTRUCTOR") {
-      alert('Bạn không có quyền truy cập trang này.');
-      router.push(`/`); 
+    if (!isLoggedIn || user?.role !== "INSTRUCTOR" && user?.role !== "ADMIN") {
+      toast('Bạn không có quyền truy cập trang này.');
+      router.push(`/`);
       return;
     }
     if (!id) return;
-    const fetchCourse = async () => {
-      try {
-        setIsLoading(true);
-        const response = await api.get(`/courses/${id}`);
-        setCourse(response.data);
-      } catch (err) {
-        let errorMessage = 'Không thể tải khóa học';
-        if (err instanceof AxiosError) {
-          errorMessage = err.response?.data?.message || err.message;
-        }
-        setError(errorMessage);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchCourse();
+    fetchCourse(id);
   }, [id, isAuthLoading, isLoggedIn, user, router]);
 
   useEffect(() => {
@@ -118,9 +117,9 @@ export default function CourseDetailPage() {
   if (!course) return <div className="container mx-auto p-6">Không tìm thấy khóa học.</div>;
   if (isAuthLoading) {
     return (
-        <div className="flex h-screen items-center justify-center">
-            <Loader2 className="animate-spin text-primary" size={40} />
-        </div>
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={40} />
+      </div>
     );
   }
   return (
@@ -145,7 +144,7 @@ export default function CourseDetailPage() {
               <Video key={currentVideoUrl} video_url={currentVideoUrl} />
             ) : (
               <div className="relative w-full h-full flex items-center justify-center">
-                 <Image
+                <Image
                   src={course.thumbnail || '/placeholder-image.jpg'}
                   alt={course.title}
                   fill
@@ -153,8 +152,8 @@ export default function CourseDetailPage() {
                   priority
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 p-4 text-center">
-                    <Lock className="h-12 w-12 text-white/50 mb-2" />
-                    <p className="text-white font-medium">Bài học này không có video xem trước.</p>
+                  <Lock className="h-12 w-12 text-white/50 mb-2" />
+                  <p className="text-white font-medium">Bài học này không có video xem trước.</p>
                 </div>
               </div>
             )}
@@ -165,7 +164,7 @@ export default function CourseDetailPage() {
             <h2 className="text-2xl font-semibold">Nội dung khóa học</h2>
             <Accordion type="multiple" className="w-full" defaultValue={course.chapter?.[0]?.chapter_id ? [course.chapter[0].chapter_id] : undefined}>
               {course.chapter.map((chapter) => {
-                const chapterQuiz = chapter.quiz; 
+                const chapterQuiz = chapter.quiz;
                 return (
                   <AccordionItem value={chapter.chapter_id} key={chapter.chapter_id}>
                     <AccordionTrigger className="text-base font-medium px-4 hover:no-underline hover:bg-muted/50 rounded-md">
@@ -174,7 +173,7 @@ export default function CourseDetailPage() {
                         {(chapter.lessons?.length || 0) + (chapterQuiz ? 1 : 0)} mục
                       </span>
                     </AccordionTrigger>
-                    
+
                     <AccordionContent className="pt-2 pb-4 px-4">
                       <ul className="space-y-1">
                         {/* DANH SÁCH BÀI HỌC */}
@@ -182,29 +181,30 @@ export default function CourseDetailPage() {
                           const isSelected = lesson.lesson_id === selectedLessonId;
                           const canPlay = !!lesson.video_url;
                           return (
-                          <li 
-                              key={lesson.lesson_id} 
+                            <li
+                              key={lesson.lesson_id}
                               onClick={() => handleLessonClick(lesson)}
                               className={`flex items-center gap-3 p-3 rounded-md transition-colors border ${canPlay ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed'} ${isSelected ? 'bg-primary/10 border-primary/30' : 'border-transparent hover:bg-muted/80'}`}
-                          >
-                            {isSelected && canPlay ? (
-                              <PauseCircle className="h-5 w-5 text-primary animate-pulse shrink-0" />
-                            ) : canPlay ? (
-                              <PlayCircle className="h-5 w-5 text-muted-foreground shrink-0" />
-                            ) : (
-                              <Lock className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-                            )}
-                            <span className={`flex-1 text-sm font-medium line-clamp-2 ${isSelected ? 'text-primary' : ''}`}>
-                              {lesson.title}
-                            </span>
-                            <span className="text-xs text-muted-foreground shrink-0">{lesson.duration || '00:00'}</span>
-                            {canPlay && (
-                              <Badge variant={isSelected ? "default" : "secondary"} className="text-[10px] px-2 py-0.5 shrink-0">
-                                {isSelected ? 'Đang xem' : 'Xem thử'}
-                              </Badge>
-                            )}
-                          </li>
-                        )})}
+                            >
+                              {isSelected && canPlay ? (
+                                <PauseCircle className="h-5 w-5 text-primary animate-pulse shrink-0" />
+                              ) : canPlay ? (
+                                <PlayCircle className="h-5 w-5 text-muted-foreground shrink-0" />
+                              ) : (
+                                <Lock className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                              )}
+                              <span className={`flex-1 text-sm font-medium line-clamp-2 ${isSelected ? 'text-primary' : ''}`}>
+                                {lesson.title}
+                              </span>
+                              <span className="text-xs text-muted-foreground shrink-0">{lesson.duration || '00:00'}</span>
+                              {canPlay && (
+                                <Badge variant={isSelected ? "default" : "secondary"} className="text-[10px] px-2 py-0.5 shrink-0">
+                                  {isSelected ? 'Đang xem' : 'Xem thử'}
+                                </Badge>
+                              )}
+                            </li>
+                          )
+                        })}
 
                         {/* QUIZ SECTION (CÓ DIALOG) */}
                         {chapterQuiz && (
@@ -214,12 +214,12 @@ export default function CourseDetailPage() {
                                 <div className="flex items-center gap-3 p-3 rounded-md bg-orange-50/50 border border-orange-100/50 cursor-pointer hover:bg-orange-100/50 transition-colors">
                                   <FileQuestion className="h-5 w-5 text-orange-500 shrink-0" />
                                   <div className="flex-1 flex flex-col">
-                                      <span className="text-sm font-medium text-orange-900">
-                                          Bài kiểm tra: {chapterQuiz.title}
-                                      </span>
-                                      <span className="text-xs text-orange-700/70">
-                                          {chapterQuiz.questions?.length || 0} câu hỏi
-                                      </span>
+                                    <span className="text-sm font-medium text-orange-900">
+                                      Bài kiểm tra: {chapterQuiz.title}
+                                    </span>
+                                    <span className="text-xs text-orange-700/70">
+                                      {chapterQuiz.questions?.length || 0} câu hỏi
+                                    </span>
                                   </div>
                                   <Eye className="h-4 w-4 text-orange-400" />
                                 </div>
@@ -237,9 +237,9 @@ export default function CourseDetailPage() {
                                       </h4>
                                       <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         {question.options?.map((option, oIndex) => (
-                                          <li 
-                                             key={option.option_id} 
-                                             className={`flex items-start gap-3 p-3 rounded-md border bg-white ${option.is_correct ? 'border-green-300 bg-green-50/50' : 'border-slate-200'}`}
+                                          <li
+                                            key={option.option_id}
+                                            className={`flex items-start gap-3 p-3 rounded-md border bg-white ${option.is_correct ? 'border-green-300 bg-green-50/50' : 'border-slate-200'}`}
                                           >
                                             <span className={`flex items-center justify-center w-6 h-6 rounded-full border text-xs font-bold shrink-0 ${option.is_correct ? 'bg-green-100 border-green-300 text-green-700' : 'bg-slate-100 border-slate-300 text-slate-600'}`}>
                                               {String.fromCharCode(65 + oIndex)}
@@ -266,7 +266,7 @@ export default function CourseDetailPage() {
 
         {/* SIDEBAR (BÊN PHẢI) */}
         <div className="lg:col-span-1 space-y-6">
-           <Card className="top-24 shadow-md border-t-4 border-t-primary">
+          <Card className="top-24 shadow-md border-t-4 border-t-primary">
             <CardHeader className="pb-2">
               <h3 className="text-3xl font-bold text-center text-primary">
                 {course.price > 0 ? `${Number(course.price).toLocaleString('vi-VN')} đ` : 'Miễn phí'}
@@ -287,25 +287,25 @@ export default function CourseDetailPage() {
             </CardContent>
           </Card>
           <Card className="shadow-sm">
-             <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                <div className="relative h-16 w-16 min-w-16">
-                  {/* <Image
+            <CardHeader className="flex flex-row items-center gap-4 pb-2">
+              <div className="relative h-16 w-16 min-w-16">
+                {/* <Image
                     src={course.instructor?.user?.avatar || '/default-avatar.png'}
                     alt={course.instructor?.user?.fullName || 'Giảng viên'}
                     fill
                     className="rounded-full object-cover border-2 border-primary/10"
                   /> */}
-                </div>
-                <div className="overflow-hidden">
-                  <CardTitle className="text-lg truncate">{course.instructor?.user?.fullName || 'Thông tin giảng viên'}</CardTitle>
-                  <Badge variant="secondary" className="mt-1">Giảng viên</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground line-clamp-4 italic">
-                  {course.instructor?.user?.bio || 'Giảng viên chưa cập nhật thông tin giới thiệu.'}
-                </p>
-              </CardContent>
+              </div>
+              <div className="overflow-hidden">
+                <CardTitle className="text-lg truncate">{course.instructor?.user?.fullName || 'Thông tin giảng viên'}</CardTitle>
+                <Badge variant="secondary" className="mt-1">Giảng viên</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground line-clamp-4 italic">
+                {course.instructor?.user?.bio || 'Giảng viên chưa cập nhật thông tin giới thiệu.'}
+              </p>
+            </CardContent>
           </Card>
         </div>
       </div>
@@ -324,9 +324,9 @@ function CourseDetailSkeleton() {
           <Skeleton className="h-6 w-2/3 rounded-md" />
           <Skeleton className="relative w-full aspect-video rounded-xl" />
           <div className="space-y-2 pt-4">
-             <Skeleton className="h-8 w-1/3 rounded-md" />
-             <Skeleton className="h-12 w-full rounded-md" />
-             <Skeleton className="h-12 w-full rounded-md" />
+            <Skeleton className="h-8 w-1/3 rounded-md" />
+            <Skeleton className="h-12 w-full rounded-md" />
+            <Skeleton className="h-12 w-full rounded-md" />
           </div>
         </div>
         <div className="lg:col-span-1 space-y-6">

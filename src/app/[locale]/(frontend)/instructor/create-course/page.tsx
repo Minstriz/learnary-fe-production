@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import api from '@/app/lib/axios';
 import { isAxiosError } from 'axios';
 import { Loader2 } from 'lucide-react';
+import { slugify } from '@/utils/utils';
 
 type ApiCategory = { category_id: string; category_name: string };
 type ApiLevel = { level_id: string; level_name: string };
@@ -26,13 +27,13 @@ export default function CreateCoursePage() {
   const [categories, setCategories] = useState<CommonType[]>([]);
   const [levels, setLevels] = useState<CommonType[]>([]);
   const [formData, setFormData] = useState({
-    title: '', category_id: '', level_id: '', description: '',
+    title: '', slug: '', category_id: '', level_id: '', description: '',
     price: 0, requirement: '', first_chapter_name: ''
   });
   useEffect(() => {
     if (isAuthLoading) return;
 
-    if (!isLoggedIn || user?.role !== "INSTRUCTOR") {
+    if (!isLoggedIn || user?.role !== "INSTRUCTOR" && user?.role !=="ADMIN") {
       alert('Bạn không có quyền truy cập trang này.');
       router.push(`/`); 
       return;
@@ -56,6 +57,10 @@ export default function CreateCoursePage() {
     };
     initData();
   }, [isAuthLoading, isLoggedIn, user, router]);
+
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, slug: slugify(prev.title) }));
+  }, [formData.title]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +102,10 @@ export default function CreateCoursePage() {
         <div className="space-y-2">
             <Label>Tên khóa học <span className="text-red-500">*</span></Label>
             <Input value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
+        </div>
+        <div className="space-y-2">
+            <Label>Slug (tự động tạo)</Label>
+            <Input value={formData.slug} disabled className="bg-gray-50 text-gray-600" placeholder="Slug sẽ được tạo tự động" />
         </div>
         <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2"><Label>Danh mục <span className="text-red-500">*</span></Label>

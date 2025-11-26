@@ -16,6 +16,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+/* import { SpinnerLoading } from '@/components/LoadingSpinner'; */
 
 interface LessonProps {
   lesson_id: string,
@@ -104,7 +105,6 @@ const CourseDetailPage = () => {
                 </TabsContent>
               </Tabs>
             </div>
-
           </div>
           <div className='ChapterBox flex justify-center items-center w-full'>
             <ChapterBox chapters={MockChapterData} emptyState={'Chưa có bài học nào'}></ChapterBox>
@@ -161,8 +161,10 @@ const CourseDetailPage = () => {
             </div>
           </div>
         </div>
-
       ) : (
+        /*     <div>
+              <SpinnerLoading title='Đang tải trang web' rightContent='Bạn chờ tí nhé'/>
+            </div> */
         <div className='w-full h-full flex items-center justify-center'>
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
         </div>

@@ -2,35 +2,18 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, PlayCircle, FileCheck } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useIsMobile';
-interface Lesson {
-  lesson_id: string;
-  chapter_id: string;
-  lesson_title: string;
-  video_url?: string;
-  duration: string | number;
-  is_completed: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface Chapter {
-  chapter_id: string;
-  course_id: string;
-  chapter_title: string;
-  created_at?: string;
-  updated_at?: string;
-  lessons: Lesson[];
-}
+import { Chapter, Lesson } from '@/type/course.type';
 
 interface CourseCurriculumProps {
   chapters: Chapter[];
-  total_lectures: number;
-  total_duration: string;
+  total_lectures?: number;
+  total_duration?: string;
 }
 
 export default function CourseCurriculum({ chapters, total_lectures, total_duration }: CourseCurriculumProps) {
   const [expandedChapters, setExpandedChapters] = useState<string[]>([chapters[0]?.chapter_id]);
   const isMobile = useIsMobile();
+
   const toggleChapter = (chapterId: string) => {
     if (expandedChapters.includes(chapterId)) {
       setExpandedChapters(expandedChapters.filter((id) => id !== chapterId));
@@ -39,8 +22,8 @@ export default function CourseCurriculum({ chapters, total_lectures, total_durat
     }
   };
 
-  const formatDuration = (duration: string | number) => {
-    const minutes = typeof duration === 'string' ? parseInt(duration) : duration;
+  const formatDuration = (duration: string | number | undefined) => {
+    const minutes = typeof duration === 'string' ? parseInt(duration) : duration ?? 0;
     if (minutes < 60) {
       return `${minutes}m`;
     }
@@ -61,9 +44,9 @@ export default function CourseCurriculum({ chapters, total_lectures, total_durat
       <div className="space-y-2">
         {chapters.map((chapter) => {
           const isExpanded = expandedChapters.includes(chapter.chapter_id);
-          const chapterLessons = chapter.lessons || [];
+          const chapterLessons: Lesson[] = chapter.lessons ?? [];
           const totalChapterDuration = chapterLessons.reduce((sum, lesson) => {
-            const duration = typeof lesson.duration === 'string' ? parseInt(lesson.duration) : lesson.duration;
+            const duration = typeof lesson.duration === 'string' ? parseInt(lesson.duration) : lesson.duration ?? 0;
             return sum + duration;
           }, 0);
 
@@ -79,7 +62,7 @@ export default function CourseCurriculum({ chapters, total_lectures, total_durat
                   ) : (
                     <ChevronDown className="w-5 h-5 text-gray-600" />
                   )}
-                  <span className="font-roboto-bold text-left">{chapter.chapter_title}</span>
+                  <span className="font-roboto-bold text-left">{chapter.chapter_title ?? ""}</span>
                 </div>
                 <span className="font-roboto text-sm text-gray-600">
                   {chapterLessons.length} lessons • {formatDuration(totalChapterDuration)}
@@ -91,12 +74,12 @@ export default function CourseCurriculum({ chapters, total_lectures, total_durat
                   {chapterLessons.map((lesson) => (
                     <div key={lesson.lesson_id} className="flex items-center cursor-pointer hover:bg-black  justify-between p-4 border-b border-gray-200 group last:border-b-0">
                       <div className="flex items-center gap-3 ">
-                        {lesson.is_completed ? (
+                        {lesson.isCompleted ? (
                           <FileCheck className="w-5 h-5 text-green-600" />
                         ) : (
                           <PlayCircle className="w-5 h-5 text-gray-600 group-hover:text-white" />
                         )}
-                        <span className="font-roboto text-gray-700 group-hover:text-white">{lesson.lesson_title}</span>
+                        <span className="font-roboto text-gray-700 group-hover:text-white">{lesson.title ?? ""}</span>
                       </div>
                       <span className="font-roboto text-sm text-gray-600 group-hover:text-white">
                         {formatDuration(lesson.duration)}

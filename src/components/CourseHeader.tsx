@@ -6,12 +6,12 @@ interface CourseHeaderProps {
   category_name: string;
   title: string;
   description: string;
-  rating: number;
-  total_reviews: number;
-  total_students: number;
-  created_by: string;
-  last_updated: string;
-  available_language: string;
+  rating?: number;
+  total_reviews?: number;
+  total_students?: number;
+  created_by?: string;
+  last_updated?: string;
+  available_language?: string;
   level_name: string;
 }
 
@@ -46,15 +46,15 @@ export default function CourseHeader({
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
-                  className={`w-4 h-4 ${star <= Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`}
+                  className={`w-4 h-4 ${star <= Math.floor(rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`}
                 />
               ))}
             </div>
-            <span className="text-gray-300">({total_reviews.toLocaleString()} reviews)</span>
+            <span className="text-gray-300">({(total_reviews ?? 0).toLocaleString()} reviews)</span>
           </div>
           <div className="flex items-center gap-1 text-gray-300">
             <Users className="w-4 h-4" />
-            <span>{total_students.toLocaleString()} students</span>
+            <span>{(total_students ?? 0).toLocaleString()} students</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-4 mt-4 font-roboto text-sm text-gray-300">

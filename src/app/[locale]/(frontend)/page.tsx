@@ -30,7 +30,7 @@ export default function HomePage() {
       </section>
       <section className="min-h-screen snap-start shadow-2xl">
         <ListTopic />
-        <ListCourseCard />
+        <ListCourseCard title="Tất cả khoá học"/>
       </section>
     </div>
   );
