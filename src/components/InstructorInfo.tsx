@@ -2,7 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Star, Users, PlayCircle } from 'lucide-react';
 
-import { InstructorWithData } from '@/type/course.type';
+import { InstructorWithData } from '@/type/user.type';
 
 type InstructorInfoProps = {
   instructor?: InstructorWithData;
@@ -11,7 +11,7 @@ type InstructorInfoProps = {
 export default function InstructorInfo({ instructor }: InstructorInfoProps) {
   // Lấy thông tin user nếu có
   const user = instructor?.user;
-  const avatar = user?.avatar && user.avatar.trim() !== ''? user.avatar: 'https://learnary-courses.s3.ap-southeast-2.amazonaws.com/thumbnail/2.jpg';
+  const avatar = user?.avatar && user.avatar.trim() !== ''? user.avatar: '';
   const fullName = user?.fullName || 'Instructor';
   const bio = user?.bio || 'Chưa có mô tả.';
 

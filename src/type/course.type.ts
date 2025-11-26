@@ -1,4 +1,4 @@
-import { Instructor, User } from "./user.type";
+import { InstructorWithData } from "./user.type";
 export type Course = {
   course_id:string,
   category_id:string,
@@ -20,7 +20,6 @@ export type Course = {
   instructor?:InstructorWithData;
   level?:Level;
 }
-export type InstructorWithData = Instructor & { user? : User}
 export type Category = {
   category_id:string,
   category_name:string,
