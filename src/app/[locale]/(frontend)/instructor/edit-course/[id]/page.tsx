@@ -6,31 +6,26 @@ import Link from 'next/link';
 import { v4 as uuidv4 } from 'uuid';
 import api from '@/app/lib/axios';
 import { isAxiosError } from 'axios';
-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import {
-    Accordion, AccordionContent, AccordionItem, AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, ChevronLeft, Save, Send, PlusCircle, Trash2, GripVertical, Video, FileQuestion, Plus, X, Pencil } from 'lucide-react';
 import { VideoUploadDialog } from '@/components/VideoUploadDialog';
 import { useAuth } from '@/app/context/AuthContext';
+import { toast } from "sonner";
 
 type Category = { category_id: string; category_name: string; };
 type Level = { level_id: string; level_name: string; };
 type Option = { option_id?: string; option_content: string; is_correct: boolean; };
 type Question = { question_id?: string; title: string; options: Option[]; };
 type Quiz = { quiz_id?: string; title: string; questions: Question[]; };
-
 type Lesson = {
     lesson_id: string;
     title: string;
@@ -51,7 +46,7 @@ type Course = {
     price: number;
     requirement: string;
     thumbnail: string;
-    status: 'Draft' | 'Pending' | 'Pubished' | 'Archived';
+    status: 'Draft' | 'Pending' | 'Published' | 'Archived';
     category_id: string;
     level_id: string;
     chapter: Chapter[];
@@ -69,11 +64,12 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const { user, isLoggedIn, isLoading: isAuthLoading } = useAuth();
+
     useEffect(() => {
         if (isAuthLoading) return;
 
         if (!isLoggedIn || user?.role !== "INSTRUCTOR") {
-        alert('Bạn không có quyền truy cập trang này.');
+        toast.success('Bạn không có quyền truy cập trang này!');
         router.push(`/`); 
         return;
         }
@@ -104,7 +100,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 setLevels(lvlRes.data.data || lvlRes.data);
             } catch (err) {
                 console.error(err);
-                alert("Không thể tải dữ liệu. Vui lòng thử lại.");
+                 toast.success("Không thể tải dữ liệu. Vui lòng thử lại.");
             } finally {
                 setIsLoading(false);
             }
@@ -152,9 +148,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
 
     const handleDeleteLesson = (chapterIndex: number, lessonIndex: number) => {
         if (!confirm("Xóa bài học này?")) return;
-        
         const lessonIdToDelete = course?.chapter[chapterIndex]?.lessons[lessonIndex]?.lesson_id;
-        
         updateCourseState((draft) => {
             draft.chapter[chapterIndex].lessons.splice(lessonIndex, 1);
         });
@@ -194,7 +188,6 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
             })
         );
     }, [course, videoStaging, allChaptersHaveLessons]);
-
     const canSaveDraft = !hasAnyVideo && course?.status === 'Draft';
     const canSubmit = allChaptersHaveLessons && allLessonsHaveVideo && course?.status === 'Draft';
 
@@ -205,15 +198,15 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         try {
             if (action === 'save') {
                 if (!canSaveDraft) {
-                    alert("Chỉ có thể lưu nháp khi chưa có video nào.");
+                     toast.error("Chỉ có thể lưu nháp khi chưa có video nào.");
                     return;
                 }
                 await api.put(`/courses/draft/${courseId}`, course);
-                alert("Đã lưu bản nháp!");
+                toast.success("Đã lưu bản nháp thành công!");
                 router.push('/instructor/my-courses');
             } else {
                 if (!canSubmit) {
-                    alert("Tất cả lesson đều phải có video và chapter buộc phải có lesson.");
+                    toast.error("Tất cả lesson đều phải có video và chapter buộc phải có lesson.");
                     return;
                 }
 
@@ -228,7 +221,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 });
 
                 await api.post(`/courses/submit/${courseId}`, finalPayload);
-                alert("Đã gửi phê duyệt thành công!");
+                toast.success("Đã gửi phê duyệt thành công!");
                 router.push('/instructor/my-courses');
             }
         } catch (err) {
@@ -238,7 +231,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
             } else if (err instanceof Error) {
                 msg = err.message;
             }
-            alert(msg);
+            toast.error(msg);
         } finally {
             setIsSaving(false);
         }
@@ -264,7 +257,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     <div>
                         <h1 className="text-xl font-bold text-slate-900 truncate max-w-md">{course.title}</h1>
                         <div className="flex items-center gap-2 mt-1">
-                            <Badge variant={course.status === 'Pubished' ? 'default' : 'secondary'}>
+                            <Badge variant={course.status === 'Published' ? 'default' : 'secondary'}>
                                 {course.status}
                             </Badge>
                             {isSaving && <span className="text-xs text-muted-foreground flex items-center"><Loader2 className="h-3 w-3 animate-spin mr-1" /> Đang lưu...</span>}
@@ -280,9 +273,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     </Button>
                 </div>
             </div>
-
             <div className="container mx-auto max-w-7xl p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
                 <div className="lg:col-span-4 space-y-6">
                     <Card>
                         <CardHeader>
@@ -335,7 +326,6 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         <h2 className="text-2xl font-bold text-slate-800">Nội dung</h2>
                         <Button size="lg" onClick={handleAddChapter} className='cursor-pointer'><PlusCircle className="w-4 h-4 mr-2 " /> Thêm chương</Button>
                     </div>
-
                     <Accordion type="multiple" className="w-full space-y-4" defaultValue={course.chapter.map(c => c.chapter_id)}>
                         {course.chapter.map((chapter, cIdx) => (
                             <AccordionItem key={chapter.chapter_id} value={chapter.chapter_id} className="border rounded-lg bg-white overflow-hidden">
@@ -409,7 +399,6 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                                 onSave={(newQuiz) => updateCourseState(d => d.chapter[cIdx].quiz = newQuiz)}
                                             />
                                         </div>
-                                        
                                         {chapter.quiz ? (
                                             <div className="p-3 bg-orange-50 border border-orange-200 rounded-md flex justify-between items-center">
                                                 <div>
@@ -490,16 +479,13 @@ function QuizEditDialog({ quiz, onSave }: { quiz?: Quiz | null | undefined, onSa
                                 >
                                     <Trash2 size={16} />
                                 </Button>
-
                                 <div className="pr-10">
                                     <Input 
                                         className="font-medium bg-white"
-                                        placeholder={`Câu hỏi ${qIdx + 1}`}
-                                        value={q.title}
+                                        placeholder={`Câu hỏi ${qIdx + 1}`} 
                                         onChange={e => updateLocalQuiz(draft => draft.questions[qIdx].title = e.target.value)}
                                     />
                                 </div>
-
                                 <div className="space-y-2 pl-4 border-l-2 border-slate-200 ml-1">
                                     {q.options.map((opt, oIdx) => (
                                         <div key={oIdx} className="flex items-center gap-2">
@@ -531,7 +517,6 @@ function QuizEditDialog({ quiz, onSave }: { quiz?: Quiz | null | undefined, onSa
                                 </div>
                             </div>
                         ))}
-                        
                         <Button variant="outline" className="w-full border-dashed" onClick={() => updateLocalQuiz(draft => draft.questions.push({
                             title: '',
                             options: Array(2).fill(null).map(() => ({ option_content: '', is_correct: false }))
@@ -540,7 +525,6 @@ function QuizEditDialog({ quiz, onSave }: { quiz?: Quiz | null | undefined, onSa
                         </Button>
                     </div>
                 </div>
-
                 <DialogFooter className="flex justify-between sm:justify-between gap-2 mt-4 pt-4 border-t">
                     {quiz ? (
                         <Button variant="destructive" onClick={() => { if(confirm("Xóa bài kiểm tra này?")) onSave(null); }}>

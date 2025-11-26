@@ -1,484 +1,324 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import api from "@/app/lib/axios";
-import { isAxiosError } from "axios";
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-  VisibilityState,
-} from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Plus, RefreshCw } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { toast } from "react-hot-toast" // Giữ nguyên react-hot-toast như file gốc
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "sonner";
 
-type Course = {
-  courses_id: string;
-  category_id: string;
-  level_id: string;
-  instructor_id: string;
-  status: "Draft" | "Published" | "Archived";
-  title: string;
-  slug: string;
-  description: string;
-  thumbnail: string;
-  price: number;
-  sale_off: boolean;
-  hot: boolean;
-  tag: boolean;
-  requirement: string;
-  available_language: "Vietnamese" | "English";
-  created_at: string;
-  updated_at: string;
+// UI Components
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+// Icons
+import {
+  Search,
+  MoreHorizontal,
+  BookOpen,
+  Calendar,
+  Plus,
+  RefreshCw,
+  Eye,
+  Trash2,
+  Tag
+} from "lucide-react";
+
+// --- Types ---
+type CourseStatus = "Draft" | "Published" | "Pending" | "Archived";
+
+interface Course {
+  course_id: string;
+  title: string;
+  slug: string;
+  thumbnail: string;
+  price: number;
+  sale_off: boolean;
+  status: CourseStatus;
+  createdAt: string;
+  updatedAt: string;
+  
+  // Relations (Dữ liệu này cần backend include)
+  instructor?: {
+    user: {
+      fullName: string;
+      avatar: string | null;
+    }
+  };
+  category?: {
+    category_name: string;
+  };
+  _count?: {
+    learnerCourses: number; // Số học viên
+  }
 }
 
-const columns: ColumnDef<Course>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "title",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Tên khóa học
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const course = row.original
-      return (
-        <div className="space-y-1">
-          <div className="font-medium">{row.getValue("title")}</div>
-          <div className="text-xs text-muted-foreground">{course.slug}</div>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "instructor_id",
-    header: "Giảng viên",
-    cell: ({ row }) => {
-      const instructorId = row.getValue("instructor_id") as string
-      // Trong thực tế, bạn sẽ fetch thông tin instructor từ API
-      const instructorNames: { [key: string]: string } = {
-        "inst_001": "Nguyễn Văn A",
-        "inst_002": "Trần Thị B",
-        "inst_003": "Lê Văn C",
-        "inst_004": "Phạm Thị D",
-        "inst_005": "Hoàng Văn E"
-      }
-      return <div>{instructorNames[instructorId] || instructorId}</div>
-    },
-  },
-  {
-    accessorKey: "status",
-    header: "Trạng thái",
-    cell: ({ row }) => {
-      const status = row.getValue("status") as string
-      const statusColors = {
-        Published: "bg-green-100 text-green-800",
-        Archived: "bg-red-100 text-red-800",
-        Draft: "bg-yellow-100 text-yellow-800"
-      }
-      const statusLabels = {
-        Published: "Đã xuất bản",
-        Archived: "Đã lưu trữ",
-        Draft: "Bản nháp"
-      }
+export default function CoursePage() {
+  const router = useRouter();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<CourseStatus | "ALL">("ALL");
 
-      return (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[status as keyof typeof statusColors]}`}>
-	        {statusLabels[status as keyof typeof statusLabels]}
-        </span>
-      )
-    },
-  },
-  {
-    accessorKey: "available_language",
-    header: "Ngôn ngữ",
-    cell: ({ row }) => {
-      const language = row.getValue("available_language") as string
-      const languageLabels = {
-        Vietnamese: "Tiếng Việt",
-        English: "Tiếng Anh"
-      }
-      return <div>{languageLabels[language as keyof typeof languageLabels]}</div>
-    },
-  },
-  {
-    accessorKey: "price",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Giá
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const course = row.original
-      const price = parseFloat(row.getValue("price"))
-      const formatted = new Intl.NumberFormat("vi-VN", {
-        style: "currency",
-        currency: "VND",
-      }).format(price)
+  // --- Fetch Data ---
+  useEffect(() => {
+    fetchCourses();
+  }, []);
 
-      return (
-        <div className="text-right space-y-1">
-          <div className="font-medium">{formatted}</div>
-          {course.sale_off && (
-            <div className="text-xs text-green-600 font-medium">Đang giảm giá</div>
-          )}
-        </div>
-      )
-    },
-  },
-  {
-    id: "badges",
-    header: "Nhãn",
-    cell: ({ row }) => {
-      const course = row.original
-      return (
-        <div className="flex gap-1 flex-wrap">
-          {course.hot && (
-            <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
-              Hot
-            </span>
-          )}
-          {course.tag && (
-            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-              Tag
-            </span>
-          )}
-        </div>
-      )
-    },
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const course = row.original
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      // Đảm bảo API backend trả về đủ thông tin instructor và category
+      const response = await api.get("/courses"); 
+      const apiData = response.data;
 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Hành động</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(course.courses_id)}
-            >
-              Copy ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Xem chi tiết</DropdownMenuItem>
-            <DropdownMenuItem>Chỉnh sửa</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">
-              Xóa khóa học
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-]
+      if (apiData.success && Array.isArray(apiData.data)) {
+        setCourses(apiData.data);
+        toast.success(`Đã tải ${apiData.data.length} khóa học`);
+      } else if (Array.isArray(apiData)) {
+        // Fallback nếu API trả về mảng trực tiếp
+        setCourses(apiData);
+      }
+    } catch (error) {
+      console.error("Lỗi tải khóa học:", error);
+      toast.error("Không thể tải danh sách khóa học");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-function CoursePage() {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = useState({})
-  const [courses, setCourses] = useState<Course[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const reload = async (): Promise<void> => {
+      fetchCourses();
+   }
+  // --- Helpers ---
+  const formatCurrency = (price: number) => {
+    return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
+  };
 
-  const fetchCourses = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const response = await api.get("/api/courses")
-      const apiData = response.data
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("vi-VN", {
+      day: "2-digit", month: "2-digit", year: "numeric"
+    });
+  };
 
-      if (apiData.success && Array.isArray(apiData.data)) {
-        setCourses(apiData.data)
-        toast.success(`Đã tải ${apiData.data.length} khóa học`)
-      } else if (Array.isArray(apiData)) {
-        setCourses(apiData)
-        toast.success(`Đã tải ${apiData.length} khóa học`)
-      } else {
-        throw new Error("Dữ liệu API không đúng định dạng")
-      }
-    } catch (error) {
-      console.error("Lỗi khi fetch courses:", error)
-      if (isAxiosError(error)) {
-        const errorMsg = error.response?.data?.message || "Lỗi khi tải khóa học, vui lòng thử lại";
-        setError(errorMsg);
-        toast.error(errorMsg);
-      } else {
-        const genericError = "Lỗi không xác định, vui lòng thử lại";
-        setError(genericError);
-        toast.error(genericError);
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
+  const getStatusBadge = (status: CourseStatus) => {
+    switch (status) {
+      case "Published":
+        return <Badge className="bg-green-600 hover:bg-green-700">Published</Badge>;
+      case "Pending":
+        return <Badge className="bg-amber-500 hover:bg-amber-600">Pending</Badge>;
+      case "Draft":
+        return <Badge variant="secondary">Draft</Badge>;
+      case "Archived":
+        return <Badge variant="destructive">Archived</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
 
-  useEffect(() => {
-    fetchCourses()
-  }, [])
+  // --- Filter Logic ---
+  const filteredCourses = courses.filter((course) => {
+    const search = searchTerm.toLowerCase();
+    const matchesSearch = 
+      course.title.toLowerCase().includes(search) || 
+      (course.instructor?.user.fullName || "").toLowerCase().includes(search);
 
-  const table = useReactTable({
-    data: courses,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
-  })
+    const matchesStatus = filterStatus === "ALL" || course.status === filterStatus;
 
-  const LoadingSkeleton = () => (
-    <div className="space-y-4">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center space-x-4">
-          <Skeleton className="h-4 w-4" />
-          <Skeleton className="h-4 w-[250px]" />
-          <Skeleton className="h-4 w-[150px]" />
-          <Skeleton className="h-4 w-[100px]" />
-          <Skeleton className="h-4 w-[80px]" />
-          <Skeleton className="h-4 w-[120px]" />
-          <Skeleton className="h-4 w-[60px]" />
-        </div>
-      ))}
-    </div>
-  )
+    return matchesSearch && matchesStatus;
+  });
 
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col">
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2 justify-start w-full pb-2">
-                <Button
-                  variant="outline"
-                  className="cursor-pointer"
-                  onClick={fetchCourses}
-                  disabled={loading}
-                >
-                  <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                  Làm mới
-                </Button>
-                <Button className="cursor-pointer">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Thêm khóa học
-                </Button>
-              </div>
-            </div>
-          </div>
-          <CardDescription className="pl-2">
-            {loading ? "Đang tải..." : `Tổng cộng ${courses.length} khóa học trong hệ thống`}
-            {error && (
-              <span className="text-red-500 ml-2">({error})</span>
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center py-4">
-          	<div className="flex w-full justify-start gap-5">
-              <CardTitle>Danh sách khoá học</CardTitle>
-              <Input
-                placeholder="Tìm kiếm khóa học..."
-                value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
-                onChange={(event) =>
-                  table.getColumn("title")?.setFilterValue(event.target.value)
-                }
-                className="max-w-sm"
-              />
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto cursor-pointer">
-                  Cột hiển thị <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {table
-                  .getAllColumns()
-                	.filter((column) => column.getCanHide())
-                  .map((column) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                      	className="capitalize"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) =>
-                          column.toggleVisibility(!!value)
-                        }
-                      >
-                        {column.id}
-                      </DropdownMenuCheckboxItem>
-                    )
-                  })}
-              </DropdownMenuContent>
-          	</DropdownMenu>
-          </div>
-          <div className="rounded-md border">
-            {loading ? (
-              <div className="p-4">
-                <LoadingSkeleton />
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => {
-                        return (
-                          <TableHead key={header.id}>
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                          </TableHead>
-                        )
-                      })}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <TableRow
-                        key={row.id}
-                         data-state={row.getIsSelected() && "selected"}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-  	                      <TableCell key={cell.id}>
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={columns.length}
-                        className="h-24 text-center"
-                      >
-                        {error ? "Không thể tải dữ liệu" : "Không có khóa học nào"}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            )}
-          </div>
-          {!loading && (
-            <div className="flex items-center justify-end space-x-2 py-4">
-              <div className="flex-1 text-sm text-muted-foreground">
-                {table.getFilteredSelectedRowModel().rows.length} trong{" "}
-                {table.getFilteredRowModel().rows.length} hàng được chọn.
-              </div>
-              <div className="space-x-2">
-              	<Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-            	  >
-                  Trước
-                </Button>
-              	<Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                >
-                  Sau
-            	  </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Spinner />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Quản lý Khóa học</h1>
+          <p className="text-gray-500 mt-1">Tổng số: {courses.length} khóa học trong hệ thống</p>
+        </div>
+        
+        {/* Nút thêm khóa học */}
+        <Button onClick={() => router.push("/admin/courses/create")} className="bg-blue-600 hover:bg-blue-700">
+          <Plus className="mr-2 h-4 w-4" /> Thêm khóa học
+        </Button>
+      </div>
+
+      {/* Toolbar: Search & Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center ">
+         <div className="relative flex-1 max-w-md">
+               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+               <Input
+               placeholder="Tìm kiếm theo tên, email, số điện thoại..."
+               value={searchTerm}
+               onChange={(e) => setSearchTerm(e.target.value)}
+               className="pl-10"
+            />
+         </div>
+
+        {/* Filter Buttons */}
+         <div className="flex gap-2 flex-wrap">
+            <Button 
+                variant={filterStatus === "ALL" ? "default" : "outline"} 
+                onClick={() => setFilterStatus("ALL")}
+                className="h-8"
+            >
+                Tất cả
+            </Button>
+            <Button 
+                variant={filterStatus === "Published" ? "default" : "outline"} 
+                onClick={() => setFilterStatus("Published")}
+                className="h-8"
+            >
+                Đã duyệt
+            </Button>
+            <Button 
+                variant={filterStatus === "Pending" ? "default" : "outline"} 
+                onClick={() => setFilterStatus("Pending")}
+                className="h-8"
+            >
+                Chờ duyệt
+            </Button>
+            <Button 
+                variant={filterStatus === "Draft" ? "default" : "outline"} 
+                onClick={() => setFilterStatus("Draft")}
+                className="h-8"
+            >
+                Nháp
+            </Button>
+            <Button  
+               variant={"outline"}
+               onClick={reload} 
+               className="cursor-pointer hover:bg-gray-300"
+            >
+               <RefreshCw/>Reload
+            </Button>
+         </div>
+      </div>
+
+      {/* Table */}
+      <div className="border rounded-lg bg-white shadow-sm">
+         <Table>
+            <TableHeader>
+               <TableRow>
+               <TableHead>Thông tin khóa học</TableHead>
+               <TableHead>Giảng viên</TableHead>
+               <TableHead>Học phí</TableHead>
+               <TableHead>Trạng thái</TableHead>
+               <TableHead>Ngày tạo</TableHead>
+               <TableHead className="text-right pr-4">Hành động</TableHead>
+               </TableRow>
+            </TableHeader>
+            <TableBody>
+               {filteredCourses.length > 0 ? (
+               filteredCourses.map((course) => (
+               <TableRow key={course.course_id}>
+               <TableCell className="pl-4 py-3">
+                           <div className="flex items-center gap-3">
+                              <div className="h-14 w-24 bg-gray-100 rounded-md overflow-hidden relative border shrink-0">
+                                 {course.thumbnail ? (
+                                       <Image src={course.thumbnail} alt={course.title} fill className="object-cover" />
+                                 ) : (
+                                       <div className="w-full h-full flex items-center justify-center text-gray-400"><BookOpen className="h-6 w-6"/></div>
+                                 )}
+                              </div>
+                              <div className="space-y-1 max-w-[250px]">
+                                 <p className="font-semibold text-gray-900 line-clamp-1" title={course.title}>{course.title}</p>
+                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                       <span className="flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded">
+                                          <Tag className="h-3 w-3" /> {course.category?.category_name || "Chưa phân loại"}
+                                       </span>
+                                       <span>{course._count?.learnerCourses || 0} học viên</span>
+                                 </div>
+                              </div>
+                           </div>
+               </TableCell>
+               <TableCell>
+                           {course.instructor ? (
+                              <div className="flex items-center gap-2">
+                                 <Avatar className="h-8 w-8">
+                                       <AvatarImage src={course.instructor.user.avatar || undefined} />
+                                       <AvatarFallback>{course.instructor.user.fullName.charAt(0)}</AvatarFallback>
+                                 </Avatar>
+                                 <span className="text-sm font-medium text-gray-700">{course.instructor.user.fullName}</span>
+                              </div>
+                           ) : (
+                              <span className="text-sm text-gray-400 italic">Không xác định</span>
+                           )}
+               </TableCell>
+               <TableCell>
+                           <div className="flex flex-col">
+                              <span className="font-medium text-green-600">{formatCurrency(course.price)}</span>
+                              {course.sale_off && <span className="text-[10px] text-red-500 font-bold">GIẢM GIÁ</span>}
+                           </div>
+               </TableCell>
+               <TableCell>
+                           {getStatusBadge(course.status)}
+               </TableCell>
+               <TableCell>
+                           <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <Calendar className="h-3 w-3" />
+                              {formatDate(course.createdAt)}
+                           </div>
+               </TableCell>
+
+               {/* Cột 6: Hành động */}
+               <TableCell className="text-right pr-4">
+                        <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            {/* Xem chi tiết - Luôn hiện */}
+                            <DropdownMenuItem 
+                                onClick={() => router.push(`/admin/courses/${course.course_id}`)}
+                                className="cursor-pointer"
+                            >
+                                <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
+                            </DropdownMenuItem>                           
+                            <DropdownMenuItem className="text-red-600 cursor-pointer">
+                                <Trash2 className="mr-2 h-4 w-4" /> Xóa khóa học
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                        </DropdownMenu>
+               </TableCell>
+            </TableRow>
+            ))
+            ) : (
+            <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center text-gray-500">
+                    Không tìm thấy khóa học nào phù hợp.
+                    </TableCell>
+            </TableRow>
+                  )}
+            </TableBody>
+         </Table>
+      </div>   
+    </div>
+  );
 }
-
-export default CoursePage;

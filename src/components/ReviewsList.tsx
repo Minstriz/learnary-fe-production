@@ -79,7 +79,7 @@ export default function ReviewsList({ rating, rating_distribution, reviews }: Re
           <div key={review.review_id} className="border-b border-gray-200 pb-6 last:border-b-0">
             <div className="flex items-start gap-4">
               <Image
-                src={review.user_avatar}
+                src={review.user_avatar || '/Logo/Logo-Black-NoBG.svg'}
                 alt={review.user_name}
                 width={48}
                 height={48}

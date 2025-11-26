@@ -80,7 +80,7 @@ const SingleCourseCard: React.FC<SingleCourseCardProps> = ({ course }) => {
               <Image
                 width={imageWidth}
                 height={imageHeight}
-                src={dataCourse.thumbnail}
+                src={dataCourse.thumbnail || '/Logo/Logo-Black-NoBG.svg'}
                 alt={dataCourse.title}
                 className={imageClass}
               />

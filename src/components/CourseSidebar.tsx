@@ -6,7 +6,7 @@ import { PlayCircle, FileText, Award, Infinity, Smartphone, Download } from 'luc
 import { useTranslations } from 'next-intl';
 
 interface CourseSidebarProps {
-  thumbnail: string;
+  thumbnail?: string | null;
   price: number;
   original_price?: number;
   sale_off?: number;
@@ -35,15 +35,24 @@ export default function CourseSidebar({ thumbnail, price, original_price, sale_o
     return new Intl.NumberFormat('vi-VN').format(priceValue) + ' ₫';
   };
 
+  const hasThumbnail = thumbnail && thumbnail.trim() !== "";
   return (
     <div className="sticky top-4 border border-gray-200 bg-white shadow-lg">
-      <div className="relative aspect-video w-full overflow-hidden">
-        <Image
-          src={thumbnail}
-          alt="Course thumbnail"
-          fill
-          className="object-cover"
-        />
+      <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
+        {hasThumbnail ? (
+          <Image
+            src={thumbnail as string}
+            alt="Course thumbnail"
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full w-full text-gray-500">
+            <div className="text-center">
+              <div className="text-3xl font-bold">No Image</div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="p-6">

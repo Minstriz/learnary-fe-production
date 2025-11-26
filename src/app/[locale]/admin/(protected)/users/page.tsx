@@ -336,7 +336,6 @@ export default function UserManagement() {
 
    return (
       <div className="space-y-6 p-4 max-w-screen">
-         <div className="flex flex-col justify-start items-start md:items-start gap-4">
             <div className='flex flex-col gap-2'>
                <h1 className="text-3xl font-bold">Quản lý người dùng</h1>
                <p className="text-gray-500 mt-1">Tổng số: {users.length} người dùng</p>
@@ -352,7 +351,6 @@ export default function UserManagement() {
                      className="pl-10"
                   />
                </div>
-
                <div className="flex gap-2 flex-wrap">
                   <Button
                      variant={filterActive === null ? "default" : "outline"}
@@ -384,7 +382,6 @@ export default function UserManagement() {
                   </Button>
                </div>
             </div>
-         </div>
 
          <div className="border rounded-lg overflow-x-auto">
             <Table>
