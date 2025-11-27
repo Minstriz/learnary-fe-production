@@ -241,7 +241,7 @@ export default function InstructorQualificationPage() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {data.qualification_images.map((img, index) => (
-                  <div key={index} className="group relative aspect-[4/3] border rounded-lg overflow-hidden bg-gray-100 cursor-pointer">
+                  <div key={index} className="group relative aspect-4/3 border rounded-lg overflow-hidden bg-gray-100 cursor-pointer">
                     <Image 
                       src={img} 
                       alt="Minh chứng" 

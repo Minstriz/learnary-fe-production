@@ -3,7 +3,6 @@ import { getMessages } from 'next-intl/server';
 import { routing } from "@/i18n/routing";
 import { hasLocale } from "next-intl";
 import CoreProviders from "@/app/providers"; // 1. Import file provider CHUNG
-
 export default async function LocaleLayout({
   children,
   params,

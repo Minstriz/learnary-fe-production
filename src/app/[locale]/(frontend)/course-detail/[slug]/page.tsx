@@ -14,7 +14,7 @@ import api from '@/app/lib/axios';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { Course } from '@/type/course.type';
-import { DEFAULT_LANGUAGE } from '@/const/urls';
+import { DEFAULT_LANGUAGE, PLACEHOLDER_THUMBNAIL } from '@/const/urls';
 
 export default function CourseDetailPage() {
     const params = useParams();
@@ -60,16 +60,18 @@ export default function CourseDetailPage() {
             </div>
         );
     }
-
+    const includesData = [
+        {
+            icon:'PlayCircle',
+            text: courseData.description ?? "Chưa có mô tả khoá học"
+        }
+    ]
     const formatPrice = (priceValue?: number) => {
         if (typeof priceValue !== 'number' || isNaN(priceValue)) return '0 ₫';
         return new Intl.NumberFormat('vi-VN').format(priceValue) + ' ₫';
     };
-
     return (
-
         <div className="min-h-screen bg-white">
-
             <CourseHeader
                 category_name={courseData.category?.category_name ?? "Không có thông tin loại khoá học"}
                 title={courseData.title ?? "Không có tiêu đề khoá học"}
@@ -115,31 +117,27 @@ export default function CourseDetailPage() {
                                     requirement={courseData.requirement ?? "Khoá học này không yêu cầu gì."}
                                 />
                             </TabsContent>
-
                             <TabsContent value="curriculum" className="mt-6">
                                 <CourseCurriculum
-                                    chapters={courseData.chapters ?? []}
-                                    /*    total_lectures={courseData.total_lectures}
-                                            total_duration={`${courseData.total_hours} hours`} */
+                                    chapters={courseData.chapter ?? []}
+                                /*    total_lectures={courseData.total_lectures}
+                                        total_duration={`${courseData.total_hours} hours`} */
                                 />
                             </TabsContent>
-
                             <TabsContent value="instructor" className="mt-6">
                                 <InstructorInfo instructor={courseData.instructor} />
                             </TabsContent>
                         </CourseTabs>
                     </div>
 
-                    <div className="hidden lg:block">
-                        {courseData.thumbnail && typeof courseData.price === 'number' && (
-                            <CourseSidebar
-                                thumbnail={courseData.thumbnail}
-                                price={courseData.price}
-                                original_price={undefined}
-                                sale_off={undefined}
-                                includes={[]}
-                            />
-                        )}
+                    <div className="p-1 border rounded rounded-t-xl">
+                        <CourseSidebar
+                            thumbnail={courseData.thumbnail || PLACEHOLDER_THUMBNAIL}
+                            price={courseData.price || 0}
+                            original_price={undefined}
+                            sale_off={undefined}
+                            includes={includesData}
+                        />
                     </div>
                 </div>
             </div>
@@ -149,7 +147,7 @@ export default function CourseDetailPage() {
                     <div className="flex flex-col">
                         <span className="font-roboto-condensed-bold text-2xl">{formatPrice(courseData.price)}</span>
                     </div>
-                    <Button className="bg-black cursor-pointer font-roboto-bold px-8 py-6">
+                    <Button className="bg-pink-600 cursor-pointer font-roboto-bold px-8 py-6">
                         Enroll Now
                     </Button>
                 </div>

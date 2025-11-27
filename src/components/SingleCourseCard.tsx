@@ -94,7 +94,7 @@ const SingleCourseCard: React.FC<SingleCourseCardProps> = ({ course }) => {
             </div>
           </div>
         </TooltipTrigger>
-        <TooltipContent side="top" className="bg-white text-orange-600 p-2 font-roboto-bold rounded-md border-2">
+        <TooltipContent side="top" className="bg-white text-pink-600 p-2 font-roboto rounded-md border-2">
           <p>Chi tiết: {dataCourse.description || "Không có mô tả chi tiết"}</p>
           <p>Ngôn ngữ khả dụng: {(dataCourse.available_language ?? DEFAULT_LANGUAGE)}</p>
         </TooltipContent>

@@ -35,6 +35,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { CreateCategoryForm } from "@/components/CreateCategoryForm";
+import { EditCategoryForm } from "@/components/EditCategoryForm";
 import { ToasterConfirm } from "@/components/ToasterConfimer";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
@@ -47,11 +48,13 @@ type Category = {
   updatedAt: string,
 }
 
+
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
+  const [editDialog, setEditDialog] = useState<{ open: boolean; category: Category | null }>({ open: false, category: null });
 
   useEffect(() => {
     fetchCategories();
@@ -237,7 +240,11 @@ export default function CategoriesPage() {
                         Copy ID
                       </DropdownMenuItem>
                       <DropdownMenuItem>Xem chi tiết</DropdownMenuItem>
-                      <DropdownMenuItem>Chỉnh sửa</DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setEditDialog({ open: true, category })}
+                      >
+                        Chỉnh sửa
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-600"
                         onClick={() => handleDeleteCategory(category.category_id)}
@@ -252,6 +259,25 @@ export default function CategoriesPage() {
           </TableBody>
         </Table>
       </div>
+      {/* Dialog sửa danh mục */}
+      <Dialog open={editDialog.open} onOpenChange={(open) => setEditDialog(s => ({ ...s, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sửa danh mục</DialogTitle>
+          </DialogHeader>
+          {editDialog.category && (
+            <EditCategoryForm
+              open={editDialog.open}
+              onOpenChange={(open) => setEditDialog(s => ({ ...s, open }))}
+              category={editDialog.category}
+              onSuccess={() => {
+                fetchCategories();
+                setEditDialog({ open: false, category: null });
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

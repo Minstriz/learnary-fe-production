@@ -15,10 +15,16 @@ export type Course = {
   hot?:boolean,
   tag?:boolean,
   available_language?:string;
-  chapters?:Chapter[];
+  chapter?:Chapter[];
   category?:Category;
   instructor?:InstructorWithData;
   level?:Level;
+}
+export type Quiz = {
+  quiz_id:string,
+  chapter_id:string,
+  title:string,
+  slug:string,
 }
 export type Category = {
   category_id:string,
@@ -41,6 +47,7 @@ export type Chapter = {
   chapter_title?:string,
   order_index?:number,
   lessons?:Lesson[]
+  quiz?:Quiz
 }
 export type Lesson = {
     lesson_id:string,
