@@ -3,7 +3,7 @@ export type Note = {
   user_id: string;
   lesson_id: string;
   content: string;
-  createdAt: string;
+  createAt: string;
   updatedAt: string;
 };
 

@@ -17,6 +17,7 @@
       if (token) {
         // Nếu có token, gắn nó vào header
         config.headers.Authorization = `Bearer ${token}`;
+        
       }
       return config; 
     },
