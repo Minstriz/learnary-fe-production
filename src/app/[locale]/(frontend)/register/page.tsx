@@ -17,7 +17,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export default function SignUpPage() {
   const [fullName, setFullName] = useState('');
@@ -44,7 +43,6 @@ export default function SignUpPage() {
         email, 
         password 
       });
-      console.log("hehe",`${BACKEND_URL}/api/auth/register`)
       alert('Đăng ký thành công! Vui lòng đăng nhập.');
       router.push('/login');
 

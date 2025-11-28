@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import api from "@/app/lib/axios";
 import { toast } from "sonner";
 // Icons
+import { Quiz} from "@/type/course.type";
 import {
     ArrowLeft, CheckCircle, XCircle, Eye, PlayCircle, 
     LayoutTemplate, MonitorPlay, Lock, PauseCircle, FileQuestion, Loader2
@@ -28,36 +29,29 @@ import InstructorInfo from '@/components/InstructorInfo';
 // import ReviewsList from '@/components/ReviewsList';
 import CourseSidebar from '@/components/CourseSidebar';
 import Video from '@/components/Video';
+import { Chapter as ImportedChapter } from '@/type/course.type';
+import { InstructorWithData } from '@/type/user.type';
 
 type Lesson = {
-  lesson_id: string;
-  title: string;
-  duration: string;
-  video_url?: string | null;
+    lesson_id:string,
+    chapter_id:string,
+    title?:string,
+    video_url?:string | null,
+    isCompleted?:boolean,
+    badge?:string
+    duration?:string,
+    slug?:string,
+    order_index?:number,
 };
 
-type Option = {
-  option_id: string;
-  option_content: string;
-  is_correct: boolean;
-};
 
-type Question = {
-  question_id: string;
-  title: string;
-  options: Option[];
-};
-
-type Quiz = {
-  quiz_id: string;
-  title: string;
-  questions: Question[];
-};
 
 type Chapter = {
   chapter_id: string;
+  course_id: string;
   chapter_title: string;
   lessons: Lesson[];
+  order_index: number;
   quiz?: Quiz | null;
 };
 
@@ -93,6 +87,7 @@ type CourseData = {
   title: string;
   description: string;
   thumbnail: string;
+  slug: string;
   admin_note?: string;
   price: number;
   original_price?: number;
@@ -112,7 +107,7 @@ type CourseData = {
   available_language: string;
   what_you_learn: string[];
   requirement: string[] | string; 
-  chapters: Chapter[];
+//   chapters: Chapter[];
   chapter?: Chapter[]; 
   total_lectures: number;
   total_hours: number;
@@ -172,7 +167,7 @@ export default function AdminCourseDetailPage() {
   // --- Auto Select First Lesson for Content View ---
   useEffect(() => {
     if (viewMode === 'content' && course) {
-        const chapters = course.chapters || course.chapter || [];
+        const chapters = course.chapter || [];
         for (const chapter of chapters) {
             if (chapter.lessons && chapter.lessons.length > 0) {
                 const firstLesson = chapter.lessons[0];
@@ -240,61 +235,36 @@ export default function AdminCourseDetailPage() {
   );
 
   if (!course) return <div className="p-10 text-center">Không tìm thấy khóa học</div>;
-  const chaptersData = course.chapters || course.chapter || [];
+  const chaptersData = course.chapter || [];
   const categoryName = course.category_name || course.category?.category_name || "";
   const levelName = course.level_name || course.level?.level_name || "";
   const formattedLastUpdated = course.last_updated || (course.updatedAt ? new Date(course.updatedAt).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN'));
   const requirementProp = Array.isArray(course.requirement) 
     ? course.requirement.join('\n') 
     : course.requirement || "";
-  const mappedInstructor = {
-    instructor_id: course.instructor?.instructor_id || "unknown",
-    full_name: course.instructor?.user?.fullName || "Unknown Instructor",
-    avatar: course.instructor?.user?.avatar || "",
-    bio: course.instructor?.user?.bio || "",
-    instructor_title: "Instructor",
-    rating: course.instructor?.rating || 0,
-    total_reviews: course.instructor?.total_reviews || 0,
-    total_students: course.instructor?.total_students || 0,
-    total_courses: 1,
-    specializations: [] 
-  };
 
   const mappedIncludes = (course.includes || []).map(item => ({
     icon: "check-circle",
     text: item
   }));
 
-    const parseDurationToMinutes = (duration?: string | number): number => {
-        if (!duration) return 0;
-        if (typeof duration === 'number') return duration;
-        if (duration.includes(':')) {
-            const parts = duration.split(':').map((p) => parseInt(p));
-            if (parts.length === 2) {
-                const [mm, ss] = parts;
-                return mm + Math.round((ss || 0) / 60);
-            }
-            if (parts.length === 3) {
-                const [hh, mm, ss] = parts;
-                return hh * 60 + mm + Math.round((ss || 0) / 60);
-            }
-        }
-        const parsed = parseInt(duration, 10);
-        return Number.isNaN(parsed) ? 0 : parsed;
-    };
-
-    const mappedChapters = (chaptersData || []).map((ch) => ({
+    const mappedChapters: ImportedChapter[] = (chaptersData || []).map((ch) => ({
         chapter_id: ch.chapter_id,
         course_id: course.course_id,
         chapter_title: ch.chapter_title,
-        lessons: (ch.lessons || []).map((lesson) => ({
-            lesson_id: lesson.lesson_id,
+        lessons: ch.lessons.map((les) => ({
             chapter_id: ch.chapter_id,
-            lesson_title: lesson.title,
-            video_url: lesson.video_url || undefined,
-            duration: parseDurationToMinutes(lesson.duration),
-            is_completed: false,
+            isCompleted: false,
+            slug: '',
+            badge: '',
+            order_index: 0,
+            lesson_id: les.lesson_id,
+            title: les.title,
+            duration: les.duration,
+            video_url: les.video_url || undefined
         })),
+        order_index: 0,
+        quiz: ch.quiz || undefined
     }));
 
   return (
@@ -444,13 +414,13 @@ export default function AdminCourseDetailPage() {
                                 <TabsContent value="curriculum" className="mt-6">
                                     <CourseCurriculum 
                                         chapters={mappedChapters} 
-                                        total_lectures={course.total_lectures} 
+                                        // total_lectures={course.total_lectures} 
                                         total_duration={`${course.total_hours} giờ`} 
                                     />
                                 </TabsContent>
 
                                 <TabsContent value="instructor" className="mt-6">
-                                    <InstructorInfo instructor={mappedInstructor} />
+                                    <InstructorInfo instructor={course.instructor as unknown as InstructorWithData} />
                                 </TabsContent>
 
                                 <TabsContent value="reviews" className="mt-6">
@@ -467,6 +437,7 @@ export default function AdminCourseDetailPage() {
                         <div className="lg:col-span-1">
                             <div className="sticky top-24">
                                 <CourseSidebar
+                                    course_slug={course.slug || "No Slug Found!"}
                                     thumbnail={course.thumbnail}
                                     price={course.price}
                                     original_price={course.original_price}

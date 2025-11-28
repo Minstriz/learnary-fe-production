@@ -84,9 +84,9 @@ export type Chapter = {
   chapter_id:string,
   course_id:string,
   chapter_title?:string,
-  order_index?:number,
   lessons?:Lesson[]
-  quiz?:Quiz
+  order_index?:number,
+  quiz?: Quiz | null;
 }
 
 export type Lesson = {

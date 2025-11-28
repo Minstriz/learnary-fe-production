@@ -58,7 +58,6 @@ const NotesTab: React.FC<NotesTabProps> = ({ lessonId }) => {
         setIsSubmitting(true);
         try {
             if (user?.id) {
-                console.log("userid:", user.id)
                 const response = await api.post('/notes/create', {
                     lesson_id: lessonId,
                     user_id: user.id,

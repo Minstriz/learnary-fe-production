@@ -88,7 +88,6 @@ export default function CreateCoursePage() {
     console.log("Submitting payload:", payload);
     try {
       const res = await api.post('/courses', payload);
-      console.log("Response:", res.data);
       const courseId = res.data?.data?.course_id || res.data?.course_id || res.data?.id;
       if (courseId) {
         toast.success("Tạo khóa học thành công!");
