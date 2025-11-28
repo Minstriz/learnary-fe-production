@@ -27,7 +27,7 @@ type Course = {
   updatedAt: string;
 };
 
-type FilterStatus = 'all' | 'Draft' | 'Pending' | 'Published';
+type FilterStatus = 'all' | 'Draft' | 'Pending' | 'Published'|'Archived';
 
 export default function MyCoursesPage() {
   const [allCourses, setAllCourses] = useState<Course[]>([]);
@@ -115,7 +115,7 @@ export default function MyCoursesPage() {
           <TabsTrigger value="all">Tất cả</TabsTrigger>
           <TabsTrigger value="Draft">Bản nháp</TabsTrigger>
           <TabsTrigger value="Pending">Chờ duyệt</TabsTrigger>
-          {/* [SỬA] Lỗi chính tả Pubished -> Published */}
+          <TabsTrigger value="Archived">Bị từ chối</TabsTrigger>
           <TabsTrigger value="Published">Đã xuất bản</TabsTrigger>
         </TabsList>
       </Tabs>
@@ -162,12 +162,14 @@ function CourseCard({
     <Card>
       <CardHeader className="p-0">
         <div className="relative h-40 w-full">
-          <Image
-            src={course.thumbnail}
-            alt={course.title}
-            fill
-            className="object-cover rounded-t-lg "
-          />
+          {course.thumbnail && (
+            <Image 
+              src={course.thumbnail} 
+              alt="thumbnail" 
+              fill 
+              className="object-cover opacity-30"
+            />
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-2 pt-4">

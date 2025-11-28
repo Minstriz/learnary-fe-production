@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import { PLACEHOLDER_THUMBNAIL } from '@/const/urls';
 import Link from 'next/link';
 interface CourseSidebarProps {
-  thumbnail: string;
+  thumbnail?: string | null;
   price: number;
   original_price?: number;
   sale_off?: number;
@@ -38,6 +38,7 @@ export default function CourseSidebar({ thumbnail, price, original_price, sale_o
     return new Intl.NumberFormat('vi-VN').format(priceValue) + ' ₫';
   };
 
+  // const hasThumbnail = thumbnail && thumbnail.trim() !== "";
   return (
     <div className="sticky border-gray-200 bg-white shadow-lg">
       <div className="relative aspect-video w-full overflow-hidden">

@@ -117,7 +117,7 @@ export default function InstructorQualificationPage() {
       
       toast.success("Đã phê duyệt yêu cầu thành công!");
       setIsApproveOpen(false); 
-      router.push("/admin/users/instructors-management"); // Check lại đường dẫn này cho đúng folder
+      router.push("/admin/users/instructors-management"); 
     } catch (error) {
       const axiosErr = error as AxiosError<{ message?: string }>;
       toast.error(axiosErr?.response?.data?.message || "Phê duyệt thất bại");

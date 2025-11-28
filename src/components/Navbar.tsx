@@ -32,6 +32,10 @@ export const NavbarLinks = () => {
       name: t("instructor"),
       href: "/become-lecturer",
     },
+    // {
+    //   name: t("my-instructor"),
+    //   href: "/instructor"
+    // },
     {
       name: t("detail"),
       href: "/course-learn"

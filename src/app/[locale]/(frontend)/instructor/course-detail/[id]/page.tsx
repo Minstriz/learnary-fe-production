@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect} from 'react';
+import { useParams,useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import api from '@/app/lib/axios';
 import { AxiosError } from 'axios';
@@ -13,10 +14,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { BarChart2, Users, PlayCircle, Lock, FileQuestion, Eye, PauseCircle, Loader2 } from 'lucide-react';
-
+import { BarChart2, Users, PlayCircle, Lock, FileQuestion, Eye, PauseCircle, Loader2, AlertCircle, ChevronLeft } from 'lucide-react';
 import Video from '@/components/Video';
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
 type Lesson = {
   lesson_id: string;
@@ -48,6 +48,7 @@ type Course = {
   thumbnail: string;
   price: number;
   status: string;
+  admin_note?: string | null;
   level: { level_name: string };
   category: { category_name: string };
   instructor: Instructor;
@@ -63,7 +64,6 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState<Course | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const fetchCourse = async (id:string) => {
@@ -115,6 +115,7 @@ export default function CourseDetailPage() {
   if (isLoading) return <CourseDetailSkeleton />;
   if (error) return <div className="container mx-auto p-6 text-red-500">Lỗi: {error}</div>;
   if (!course) return <div className="container mx-auto p-6">Không tìm thấy khóa học.</div>;
+
   if (isAuthLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -124,17 +125,39 @@ export default function CourseDetailPage() {
   }
   return (
     <div className="container mx-auto max-w-6xl p-4 md:p-6">
+      
+      {/* 👇 HIỂN THỊ LÝ DO TỪ CHỐI (Nếu có) */}
+      {/* Logic: Nếu status là Archived (hoặc Draft do bị từ chối) VÀ có admin_note */}
+      {(course.status === 'Archived' || (course.status === 'Draft' && course.admin_note)) && (
+          <div className="mb-6 animate-in fade-in slide-in-from-top-2">
+              <div className="p-4 bg-red-50 border border-red-200 rounded-md flex gap-3 text-red-800 shadow-sm items-start">
+                  <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                  <div>
+                      <h4 className="font-bold text-sm uppercase">Khóa học cần chỉnh sửa</h4>
+                      <p className="text-sm mt-1 font-medium">
+                          <span className="font-bold">Lý do từ chối: </span>
+                          {course.admin_note}
+                      </p>
+                  </div>
+              </div>
+          </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* CỘT CHÍNH (BÊN TRÁI) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Thông tin chung */}
           <div className="space-y-3">
-            <h1 className="text-3xl md:text-4xl font-bold">{course.title}</h1>
-            <p className="text-lg text-muted-foreground">{course.description}</p>
+            <div className="flex items-center gap-4">
+              <Link href="/instructor/my-courses" className=''>
+                <Button variant="ghost" size="icon" className=' hover:bg-gray-300 cursor-pointer'><ChevronLeft /></Button>
+              </Link>
+              <h1 className="text-3xl md:text-4xl font-bold">{course.title}</h1>
+              <p className="text-lg text-muted-foreground">{course.description}</p>
+            </div>
             <div className="flex flex-wrap gap-2">
-              <Badge variant="outline">{course.category?.category_name}</Badge>
-              <Badge variant="outline">{course.level?.level_name}</Badge>
+              <Badge variant="outline">Category: {course.category?.category_name}</Badge>
+              <Badge variant="outline">Level: {course.level?.level_name}</Badge>
             </div>
           </div>
 

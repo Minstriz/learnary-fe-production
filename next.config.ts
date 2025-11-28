@@ -34,6 +34,27 @@ const nextConfig: NextConfig = {
         protocol:'https',
         hostname:'learnary-courses.s3.amazonaws.com'
       }
+      ,
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh2.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh1.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'graph.facebook.com',
+      }
     ],
   },
   // không cần khai báo i18n này nữa vì App Router của NextJS 13+ đã có cách xử lý đa ngô ngữ i18n mới, không cần cấu hình trong này như Pages Router nữa.
@@ -45,7 +66,6 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        // Sửa port 8000 và prefix /api/v1 cho đúng với Backend của bạn
         destination: 'http://localhost:4000/api/v1/:path*', 
       },
     ];

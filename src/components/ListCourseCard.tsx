@@ -14,12 +14,13 @@ type ListCourseCardProps = {
 const fetchListCourses = async (): Promise<Course[]> => {
   try {
     const res = await api.get("/courses");
-    const data = res.data;
-    if (!data) {
+    const data = res.data.data;
+    if (!data || data.length === 0) {
       toast.info("Hệ thống chưa có khoá học nào");
       return [];
     }
-    return data;
+    const PublishedCourse = data.filter((course: Course) => course.status === "Published");
+    return PublishedCourse;
   } catch {
     toast.error("Lỗi khi lấy danh sách khoá học!");
     return [];
