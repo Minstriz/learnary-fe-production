@@ -17,7 +17,7 @@ type Props = {
 export default function CoreProviders({ children, locale, messages }: Props) {
   return (
       <AuthProvider>
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        <NextIntlClientProvider locale={locale} messages={messages} timeZone='Asisa/Ho_Chi_Minh'>
           <SidebarProvider>
             <HotToaster />
             <SonnerToaster richColors position="top-right" />

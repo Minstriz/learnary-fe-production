@@ -8,47 +8,42 @@ import CourseTabs from '@/components/CourseTabs';
 import CourseOverview from '@/components/CourseOverview';
 import CourseCurriculum from '@/components/CourseCurriculum';
 import InstructorInfo from '@/components/InstructorInfo';
-import ReviewsList from '@/components/ReviewsList';
+/* import ReviewsList from '@/components/ReviewsList'; */
 import CourseSidebar from '@/components/CourseSidebar';
 import api from '@/app/lib/axios';
-import mockCourseDetail from '@/Mock/MockData/CourseDetail.json';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { useIsMobile } from '@/hooks/useIsMobile';
-
-type CourseData = typeof mockCourseDetail;
+import { Course } from '@/type/course.type';
+import { DEFAULT_LANGUAGE, PLACEHOLDER_THUMBNAIL } from '@/const/urls';
 
 export default function CourseDetailPage() {
     const params = useParams();
-    const courseId = params?.id || 'course_001';
+    const slug = params?.slug;
     const isMobile = useIsMobile();
-    const [courseData, setCourseData] = useState<CourseData | null>(null);
+    const [courseData, setCourseData] = useState<Course | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
     useEffect(() => {
         const fetchCourseData = async () => {
             setIsLoading(true);
             setError(null);
             try {
-                const response = await api.get(`/courses/${courseId}`);
+                const response = await api.get(`/courses/slug/${slug}`);
                 if (response.data && response.status === 200) {
                     setCourseData(response.data);
                 } else {
                     console.log('No data received, using mock data');
-                    setCourseData(mockCourseDetail);
                     setError('Không thể lấy khoá học từ server, đang dùng data mẫu!');
                 }
             } catch {
                 console.log('Using mock data as fallback');
-                setCourseData(mockCourseDetail);
                 setError('Không thể lấy khoá học từ server, đang dùng data mẫu!');
             } finally {
                 setIsLoading(false);
             }
         };
-
         fetchCourseData();
-    }, [courseId]);
+    }, [slug]);
 
     if (isLoading) {
         return (
@@ -65,26 +60,29 @@ export default function CourseDetailPage() {
             </div>
         );
     }
-
-    const formatPrice = (priceValue: number) => {
+    const includesData = [
+        {
+            icon: 'PlayCircle',
+            text: courseData.description ?? "Chưa có mô tả khoá học"
+        }
+    ]
+    const formatPrice = (priceValue?: number) => {
+        if (typeof priceValue !== 'number' || isNaN(priceValue)) return '0 ₫';
         return new Intl.NumberFormat('vi-VN').format(priceValue) + ' ₫';
     };
-
     return (
-
         <div className="min-h-screen bg-white">
-            
             <CourseHeader
-                category_name={courseData.category_name}
-                title={courseData.title}
-                description={courseData.description}
-                rating={courseData.rating}
-                total_reviews={courseData.total_reviews}
-                total_students={courseData.total_students}
-                created_by={courseData.created_by}
-                last_updated={courseData.last_updated}
-                available_language={courseData.available_language}
-                level_name={courseData.level_name}
+                category_name={courseData.category?.category_name ?? "Không có thông tin loại khoá học"}
+                title={courseData.title ?? "Không có tiêu đề khoá học"}
+                description={courseData.description ?? "Không có mô tả khoá học"}
+                /* rating={courseData.rating} */
+                total_reviews={0}
+                total_students={0}
+                /* created_by={courseData.created_by} */
+                /* last_updated={courseData.last_updated} */
+                available_language={courseData.available_language ?? DEFAULT_LANGUAGE}
+                level_name={courseData.level?.level_name ?? "Chưa có cấp độ cho khoá học này"}
             />
 
             {error && (
@@ -115,41 +113,31 @@ export default function CourseDetailPage() {
                         <CourseTabs>
                             <TabsContent value="overview" className="mt-6">
                                 <CourseOverview
-                                    what_you_learn={courseData.what_you_learn}
-                                    requirement={courseData.requirement}
+                                    what_you_learn={[courseData.description ?? "Chưa có mô tả chi tiết."]}
+                                    requirement={courseData.requirement ?? "Khoá học này không yêu cầu gì."}
                                 />
                             </TabsContent>
-
                             <TabsContent value="curriculum" className="mt-6">
                                 <CourseCurriculum
-                                    chapters={courseData.chapters}
-                                    total_lectures={courseData.total_lectures}
-                                    total_duration={`${courseData.total_hours} hours`}
+                                    chapters={courseData.chapter ?? []}
+                                /*    total_lectures={courseData.total_lectures}
+                                        total_duration={`${courseData.total_hours} hours`} */
                                 />
                             </TabsContent>
-
                             <TabsContent value="instructor" className="mt-6">
                                 <InstructorInfo instructor={courseData.instructor} />
-                            </TabsContent>
-
-                            <TabsContent value="reviews" className="mt-6">
-                                <ReviewsList
-                                    rating={courseData.rating}
-                                    total_reviews={courseData.total_reviews}
-                                    rating_distribution={courseData.rating_distribution}
-                                    reviews={courseData.reviews}
-                                />
                             </TabsContent>
                         </CourseTabs>
                     </div>
 
-                    <div className="hidden lg:block">
+                    <div className="p-1 border rounded rounded-t-xl">
                         <CourseSidebar
-                            thumbnail={courseData.thumbnail}
-                            price={courseData.price}
-                            original_price={courseData.original_price}
-                            sale_off={courseData.sale_off}
-                            includes={courseData.includes}
+                            course_slug={courseData.slug || "No Slug Found!"}
+                            thumbnail={courseData.thumbnail || PLACEHOLDER_THUMBNAIL}
+                            price={courseData.price || 0}
+                            original_price={undefined}
+                            sale_off={undefined}
+                            includes={includesData}
                         />
                     </div>
                 </div>
@@ -159,13 +147,8 @@ export default function CourseDetailPage() {
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex flex-col">
                         <span className="font-roboto-condensed-bold text-2xl">{formatPrice(courseData.price)}</span>
-                        {courseData.original_price && (
-                            <span className="font-roboto text-sm text-gray-500 line-through">
-                                {formatPrice(courseData.original_price)}
-                            </span>
-                        )}
                     </div>
-                    <Button className="bg-black cursor-pointer font-roboto-bold px-8 py-6">
+                    <Button className="bg-pink-600 cursor-pointer font-roboto-bold px-8 py-6">
                         Enroll Now
                     </Button>
                 </div>

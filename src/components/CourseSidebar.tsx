@@ -4,21 +4,24 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { PlayCircle, FileText, Award, Infinity, Smartphone, Download } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-
+import { PLACEHOLDER_THUMBNAIL } from '@/const/urls';
+import Link from 'next/link';
 interface CourseSidebarProps {
   thumbnail?: string | null;
   price: number;
   original_price?: number;
   sale_off?: number;
+  course_slug: string;
   includes: Array<{
     icon: string;
     text: string;
   }>;
 }
 
-export default function CourseSidebar({ thumbnail, price, original_price, sale_off, includes }: CourseSidebarProps) {
+export default function CourseSidebar({ thumbnail, price, original_price, sale_off, includes, course_slug }: CourseSidebarProps) {
   const t = useTranslations("Course-Detail-Sidebar");
-  
+  original_price = 1200000
+  sale_off = 50
   const getIcon = (iconName: string) => {
     const icons: { [key: string]: React.ReactNode } = {
       PlayCircle: <PlayCircle className="w-5 h-5" />,
@@ -35,30 +38,22 @@ export default function CourseSidebar({ thumbnail, price, original_price, sale_o
     return new Intl.NumberFormat('vi-VN').format(priceValue) + ' ₫';
   };
 
-  const hasThumbnail = thumbnail && thumbnail.trim() !== "";
+  // const hasThumbnail = thumbnail && thumbnail.trim() !== "";
   return (
-    <div className="sticky top-4 border border-gray-200 bg-white shadow-lg">
-      <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
-        {hasThumbnail ? (
-          <Image
-            src={thumbnail as string}
-            alt="Course thumbnail"
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full w-full text-gray-500">
-            <div className="text-center">
-              <div className="text-3xl font-bold">No Image</div>
-            </div>
-          </div>
-        )}
+    <div className="sticky border-gray-200 bg-white shadow-lg">
+      <div className="relative aspect-video w-full overflow-hidden">
+        <Image
+          src={thumbnail || PLACEHOLDER_THUMBNAIL}
+          alt="Course thumbnail"
+          fill
+          className="object-cover rounded-t-xl"
+        />
       </div>
 
       <div className="p-6">
         <div className="mb-4">
-          <div className="flex items-baseline gap-3">
-            <span className="font-roboto-condensed-bold text-3xl">{formatPrice(price)}</span>
+          <div className="flex justify-center w-full gap-3">
+            <span className="font-roboto-condensed-bold text-3xl text-red-500">{formatPrice(price)}</span>
             {original_price && (
               <div className='flex gap-2'>
                 <span className="font-roboto-condensed-italic text-gray-500 line-through">{formatPrice(original_price)}</span>
@@ -68,12 +63,13 @@ export default function CourseSidebar({ thumbnail, price, original_price, sale_o
           </div>
         </div>
 
-        <Button className="w-full text-white cursor-pointer mb-3 bg-black transition-all duration-300 ease-in-out hover:bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 font-roboto-bold py-6 text-lg">
-          {t("btnEnroll")}
-        </Button>
-
-        <Button variant="outline" className="w-full mb-6 font-roboto-bold py-6 cursor-pointer">
-          {t("btnCard")}
+        <Link href={`/course-learn/${course_slug}`}>
+          <Button className="w-full text-white cursor-pointer mb-3 bg-pink-600 transition-all duration-300 ease-in-out hover:bg-linear-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 font-roboto-bold py-6 text-lg">
+            {t("btnEnroll")}
+          </Button>
+        </Link>
+        <Button variant="outline" className="w-full mb-6 font-roboto-bold py-6 cursor-pointer" >
+          <Link href={``}>{t("btnCard")}</Link>
         </Button>
 
         <div className="space-y-3">

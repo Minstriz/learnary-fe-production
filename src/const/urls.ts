@@ -1,0 +1,4 @@
+const  PLACEHOLDER_THUMBNAIL = "https://placebear.com/g/200/200";
+const DEFAULT_LANGUAGE = "Vietnamese"
+
+export {PLACEHOLDER_THUMBNAIL,DEFAULT_LANGUAGE}

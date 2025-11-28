@@ -6,12 +6,12 @@ interface CourseHeaderProps {
   category_name: string;
   title: string;
   description: string;
-  rating: number;
-  total_reviews: number;
-  total_students: number;
-  created_by: string;
-  last_updated: string;
-  available_language: string;
+  rating?: number;
+  total_reviews?: number;
+  total_students?: number;
+  created_by?: string;
+  last_updated?: string;
+  available_language?: string;
   level_name: string;
 }
 
@@ -30,7 +30,7 @@ export default function CourseHeader({
   return (
     <div className="bg-gray-900 text-white py-8 px-4 md:px-10">
       <div className="max-w-7xl mx-auto">
-        <Badge className="mb-3 bg-white text-gray-900 hover:bg-gray-100 cursor-default">
+        <Badge className="mb-3 bg-orange-600 text-white hover:bg-gray-100 cursor-default">
           {category_name}
         </Badge>
         <h1 className="font-rosario-bold text-3xl md:text-4xl mb-4">
@@ -46,15 +46,15 @@ export default function CourseHeader({
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
-                  className={`w-4 h-4 ${star <= Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`}
+                  className={`w-4 h-4 ${star <= Math.floor(rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`}
                 />
               ))}
             </div>
-            <span className="text-gray-300">({total_reviews.toLocaleString()} reviews)</span>
+            <span className="text-gray-300">({(total_reviews ?? 0).toLocaleString()} reviews)</span>
           </div>
           <div className="flex items-center gap-1 text-gray-300">
             <Users className="w-4 h-4" />
-            <span>{total_students.toLocaleString()} students</span>
+            <span>{(total_students ?? 0).toLocaleString()} students</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-4 mt-4 font-roboto text-sm text-gray-300">
@@ -69,7 +69,7 @@ export default function CourseHeader({
             <Globe className="w-4 h-4" />
             {available_language}
           </div>
-          <Badge variant="outline" className="text-gray-300 border-gray-600">
+          <Badge variant="outline" className="text-pink-600 font-roboto-bold border-gray-600 bg-white">
             {level_name}
           </Badge>
         </div>

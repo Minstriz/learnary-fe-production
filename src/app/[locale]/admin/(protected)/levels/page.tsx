@@ -35,6 +35,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { CreateLevelForm } from "@/components/CreateLevelForm";
+import { EditLevelForm } from "@/components/EditLevelForm";
 import { ToasterConfirm } from "@/components/ToasterConfimer";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
@@ -53,6 +54,7 @@ export default function LevelsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
+  const [editDialog, setEditDialog] = useState<{ open: boolean; level: Level | null }>({ open: false, level: null });
 
   useEffect(() => {
     fetchLevels();
@@ -239,7 +241,11 @@ export default function LevelsPage() {
                         Copy ID
                       </DropdownMenuItem>
                       <DropdownMenuItem>Xem chi tiết</DropdownMenuItem>
-                      <DropdownMenuItem>Chỉnh sửa</DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setEditDialog({ open: true, level })}
+                      >
+                        Chỉnh sửa
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-600"
                         onClick={() => handleDeleteLevel(level.level_id)}
@@ -254,6 +260,25 @@ export default function LevelsPage() {
           </TableBody>
         </Table>
       </div>
+      {/* Dialog sửa cấp độ */}
+      <Dialog open={editDialog.open} onOpenChange={(open) => setEditDialog(s => ({ ...s, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sửa cấp độ</DialogTitle>
+          </DialogHeader>
+          {editDialog.level && (
+            <EditLevelForm
+              open={editDialog.open}
+              onOpenChange={(open) => setEditDialog(s => ({ ...s, open }))}
+              level={editDialog.level}
+              onSuccess={() => {
+                fetchLevels();
+                setEditDialog({ open: false, level: null });
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

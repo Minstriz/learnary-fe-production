@@ -19,7 +19,8 @@ import { Switch } from "@/components/ui/switch";
 import { Loader2, ChevronLeft, Save, Send, PlusCircle, Trash2, GripVertical, Video, FileQuestion, Plus, X, Pencil } from 'lucide-react';
 import { VideoUploadDialog } from '@/components/VideoUploadDialog';
 import { useAuth } from '@/app/context/AuthContext';
-import { toast } from "sonner";
+import { formatNumberWithDots, parseNumberFromDots } from '@/utils/convert_price';
+import { toast } from 'sonner';
 
 type Category = { category_id: string; category_name: string; };
 type Level = { level_id: string; level_name: string; };
@@ -58,6 +59,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     const { id: courseId } = use(params);
     const router = useRouter();
     const [course, setCourse] = useState<Course | null>(null);
+    const [priceDisplay, setPriceDisplay] = useState<string>('');
     const [videoStaging, setVideoStaging] = useState<VideoStaging>({});
     const [categories, setCategories] = useState<Category[]>([]);
     const [levels, setLevels] = useState<Level[]>([]);
@@ -68,8 +70,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     useEffect(() => {
         if (isAuthLoading) return;
 
-        if (!isLoggedIn || user?.role !== "INSTRUCTOR") {
-        toast.success('Bạn không có quyền truy cập trang này!');
+        if (!isLoggedIn || user?.role !== "INSTRUCTOR"&& user?.role !== "ADMIN") {
+        toast.info('Bạn không có quyền truy cập trang này.');
         router.push(`/`); 
         return;
         }
@@ -95,12 +97,13 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 }
 
                 setCourse(courseData);
+                setPriceDisplay(courseData.price > 0 ? formatNumberWithDots(courseData.price) : '');
                 setVideoStaging(newVideoStaging);
                 setCategories(catRes.data.data || catRes.data);
                 setLevels(lvlRes.data.data || lvlRes.data);
             } catch (err) {
                 console.error(err);
-                 toast.success("Không thể tải dữ liệu. Vui lòng thử lại.");
+                toast.info("Không thể tải dữ liệu. Vui lòng thử lại.");
             } finally {
                 setIsLoading(false);
             }
@@ -191,7 +194,6 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     const canSaveDraft = !hasAnyVideo && course?.status === 'Draft';
     const canSubmit = allChaptersHaveLessons && allLessonsHaveVideo && course?.status === 'Draft';
 
-    // --- SAVE ACTIONS ---
     const handleAction = async (action: 'save' | 'submit') => {
         if (!course) return;
         setIsSaving(true);
@@ -219,7 +221,6 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         }
                     });
                 });
-
                 await api.post(`/courses/submit/${courseId}`, finalPayload);
                 toast.success("Đã gửi phê duyệt thành công!");
                 router.push('/instructor/my-courses');
@@ -305,7 +306,19 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                             </div>
                              <div className="space-y-2">
                                 <Label>Giá (VNĐ)</Label>
-                                <Input type="number" min={0} value={course.price} onChange={(e) => updateCourseState(d => d.price = Number(e.target.value))} />
+                                <Input 
+                                    type="text" 
+                                    value={priceDisplay} 
+                                    onChange={(e) => {
+                                        const rawValue = e.target.value.replace(/\./g, '');
+                                        if (rawValue === '' || /^\d+$/.test(rawValue)) {
+                                            const numValue = parseNumberFromDots(e.target.value);
+                                            updateCourseState(d => d.price = numValue);
+                                            setPriceDisplay(rawValue === '' ? '' : formatNumberWithDots(numValue));
+                                        }
+                                    }} 
+                                    placeholder="0"
+                                />
                             </div>
                              <div className="space-y-2">
                                 <Label>Ảnh bìa (URL)</Label>
