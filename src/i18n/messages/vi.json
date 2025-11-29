@@ -2,7 +2,8 @@
   "Navbar": {
     "home": "Trang chủ",
     "explore": "Khám phá khóa học",
-    "instructor": "Trở thành giảng viên",
+    "become-lecturer": "Trở thành giảng viên",
+    "instructor": "Khu vực giảng viên",
     "detail":"Khu vực học tập",
     "login" : "Đăng nhập",
     "logout":"Đăng xuất",
