@@ -27,8 +27,14 @@ export default function CreateCoursePage() {
   const [categories, setCategories] = useState<CommonType[]>([]);
   const [levels, setLevels] = useState<CommonType[]>([]);
   const [formData, setFormData] = useState({
-    title: '', slug: '', category_id: '', level_id: '', description: '',
-    price: 0, requirement: '', first_chapter_name: ''
+    title: '', 
+    slug: '', 
+    category_id: '', 
+    level_id: '', 
+    description: '',
+    price: 0, 
+    requirement: '', 
+    first_chapter_name: 'Chương 1: Giới thiệu'
   });
   useEffect(() => {
     if (isAuthLoading) return;
@@ -76,20 +82,21 @@ export default function CreateCoursePage() {
         category_id: formData.category_id, 
         level_id: formData.level_id,
         description: formData.description, 
-        price: formData.price, 
+        price: Number(formData.price), 
         requirement: formData.requirement,
         thumbnail: '',
         chapter: [{ 
           chapter_title: formData.first_chapter_name, 
-          order_index: 0, lessons: [], 
-          quiz: null 
+          order_index: 0,
+          lessons: [],
+          quiz: null
         }]
     };  
     console.log("Submitting payload:", payload);
     try {
       const res = await api.post('/courses', payload);
       const courseId = res.data?.data?.course_id || res.data?.course_id || res.data?.id;
-      if (courseId) {
+      if (courseId) { 
         toast.success("Tạo khóa học thành công!");
         // Chuyển hướng
         router.push(`/instructor/edit-course/${courseId}`);

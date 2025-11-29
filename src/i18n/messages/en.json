@@ -2,7 +2,8 @@
   "Navbar": {
     "home": "Home",
     "explore": "Explore Courses",
-    "instructor": "Become an Instructor",
+    "become-lecturer": "Become an Instructor",
+    "instructor": "Instructor Area",
     "detail":"Learning Space",
     "login": "Login",
     "logout":"Logout",

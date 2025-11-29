@@ -2,8 +2,6 @@
 
 import { useState, useEffect, use, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { v4 as uuidv4 } from 'uuid';
 import api from '@/app/lib/axios';
 import { isAxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
@@ -20,6 +18,7 @@ import { Loader2, ChevronLeft, Save, Send, PlusCircle, Trash2, GripVertical, Vid
 import { VideoUploadDialog } from '@/components/VideoUploadDialog';
 import { useAuth } from '@/app/context/AuthContext';
 import { formatNumberWithDots, parseNumberFromDots } from '@/utils/convert_price';
+import { slugify } from '@/utils/utils';
 import { toast } from 'sonner';
 
 type Category = { category_id: string; category_name: string; };
@@ -65,6 +64,9 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     const [levels, setLevels] = useState<Level[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [newlyCreatedChapters, setNewlyCreatedChapters] = useState<string[]>([]);
+    const [newlyCreatedLessons, setNewlyCreatedLessons] = useState<string[]>([]);
     const { user, isLoggedIn, isLoading: isAuthLoading } = useAuth();
 
     useEffect(() => {
@@ -111,58 +113,146 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         fetchData();
     }, [courseId, user,isAuthLoading, isLoggedIn, router]);
 
+    // Cảnh báo khi rời trang mà chưa lưu
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasUnsavedChanges]);
+
     // --- HELPER UPDATE STATE ---
     const updateCourseState = (callback: (currentCourse: Course) => void) => {
         setCourse((prev) => {
             if (!prev) return null;
             const newData = JSON.parse(JSON.stringify(prev)) as Course;
             callback(newData);
+            setHasUnsavedChanges(true);
             return newData;
         });
     };
 
     // --- HANDLERS (Thêm/Sửa/Xóa) ---
-    const handleAddChapter = () => {
-        updateCourseState((draft) => {
-            draft.chapter.push({
-                chapter_id: `new_${uuidv4()}`,
+    const handleAddChapter = async () => {
+        if (!course) return;
+        
+        try {
+            const response = await api.post(`/chapters`, {
+                course_id: courseId,
                 chapter_title: "Chương mới",
-                lessons: []
+                order_index: course.chapter.length
             });
-        });
+            
+            const newChapter = response.data.data || response.data;
+            setNewlyCreatedChapters(prev => [...prev, newChapter.chapter_id]);
+            
+            updateCourseState((draft) => {
+                draft.chapter.push({
+                    chapter_id: newChapter.chapter_id,
+                    chapter_title: newChapter.chapter_title,
+                    lessons: []
+                });
+            });
+            toast.success("Đã thêm chương mới!");
+        } catch (err) {
+            console.error(err);
+            toast.error("Không thể tạo chương. Vui lòng thử lại.");
+        }
     };
 
-    const handleDeleteChapter = (index: number) => {
+    const handleDeleteChapter = async (index: number) => {
         if (!confirm("Bạn chắc chắn muốn xóa chương này?")) return;
-        updateCourseState((draft) => {
-            draft.chapter.splice(index, 1);
-        });
-    };
+        if (!course) return;
+        
+        const chapterIdToDelete = course.chapter[index]?.chapter_id;
+        if (!chapterIdToDelete) return;
 
-    const handleAddLesson = (chapterIndex: number) => {
-        updateCourseState((draft) => {
-            draft.chapter[chapterIndex].lessons.push({
-                lesson_id: `new_${uuidv4()}`,
-                title: "Bài học mới",
-                duration: "00:00",
+        try {
+            await api.delete(`/chapters/${chapterIdToDelete}`);
+            
+            setNewlyCreatedChapters(prev => prev.filter(id => id !== chapterIdToDelete));
+            
+            updateCourseState((draft) => {
+                draft.chapter.splice(index, 1);
             });
-        });
+            toast.success("Đã xóa chương!");
+        } catch (err) {
+            console.error(err);
+            toast.error("Không thể xóa chương. Vui lòng thử lại.");
+        }
     };
 
-    const handleDeleteLesson = (chapterIndex: number, lessonIndex: number) => {
-        if (!confirm("Xóa bài học này?")) return;
-        const lessonIdToDelete = course?.chapter[chapterIndex]?.lessons[lessonIndex]?.lesson_id;
-        updateCourseState((draft) => {
-            draft.chapter[chapterIndex].lessons.splice(lessonIndex, 1);
-        });
+    const handleAddLesson = async (chapterIndex: number) => {
+        if (!course) return;
+        const chapterId = course.chapter[chapterIndex].chapter_id;
+        const lessonTitle = "Bài học mới";
+        
+        console.log('Creating lesson with chapter_id:', chapterId);
+        
+        try {
+            const response = await api.post(`/lessons`, {
+                chapter_id: chapterId,
+                title: lessonTitle,
+                slug: slugify(lessonTitle),
+                duration: "00:00"
+            });
+            
+            console.log('Lesson created response:', response.data);
+            
+            const newLesson = response.data.data || response.data;
+            setNewlyCreatedLessons(prev => [...prev, newLesson.lesson_id]);
+            
+            updateCourseState((draft) => {
+                draft.chapter[chapterIndex].lessons.push({
+                    lesson_id: newLesson.lesson_id,
+                    title: newLesson.title,
+                    duration: newLesson.duration
+                });
+            });
+            toast.success("Đã thêm bài học mới!");
+        } catch (err) {
+            console.error('Error creating lesson:', err);
+            if (isAxiosError(err)) {
+                console.error('Response error:', err.response?.data);
+                toast.error(err.response?.data?.message || "Không thể tạo bài học. Vui lòng thử lại.");
+            } else {
+                toast.error("Không thể tạo bài học. Vui lòng thử lại.");
+            }
+        }
+    };
 
-        // Xóa video khỏi staging (nếu có)
-        if (lessonIdToDelete) {
+    const handleDeleteLesson = async (chapterIndex: number, lessonIndex: number) => {
+        if (!confirm("Xóa bài học này?")) return;
+        if (!course) return;
+        
+        const lessonIdToDelete = course.chapter[chapterIndex]?.lessons[lessonIndex]?.lesson_id;
+        if (!lessonIdToDelete) return;
+
+        try {
+            await api.delete(`/lessons/${lessonIdToDelete}`);
+            
+            setNewlyCreatedLessons(prev => prev.filter(id => id !== lessonIdToDelete));
+            
+            updateCourseState((draft) => {
+                draft.chapter[chapterIndex].lessons.splice(lessonIndex, 1);
+            });
+
+            // Xóa video khỏi staging (nếu có)
             setVideoStaging(prev => {
                 const newStaging = {...prev};
                 delete newStaging[lessonIdToDelete];
                 return newStaging;
             });
+            
+            toast.success("Đã xóa bài học!");
+        } catch (err) {
+            console.error(err);
+            toast.error("Không thể xóa bài học. Vui lòng thử lại.");
         }
     };
 
@@ -171,6 +261,27 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
             ...prev,
             [lessonId]: url,
         }));
+        setHasUnsavedChanges(true);
+    };
+
+    const rollbackChanges = async () => {
+        try {
+            // Xóa tất cả lessons mới tầo
+            for (const lessonId of newlyCreatedLessons) {
+                await api.delete(`/lessons/${lessonId}`);
+            }
+            
+            // Xóa tất cả chapters mới tạo
+            for (const chapterId of newlyCreatedChapters) {
+                await api.delete(`/chapters/${chapterId}`);
+            }
+            
+            setNewlyCreatedChapters([]);
+            setNewlyCreatedLessons([]);
+            setHasUnsavedChanges(false);
+        } catch (err) {
+            console.error('Error rolling back changes:', err);
+        }
     };
 
     const hasAnyVideo = useMemo(() => {
@@ -204,6 +315,9 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     return;
                 }
                 await api.put(`/courses/draft/${courseId}`, course);
+                setHasUnsavedChanges(false);
+                setNewlyCreatedChapters([]);
+                setNewlyCreatedLessons([]);
                 toast.success("Đã lưu bản nháp thành công!");
                 router.push('/instructor/my-courses');
             } else {
@@ -222,6 +336,9 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     });
                 });
                 await api.post(`/courses/submit/${courseId}`, finalPayload);
+                setHasUnsavedChanges(false);
+                setNewlyCreatedChapters([]);
+                setNewlyCreatedLessons([]);
                 toast.success("Đã gửi phê duyệt thành công!");
                 router.push('/instructor/my-courses');
             }
@@ -252,9 +369,24 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
             {/* --- HEADER STICKY --- */}
             <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b px-6 py-4 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-4">
-                    <Link href="/instructor/my-courses" className=''>
-                        <Button variant="ghost" size="icon" className=' hover:bg-gray-300 cursor-pointer'><ChevronLeft /></Button>
-                    </Link>
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className='hover:bg-gray-300 cursor-pointer'
+                        onClick={async () => {
+                            if (hasUnsavedChanges) {
+                                const confirmed = confirm(
+                                    'Bạn có thay đổi chưa lưu. Nếu rời trang, tất cả thay đổi mới tạo sẽ bị xóa. Bạn có chắc muốn rời trang?'
+                                );
+                                if (!confirmed) return;
+                                
+                                await rollbackChanges();
+                            }
+                            router.push('/instructor/my-courses');
+                        }}
+                    >
+                        <ChevronLeft />
+                    </Button>
                     <div>
                         <h1 className="text-xl font-bold text-slate-900 truncate max-w-md">{course.title}</h1>
                         <div className="flex items-center gap-2 mt-1">
@@ -324,6 +456,10 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                 <Label>Ảnh bìa (URL)</Label>
                                 <Input value={course.thumbnail || ''} onChange={(e) => updateCourseState(d => d.thumbnail = e.target.value)} placeholder="https://..." />
                                 {/* TODO: Thay bằng component Upload Image */}
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Yêu cầu của khóa học</Label>
+                                <Textarea rows={4} value={course.requirement || ''} onChange={(e) => updateCourseState(d => d.requirement = e.target.value)} />
                             </div>
                             <div className="space-y-2">
                                 <Label>Mô tả ngắn</Label>
