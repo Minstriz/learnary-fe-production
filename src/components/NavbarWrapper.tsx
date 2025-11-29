@@ -2,7 +2,6 @@
 import React from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
-
 interface NavbarWrapperProps {
   children: React.ReactNode;
   locale: string;

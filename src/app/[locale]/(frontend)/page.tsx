@@ -22,15 +22,14 @@ export default function HomePage() {
       </div>
     );
   }
-
-  return ( 
-    <div className="w-full h-screen overflow-y-auto snap-y snap-mandatory scroll-smooth scrollbar-hide">
-      <section className="h-screen snap-start">
+  return (
+    <div className="w-full min-h-screen ">
+      <section className="min-h-screen">
         <Hero />
       </section>
-      <section className="min-h-screen snap-start shadow-2xl">
+      <section className="min-h-screen shadow-2xl pb-20">
         <ListTopic />
-        <ListCourseCard title="Tất cả khoá học"/>
+        <ListCourseCard title="Tất cả khoá học" />
       </section>
     </div>
   );

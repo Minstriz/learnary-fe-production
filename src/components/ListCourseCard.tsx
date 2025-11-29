@@ -48,7 +48,7 @@ const ListCourseCard: React.FC<ListCourseCardProps> = ({ title, courses }) => {
   }
 
   return isMobile ? (
-    <div>
+    <div className="">
       <div className="title w-full font-roboto-condensed-bold text-2xl pl-5 pb-5 pt-5">{title}</div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
         {coursesData.map((course) => (
