@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useEffect} from 'react';
-import { useParams,useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import api from '@/app/lib/axios';
 import { AxiosError } from 'axios';
 import { useAuth } from "@/app/context/AuthContext";
+// Import types
+import { Chapter, Lesson, Question, Option } from '@/type/course.type';
+import { InstructorWithData } from '@/type/user.type';
 // Import các component UI
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,46 +17,50 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { BarChart2, Users, PlayCircle, Lock, FileQuestion, Eye, PauseCircle, Loader2, AlertCircle, ChevronLeft } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart2, Users, PlayCircle, Lock, FileQuestion, Eye, PauseCircle, Loader2, AlertCircle, ChevronLeft, LayoutTemplate, MonitorPlay } from 'lucide-react';
 import Video from '@/components/Video';
 import { toast } from "sonner";
+// Import course components
+import CourseHeader from '@/components/CourseHeader';
+import CourseTabs from '@/components/CourseTabs';
+import CourseOverview from '@/components/CourseOverview';
+import CourseCurriculum from '@/components/CourseCurriculum';
+import InstructorInfo from '@/components/InstructorInfo';
+import CourseSidebar from '@/components/CourseSidebar';
 
-type Lesson = {
-  lesson_id: string;
-  title: string;
-  duration: string;
-  video_url?: string | null;
-};
-type Option = { option_id: string; option_content: string; is_correct: boolean };
-type Question = { question_id: string; title: string; options: Option[] };
-type Quiz = { quiz_id: string; title: string; questions: Question[]; };
-type Chapter = {
-  chapter_id: string;
-  chapter_title: string;
-  lessons: Lesson[];
-  quiz?: Quiz | null;
-};
-type User = {
-  fullName: string;
-  avatar: string | null;
-  bio: string | null;
-};
-type Instructor = {
-  user: User;
-};
-type Course = {
+type ViewMode = "marketing" | "content";
+
+type CourseData = {
   course_id: string;
   title: string;
   description: string;
   thumbnail: string;
-  price: number;
-  status: string;
+  slug: string;
   admin_note?: string | null;
-  level: { level_name: string };
-  category: { category_name: string };
-  instructor: Instructor;
-  chapter: Chapter[];
-  _count: { chapter: number; lessons: number };
+  price: number;
+  original_price?: number;
+  sale_off?: boolean;
+  status: "Draft" | "Published" | "Pending" | "Archived";
+  category_name?: string;
+  category?: { category_name: string };
+  level_name?: string;
+  level?: { level_name: string };
+  instructor: InstructorWithData;
+  rating?: number;
+  total_reviews?: number;
+  total_students?: number;
+  created_by?: string;
+  last_updated?: string;
+  updatedAt?: string;
+  available_language?: string;
+  what_you_learn?: string[];
+  requirement?: string[] | string;
+  chapter?: Chapter[];
+  total_lectures?: number;
+  total_hours?: number;
+  includes?: string[];
+  _count?: { chapter: number; lessons: number };
 };
 
 export default function CourseDetailPage() {
@@ -61,15 +68,16 @@ export default function CourseDetailPage() {
   const router = useRouter();
   const id = params.id as string;
   const { user, isLoggedIn, isLoading: isAuthLoading } = useAuth();
-  const [course, setCourse] = useState<Course | null>(null);
+  const [course, setCourse] = useState<CourseData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("marketing");
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
-  const fetchCourse = async (id:string) => {
+  const fetchCourse = async (id: string) => {
     try {
       setIsLoading(true);
-      const response = await api.get(`/courses/${id}`);
+      const response = await api.get<CourseData>(`/courses/${id}`);
       setCourse(response.data);
     } catch (err) {
       let errorMessage = 'Không thể tải khóa học';
@@ -93,19 +101,22 @@ export default function CourseDetailPage() {
   }, [id, isAuthLoading, isLoggedIn, user, router]);
 
   useEffect(() => {
-    if (course && course.chapter) {
-      for (const chapter of course.chapter) {
+    if (viewMode === 'content' && course) {
+      const chapters = course.chapter || [];
+      for (const chapter of chapters) {
         if (chapter.lessons && chapter.lessons.length > 0) {
           const firstLesson = chapter.lessons[0];
-          setSelectedLessonId(firstLesson.lesson_id);
-          if (firstLesson.video_url) {
-            setCurrentVideoUrl(firstLesson.video_url);
+          if (!selectedLessonId) {
+            setSelectedLessonId(firstLesson.lesson_id);
+            if (firstLesson.video_url) {
+              setCurrentVideoUrl(firstLesson.video_url);
+            }
           }
-          return;
+          break;
         }
       }
     }
-  }, [course]);
+  }, [viewMode, course, selectedLessonId]);
 
   const handleLessonClick = (lesson: Lesson) => {
     setSelectedLessonId(lesson.lesson_id);
@@ -115,7 +126,6 @@ export default function CourseDetailPage() {
   if (isLoading) return <CourseDetailSkeleton />;
   if (error) return <div className="container mx-auto p-6 text-red-500">Lỗi: {error}</div>;
   if (!course) return <div className="container mx-auto p-6">Không tìm thấy khóa học.</div>;
-
   if (isAuthLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -123,46 +133,172 @@ export default function CourseDetailPage() {
       </div>
     );
   }
+
+  const chaptersData = course.chapter || [];
+  const categoryName = course.category_name || course.category?.category_name || "";
+  const levelName = course.level_name || course.level?.level_name || "";
+  const formattedLastUpdated = course.last_updated || (course.updatedAt ? new Date(course.updatedAt).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN'));
+  const requirementProp = Array.isArray(course.requirement) 
+    ? course.requirement.join('\n') 
+    : course.requirement || "";
+
+  const mappedIncludes = (course.includes || []).map(item => ({
+    icon: "check-circle",
+    text: item
+  }));
+
+  const mappedChapters: Chapter[] = (chaptersData || []).map((ch) => ({
+    chapter_id: ch.chapter_id,
+    course_id: course.course_id,
+    chapter_title: ch.chapter_title || "",
+    lessons: ch.lessons || [],
+    order_index: ch.order_index || 0,
+    quiz: ch.quiz || undefined
+  }));
+
   return (
-    <div className="container mx-auto max-w-6xl p-4 md:p-6">
-      
-      {/* 👇 HIỂN THỊ LÝ DO TỪ CHỐI (Nếu có) */}
-      {/* Logic: Nếu status là Archived (hoặc Draft do bị từ chối) VÀ có admin_note */}
-      {(course.status === 'Archived' || (course.status === 'Draft' && course.admin_note)) && (
+    <div className="min-h-screen bg-gray-50/50 pb-10">
+      {/* HEADER WITH VIEW SWITCHER */}
+      <div className="sticky top-0 z-40 bg-white border-b shadow-sm px-6 py-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/instructor/my-courses">
+            <Button variant="ghost" size="icon" className="hover:bg-gray-300 cursor-pointer">
+              <ChevronLeft />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-lg font-bold line-clamp-1 max-w-[300px] md:max-w-md" title={course.title}>
+              {course.title}
+            </h1>
+            <div className="flex items-center gap-2 text-xs mt-1">
+              <Badge 
+                className={
+                  course.status === 'Published' ? "bg-green-600 hover:bg-green-700" : 
+                  course.status === 'Pending' ? "bg-amber-500 hover:bg-amber-600" : "bg-gray-500"
+                }
+              >
+                {course.status}
+              </Badge>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* View Mode Switcher */}
+          <div className="bg-slate-100 p-1 rounded-lg hidden md:flex">
+            <button 
+              onClick={() => setViewMode('marketing')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${
+                viewMode === 'marketing' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <LayoutTemplate className="h-4 w-4" /> Trang giới thiệu
+            </button>
+            <button 
+              onClick={() => setViewMode('content')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${
+                viewMode === 'content' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <MonitorPlay className="h-4 w-4" /> Nội dung học
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile View Switcher */}
+      <div className="md:hidden px-4 py-3 bg-white border-b flex justify-center shadow-sm">
+        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="marketing">Giới thiệu</TabsTrigger>
+            <TabsTrigger value="content">Bài học</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      {/* ADMIN NOTE */}
+      {(course.status === 'Archived' || (course.status === 'Draft' && course.admin_note)) && course.admin_note && (
+        <div className="container mx-auto p-4 md:p-8">
           <div className="mb-6 animate-in fade-in slide-in-from-top-2">
-              <div className="p-4 bg-red-50 border border-red-200 rounded-md flex gap-3 text-red-800 shadow-sm items-start">
-                  <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-                  <div>
-                      <h4 className="font-bold text-sm uppercase">Khóa học cần chỉnh sửa</h4>
-                      <p className="text-sm mt-1 font-medium">
-                          <span className="font-bold">Lý do từ chối: </span>
-                          {course.admin_note}
-                      </p>
-                  </div>
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md flex gap-3 text-red-800 shadow-sm items-start">
+              <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-bold text-sm uppercase">Khóa học cần chỉnh sửa</h4>
+                <p className="text-sm mt-1 font-medium">
+                  <span className="font-bold">Lý do từ chối: </span>
+                  {course.admin_note}
+                </p>
               </div>
+            </div>
           </div>
+        </div>
       )}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* CỘT CHÍNH (BÊN TRÁI) */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Thông tin chung */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-4">
-              <Link href="/instructor/my-courses" className=''>
-                <Button variant="ghost" size="icon" className=' hover:bg-gray-300 cursor-pointer'><ChevronLeft /></Button>
-              </Link>
-              <h1 className="text-3xl md:text-4xl font-bold">{course.title}</h1>
-              <p className="text-lg text-muted-foreground">{course.description}</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline">Category: {course.category?.category_name}</Badge>
-              <Badge variant="outline">Level: {course.level?.level_name}</Badge>
+      {/* MAIN CONTENT */}
+      <div className="container mx-auto p-4 md:p-8">
+        {/* MARKETING VIEW */}
+        {viewMode === 'marketing' && (
+          <div className="animate-in fade-in zoom-in-95 duration-300">
+            <CourseHeader
+              category_name={categoryName}
+              title={course.title}
+              description={course.description}
+              rating={course.rating || 0}
+              total_reviews={course.total_reviews || 0}
+              total_students={course.total_students || 0}
+              created_by={course.created_by || course.instructor?.user?.fullName || "Giảng viên"}
+              last_updated={formattedLastUpdated}
+              available_language={course.available_language || "Tiếng Việt"}
+              level_name={levelName}
+            />
+
+            <div className="max-w-7xl mx-auto mt-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2">
+                  <CourseTabs>
+                    <TabsContent value="overview" className="mt-6">
+                      <CourseOverview 
+                        what_you_learn={course.what_you_learn || []} 
+                        requirement={requirementProp} 
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="curriculum" className="mt-6">
+                      <CourseCurriculum 
+                        chapters={mappedChapters} 
+                        total_duration={`${course.total_hours || 0} giờ`} 
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="instructor" className="mt-6">
+                      <InstructorInfo instructor={course.instructor} />
+                    </TabsContent>
+                  </CourseTabs>
+                </div>
+
+                <div className="lg:col-span-1">
+                  <div className="sticky top-24">
+                    <CourseSidebar
+                      course_slug={course.slug || ""}
+                      thumbnail={course.thumbnail}
+                      price={course.price}
+                      original_price={course.original_price}
+                      includes={mappedIncludes}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+        )}
 
-          {/* VIDEO PLAYER */}
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden border bg-black shadow-lg z-10">
+        {/* CONTENT VIEW */}
+        {viewMode === 'content' && (
+          <div className="animate-in fade-in zoom-in-95 duration-300">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-6">
+                {/* VIDEO PLAYER */}
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden border bg-black shadow-lg z-10">
             {currentVideoUrl ? (
               <Video key={currentVideoUrl} video_url={currentVideoUrl} />
             ) : (
@@ -182,11 +318,11 @@ export default function CourseDetailPage() {
             )}
           </div>
 
-          {/* NỘI DUNG KHÓA HỌC */}
-          <div className="space-y-4 pt-4">
-            <h2 className="text-2xl font-semibold">Nội dung khóa học</h2>
-            <Accordion type="multiple" className="w-full" defaultValue={course.chapter?.[0]?.chapter_id ? [course.chapter[0].chapter_id] : undefined}>
-              {course.chapter.map((chapter) => {
+              {/* NỘI DUNG KHÓA HỌC */}
+              <div className="space-y-4 pt-4">
+                <h2 className="text-2xl font-semibold">Nội dung khóa học</h2>
+                <Accordion type="multiple" className="w-full" defaultValue={chaptersData?.[0]?.chapter_id ? [chaptersData[0].chapter_id] : undefined}>
+                  {chaptersData.map((chapter: Chapter) => {
                 const chapterQuiz = chapter.quiz;
                 return (
                   <AccordionItem value={chapter.chapter_id} key={chapter.chapter_id}>
@@ -199,8 +335,8 @@ export default function CourseDetailPage() {
 
                     <AccordionContent className="pt-2 pb-4 px-4">
                       <ul className="space-y-1">
-                        {/* DANH SÁCH BÀI HỌC */}
-                        {chapter.lessons?.map((lesson) => {
+                          {/* DANH SÁCH BÀI HỌC */}
+                          {chapter.lessons?.map((lesson: Lesson) => {
                           const isSelected = lesson.lesson_id === selectedLessonId;
                           const canPlay = !!lesson.video_url;
                           return (
@@ -252,14 +388,14 @@ export default function CourseDetailPage() {
                                   <DialogTitle className="text-xl text-primary">{chapterQuiz.title}</DialogTitle>
                                 </DialogHeader>
                                 <div className="space-y-8 py-4">
-                                  {chapterQuiz.questions?.map((question, qIndex) => (
+                                  {chapterQuiz.questions?.map((question: Question, qIndex: number) => (
                                     <div key={question.question_id} className="space-y-4 p-4 bg-slate-50 rounded-lg border">
                                       <h4 className="text-base font-medium flex gap-2">
                                         <Badge variant="outline" className="h-fit">Câu {qIndex + 1}</Badge>
                                         <span>{question.title}</span>
                                       </h4>
                                       <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        {question.options?.map((option, oIndex) => (
+                                        {question.options?.map((option: Option, oIndex: number) => (
                                           <li
                                             key={option.option_id}
                                             className={`flex items-start gap-3 p-3 rounded-md border bg-white ${option.is_correct ? 'border-green-300 bg-green-50/50' : 'border-slate-200'}`}
@@ -287,9 +423,9 @@ export default function CourseDetailPage() {
           </div>
         </div>
 
-        {/* SIDEBAR (BÊN PHẢI) */}
+        {/* SIDEBAR PHẢI */}
         <div className="lg:col-span-1 space-y-6">
-          <Card className="top-24 shadow-md border-t-4 border-t-primary">
+          <Card className="sticky top-24 shadow-md border-t-4 border-t-primary">
             <CardHeader className="pb-2">
               <h3 className="text-3xl font-bold text-center text-primary">
                 {course.price > 0 ? `${Number(course.price).toLocaleString('vi-VN')} đ` : 'Miễn phí'}
@@ -331,6 +467,9 @@ export default function CourseDetailPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+    </div>
+  )}
       </div>
     </div>
   );
