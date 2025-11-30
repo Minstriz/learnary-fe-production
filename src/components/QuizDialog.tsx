@@ -11,19 +11,21 @@ import {
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Quiz, Question, Answer } from '@/type/course.type';
+import { Quiz, Question } from '@/type/course.type';
 import api from '@/app/lib/axios';
 import { toast } from 'sonner';
 import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 
 type QuizDialogProps = {
+  is_completed?: boolean;
+  user_id: string;
   quiz: Quiz & { questions: Question[] };
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onComplete?: () => void;
 };
 
-const QuizDialog: React.FC<QuizDialogProps> = ({ quiz, open, onOpenChange, onComplete }) => {
+const QuizDialog: React.FC<QuizDialogProps> = ({ quiz, open, onOpenChange, onComplete, user_id }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,44 +75,55 @@ const QuizDialog: React.FC<QuizDialogProps> = ({ quiz, open, onOpenChange, onCom
   };
 
   const handleSubmit = async () => {
-    if (!allQuestionsAnswered) {
-      toast.error('Vui lòng trả lời tất cả các câu hỏi!');
-      return;
+  if (!allQuestionsAnswered) {
+    toast.error('Vui lòng trả lời tất cả các câu hỏi!');
+    return;
+  }
+
+  setIsSubmitting(true);
+  try {
+    const payload = {
+      user_id: user_id.trim(), 
+      quiz_id: quiz.quiz_id.trim(), 
+      answers: Object.entries(answers).map(([question_id, option_id]) => ({
+        question_id: question_id.trim(),
+        option_id: option_id.trim() 
+      })),
+      is_completed: true,
+      duration: calculateDuration()
+    };
+    const response = await api.post('/submissions/create', payload);
+    if (!response.data.success) {
+      throw new Error(response.data.error?.message || 'Submit failed');
     }
-
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        quiz_id: quiz.quiz_id,
-        answers: Object.entries(answers).map(([question_id, option_id]) => ({
-          question_id,
-          option_id
-        })),
-        duration: calculateDuration()
-      };
-
-      const response = await api.post('/submissions/create', payload);
-      
-      // Calculate score
-      const correctAnswers = response.data.answers?.filter((a: Answer) => a.is_correct).length || 0;
-      setResult({
-        score: correctAnswers,
-        total: totalQuestions
-      });
-      setShowResult(true);
-      
-      toast.success('Nộp bài thành công!');
-      
-      if (onComplete) {
-        onComplete();
+    let correctAnswers = 0;
+    quiz.questions.forEach(question => {
+      const userAnswerId = answers[question.question_id]?.trim(); 
+      const correctOption = question.options?.find(opt => opt.is_correct);
+      const correctOptionId = correctOption?.option_id?.trim(); 
+      if (userAnswerId === correctOptionId) {
+        correctAnswers++;
       }
-    } catch (error) {
-      console.error('Error submitting quiz:', error);
-      toast.error('Có lỗi xảy ra khi nộp bài!');
-    } finally {
-      setIsSubmitting(false);
+    });
+
+    setResult({
+      score: correctAnswers,
+      total: totalQuestions
+    });
+    setShowResult(true);
+    toast.success(`Nộp bài thành công! Bạn đạt ${correctAnswers}/${totalQuestions} câu đúng`);
+    if (onComplete) {
+      onComplete();
     }
-  };
+  } catch (error) {
+    console.error('Error submitting quiz:', error);
+    toast.error('Có lỗi xảy ra khi nộp bài!');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+
 
   const handleClose = () => {
     if (!showResult && Object.keys(answers).length > 0) {
@@ -137,7 +150,7 @@ const QuizDialog: React.FC<QuizDialogProps> = ({ quiz, open, onOpenChange, onCom
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">{quiz.title}</DialogTitle>
-          <DialogDescription>
+          <DialogDescription asChild>
             {showResult ? (
               <div className="flex items-center gap-2 mt-2">
                 {result && result.score / result.total >= 0.8 ? (
@@ -148,7 +161,7 @@ const QuizDialog: React.FC<QuizDialogProps> = ({ quiz, open, onOpenChange, onCom
                 <span>Kết quả bài kiểm tra của bạn</span>
               </div>
             ) : (
-              `Câu hỏi ${currentQuestionIndex + 1}/${totalQuestions}`
+              <span>Câu hỏi {currentQuestionIndex + 1}/{totalQuestions}</span>
             )}
           </DialogDescription>
         </DialogHeader>
@@ -164,7 +177,7 @@ const QuizDialog: React.FC<QuizDialogProps> = ({ quiz, open, onOpenChange, onCom
             <p className="text-sm text-gray-500">
               Tỷ lệ: {((result.score / result.total) * 100).toFixed(1)}%
             </p>
-            
+
             <div className="mt-8 space-y-4">
               {quiz.questions.map((question, idx) => {
                 const userAnswerId = answers[question.question_id];
@@ -225,13 +238,12 @@ const QuizDialog: React.FC<QuizDialogProps> = ({ quiz, open, onOpenChange, onCom
                 <button
                   key={q.question_id}
                   onClick={() => setCurrentQuestionIndex(idx)}
-                  className={`w-8 h-8 rounded-full text-sm font-semibold transition-colors ${
-                    idx === currentQuestionIndex
+                  className={`w-8 h-8 rounded-full text-sm font-semibold transition-colors ${idx === currentQuestionIndex
                       ? 'bg-blue-600 text-white'
                       : answers[q.question_id]
-                      ? 'bg-green-200 text-green-800'
-                      : 'bg-gray-200 text-gray-600'
-                  }`}
+                        ? 'bg-green-200 text-green-800'
+                        : 'bg-gray-200 text-gray-600'
+                    }`}
                 >
                   {idx + 1}
                 </button>
@@ -242,7 +254,11 @@ const QuizDialog: React.FC<QuizDialogProps> = ({ quiz, open, onOpenChange, onCom
 
         <DialogFooter>
           {showResult ? (
-            <Button onClick={handleClose} className="w-full">
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              className="w-full cursor-pointer hover:bg-pink-600 border border-pink-600 text-pink-600 hover:text-white"
+            >
               Đóng
             </Button>
           ) : (

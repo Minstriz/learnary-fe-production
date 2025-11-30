@@ -20,8 +20,10 @@ import { useParams, useRouter } from 'next/navigation';
 import api from '@/app/lib/axios';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { useAuth } from '@/app/context/AuthContext';
 
 const CourseDetailPage = () => {
+  const user = useAuth();
   const isMobile = useIsMobile();
   const params = useParams();
   const router = useRouter();
@@ -182,6 +184,7 @@ const CourseDetailPage = () => {
 
       {selectedQuiz && selectedQuiz.questions && (
         <QuizDialog
+          user_id=''
           quiz={selectedQuiz as Quiz & { questions: NonNullable<Quiz['questions']> }}
           open={isQuizDialogOpen}
           onOpenChange={setIsQuizDialogOpen}
@@ -247,6 +250,7 @@ const CourseDetailPage = () => {
 
       {selectedQuiz && selectedQuiz.questions && (
         <QuizDialog
+          user_id={user.user?.id ?? ""}
           quiz={selectedQuiz as Quiz & { questions: NonNullable<Quiz['questions']> }}
           open={isQuizDialogOpen}
           onOpenChange={setIsQuizDialogOpen}

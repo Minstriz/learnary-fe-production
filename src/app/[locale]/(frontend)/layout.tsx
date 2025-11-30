@@ -1,7 +1,7 @@
 "use client";
 import NavbarWrapper from "@/components/NavbarWrapper";
 import { useParams } from "next/navigation";
-import Footer from "@/components/Footer";
+/* import Footer from "@/components/Footer"; */
 
 // Layout này CHỈ áp dụng cho các trang user (FE)
 export default function FrontendLayout({
@@ -20,7 +20,7 @@ export default function FrontendLayout({
           {children}
         </main>
       </NavbarWrapper>
-      <Footer />
+     {/*  <Footer /> */}
     </div>
   );
 }

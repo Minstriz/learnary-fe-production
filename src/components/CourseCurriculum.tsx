@@ -84,7 +84,7 @@ export default function CourseCurriculum({ chapters }: CourseCurriculumProps) {
               {isExpanded && (
                 <div className="border-t border-gray-200 bg-gray-50 ">
                   {chapterLessons.map((lesson) => (
-                    <div key={lesson.lesson_id} className="flex items-center cursor-pointer hover:bg-black  justify-between p-4 border-b border-gray-200 group last:border-b-0">
+                    <div key={lesson.lesson_id} className="flex items-center cursor-pointer hover:bg-pink-600  justify-between p-4 border-b border-gray-200 group last:border-b-0">
                       <div className="flex items-center gap-3 ">
                         {lesson.isCompleted ? (
                           <FileCheck className="w-5 h-5 text-green-600" />
