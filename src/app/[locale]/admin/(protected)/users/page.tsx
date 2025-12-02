@@ -46,6 +46,7 @@ import {
    DialogTitle,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
+import { UserRole } from '@/type/user.type';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const UserSchema = z.object({
@@ -126,7 +127,7 @@ export default function UserManagement() {
    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
    const [dateInputValue, setDateInputValue] = useState<string>("");
    const [avatarTimestamp, setAvatarTimestamp] = useState<number>(Date.now());
-   
+
    useEffect(() => {
       fetchUsers();
    }, []);
@@ -135,7 +136,7 @@ export default function UserManagement() {
       setSelecteduser(user);
       setEditData(user);
       setDateInputValue(formatDateForInput(user.dateOfBirth));
-      setEditMode(false); 
+      setEditMode(false);
       setIsDialogOpen(true);
       setAvatarFile(null);
       setAvatarPreview(null);
@@ -229,7 +230,7 @@ export default function UserManagement() {
 
    const submitChange = async () => {
       if (!selectedUser) return;
-   
+
       try {
          const dataToValidate = {
             fullName: (editData.fullName || selectedUser.fullName)?.trim() || "",
@@ -256,9 +257,9 @@ export default function UserManagement() {
             nation: dataToValidate.nation || null,
             bio: dataToValidate.bio || null,
          });
-         
+
          setIsSaving(true);
-         
+
          if (avatarFile) {
             const formData = new FormData();
             formData.append('avatar', avatarFile);
@@ -273,16 +274,16 @@ export default function UserManagement() {
                setAvatarTimestamp(Date.now());
             }
          }
-         
-         if(editData.dateOfBirth) {
+
+         if (editData.dateOfBirth) {
             const date = new Date(editData.dateOfBirth);
-            if(!isNaN(date.getTime())) {
-               editData.dateOfBirth=date.toISOString();
+            if (!isNaN(date.getTime())) {
+               editData.dateOfBirth = date.toISOString();
             } else {
                delete editData.dateOfBirth;
             }
          }
-         
+
          if (editData.role && editData.role !== selectedUser.role) {
             await api.patch(`/users/update-role/${selectedUser.user_id}`, {
                role: editData.role
@@ -326,6 +327,13 @@ export default function UserManagement() {
       return matchSearch && matchActive;
    });
 
+   const labeledRole: Record<UserRole,"destructive" | "outline" | "default"> = {
+      ADMIN:"destructive",
+      INSTRUCTOR:"default",
+      LEARNER:"outline",
+   }
+
+
    if (isLoading) {
       return (
          <div className="flex items-center justify-center min-h-screen">
@@ -336,60 +344,60 @@ export default function UserManagement() {
 
    return (
       <div className="space-y-6 p-4 max-w-screen">
-            <div className='flex flex-col gap-2'>
-               <h1 className="text-3xl font-bold">Quản lý người dùng</h1>
-               <p className="text-gray-500 mt-1">Tổng số: {users.length} người dùng</p>
-            </div>
+         <div className='flex flex-col gap-2'>
+            <h1 className="text-3xl font-bold">Quản lý người dùng</h1>
+            <p className="text-gray-500 mt-1">Tổng số: {users.length} người dùng</p>
+         </div>
 
-            <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-               <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                     placeholder="Tìm kiếm theo tên hoặc email..."
-                     value={searchTerm}
-                     onChange={(e) => setSearchTerm(e.target.value)}
-                     className="pl-10"
-                  />
-               </div>
-               <div className="flex gap-2 flex-wrap">
-                  <Button
-                     variant={filterActive === null ? "default" : "outline"}
-                     onClick={() => setFilterActive(null)}
-                     className="cursor-pointer hover:bg-gray-300"
-                  >
-                     Tất cả
-                  </Button>
-                  <Button
-                     variant={filterActive === true ? "default" : "outline"}
-                     onClick={() => setFilterActive(true)}
-                     className="cursor-pointer hover:bg-gray-300"
-                  >
-                     Tài khoản đang mở
-                  </Button>
-                  <Button
-                     variant={filterActive === false ? "default" : "outline"}
-                     onClick={() => setFilterActive(false)}
-                     className="cursor-pointer hover:bg-gray-300"
-                  >
-                     Tài khoản bị khoá
-                  </Button>
-                  <Button
-                     variant={"outline"}
-                     onClick={reload}
-                     className="cursor-pointer hover:bg-gray-300"
-                  >
-                     <RefreshCcw /> Reload
-                  </Button>
-               </div>
+         <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+            <div className="relative flex-1 max-w-md">
+               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+               <Input
+                  placeholder="Tìm kiếm theo tên hoặc email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+               />
             </div>
+            <div className="flex gap-2 flex-wrap">
+               <Button
+                  variant={filterActive === null ? "default" : "outline"}
+                  onClick={() => setFilterActive(null)}
+                  className="cursor-pointer hover:bg-gray-300"
+               >
+                  Tất cả
+               </Button>
+               <Button
+                  variant={filterActive === true ? "default" : "outline"}
+                  onClick={() => setFilterActive(true)}
+                  className="cursor-pointer hover:bg-gray-300"
+               >
+                  Tài khoản đang mở
+               </Button>
+               <Button
+                  variant={filterActive === false ? "default" : "outline"}
+                  onClick={() => setFilterActive(false)}
+                  className="cursor-pointer hover:bg-gray-300"
+               >
+                  Tài khoản bị khoá
+               </Button>
+               <Button
+                  variant={"outline"}
+                  onClick={reload}
+                  className="cursor-pointer hover:bg-gray-300"
+               >
+                  <RefreshCcw /> Reload
+               </Button>
+            </div>
+         </div>
 
          <div className="border rounded-lg overflow-x-auto">
             <Table>
                <TableHeader>
                   <TableRow>
                      <TableHead>Người dùng</TableHead>
+                     <TableHead>Role</TableHead>
                      <TableHead>Email</TableHead>
-                     <TableHead>Trạng thái</TableHead>
                      <TableHead className="text-right">Hành động</TableHead>
                   </TableRow>
                </TableHeader>
@@ -399,10 +407,10 @@ export default function UserManagement() {
                         <TableCell>
                            <div className="flex items-center gap-3">
                               <Avatar className="h-10 w-10 shrink-0">
-                                 <AvatarImage 
-                                 /* đổi params để báo với trình duyệt là url này thay đổi, nếu không có thì trình duyệt sẽ lấy cache url của ảnh cũ, không hiển thị ảnh mới */
-                                    src={user.avatar ? `${user.avatar}?t=${Date.now()}` : undefined} 
-                                    className="object-cover" 
+                                 <AvatarImage
+                                    /* đổi params để báo với trình duyệt là url này thay đổi, nếu không có thì trình duyệt sẽ lấy cache url của ảnh cũ, không hiển thị ảnh mới */
+                                    src={user.avatar ? `${user.avatar}?t=${Date.now()}` : undefined}
+                                    className="object-cover"
                                  />
                                  <AvatarFallback>
                                     {user.fullName.charAt(0).toUpperCase()}
@@ -410,7 +418,16 @@ export default function UserManagement() {
                               </Avatar>
                               <div>
                                  <p className="font-medium">{user.fullName}</p>
-                                 <p className="text-sm text-gray-500">{user.bio || "Chưa có mô tả"}</p>
+                              </div>
+                           </div>
+                        </TableCell>
+
+                        <TableCell>
+                           <div className="flex items-center gap-3">
+                              <div>
+                                 <Badge variant={labeledRole[user.role]}>
+                                       {user.role}
+                                 </Badge>
                               </div>
                            </div>
                         </TableCell>
@@ -426,20 +443,6 @@ export default function UserManagement() {
                                     <Phone className="h-3 w-3 text-gray-400" />
                                     {user.phone}
                                  </div>
-                              )}
-                           </div>
-                        </TableCell>
-
-                        <TableCell>
-                           <div className="space-y-1">
-                              {user.isActive ? (
-                                 <Badge variant={"default"} className="bg-green-600">
-                                    Đang mở
-                                 </Badge>
-                              ) : (
-                                 <Badge variant={"destructive"} className="bg-red-600">
-                                    Tài khoản bị khoá
-                                 </Badge>
                               )}
                            </div>
                         </TableCell>
@@ -476,12 +479,12 @@ export default function UserManagement() {
                         <div className="flex sm:flex-row items-start sm:items-center gap-4">
                            <div className="relative">
                               <Avatar className="w-16 h-16 shrink-0">
-                                 <AvatarImage 
+                                 <AvatarImage
                                     src={
-                                       avatarPreview || 
+                                       avatarPreview ||
                                        (selectedUser.avatar ? `${selectedUser.avatar}?t=${avatarTimestamp}` : undefined)
-                                    } 
-                                    className="object-cover" 
+                                    }
+                                    className="object-cover"
                                  />
                                  <AvatarFallback>
                                     {selectedUser.fullName.charAt(0).toUpperCase()}
@@ -489,7 +492,7 @@ export default function UserManagement() {
                               </Avatar>
                               {editMode && (
                                  <Label htmlFor="avatar-upload" className="absolute -bottom-1 -right-1 cursor-pointer">
-                                    <CircleFadingArrowUpIcon/>
+                                    <CircleFadingArrowUpIcon />
                                     <input
                                        id="avatar-upload"
                                        type="file"
