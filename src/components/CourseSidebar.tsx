@@ -16,9 +16,11 @@ interface CourseSidebarProps {
     icon: string;
     text: string;
   }>;
+  onBuyNow?: () => void;
+  isLoading?: boolean;
 }
 
-export default function CourseSidebar({ thumbnail, price, original_price, sale_off, includes, course_slug }: CourseSidebarProps) {
+export default function CourseSidebar({ thumbnail, price, original_price, sale_off, includes, course_slug,onBuyNow, isLoading }: CourseSidebarProps) {
   const t = useTranslations("Course-Detail-Sidebar");
   original_price = 1200000
   sale_off = 50
@@ -71,6 +73,13 @@ export default function CourseSidebar({ thumbnail, price, original_price, sale_o
         <Button variant="outline" className="w-full mb-6 font-roboto-bold py-6 cursor-pointer" >
           <Link href={``}>{t("btnCard")}</Link>
         </Button>
+        <Button 
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 text-lg"
+                    onClick={onBuyNow}     // Gọi hàm
+                    disabled={isLoading}   // Disable khi đang tải
+                >
+                    {isLoading ? 'Đang tạo link...' : 'Mua ngay'}
+                </Button>
 
         <div className="space-y-3">
           <h3 className="font-roboto-bold text-sm mb-4">{t("courseIncludes")}</h3>
