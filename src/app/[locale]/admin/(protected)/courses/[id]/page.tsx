@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import api from "@/app/lib/axios";
 import { toast } from "sonner";
 // Icons
-import { Quiz} from "@/type/course.type";
+import {  Lesson, Chapter } from "@/type/course.type";
 import {
     ArrowLeft, CheckCircle, XCircle, Eye, PlayCircle, 
     LayoutTemplate, MonitorPlay, Lock, PauseCircle, FileQuestion, Loader2
@@ -32,28 +32,6 @@ import Video from '@/components/Video';
 import { Chapter as ImportedChapter } from '@/type/course.type';
 import { InstructorWithData } from '@/type/user.type';
 
-type Lesson = {
-    lesson_id:string,
-    chapter_id:string,
-    title?:string,
-    video_url?:string | null,
-    isCompleted?:boolean,
-    badge?:string
-    duration?:string,
-    slug?:string,
-    order_index?:number,
-};
-
-
-
-type Chapter = {
-  chapter_id: string;
-  course_id: string;
-  chapter_title: string;
-  lessons: Lesson[];
-  order_index: number;
-  quiz?: Quiz | null;
-};
 
 type InstructorProfile = {
   instructor_id?: string;
