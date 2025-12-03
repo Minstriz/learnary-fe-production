@@ -44,7 +44,11 @@ const ListCourseCard: React.FC<ListCourseCardProps> = ({ title, courses }) => {
   }, [courses]);
 
   if (!coursesData || coursesData.length === 0) {
-    return <p className="text-gray-500">Chưa có khoá học nào hiện tại</p>;
+    return (
+      <div className="flex items-center justify-center w-full">
+        <p className="text-gray-500 relative">Hiện tại chưa có khoá học nào</p>
+      </div>
+    )
   }
 
   return isMobile ? (
