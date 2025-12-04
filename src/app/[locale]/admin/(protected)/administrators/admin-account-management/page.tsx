@@ -83,7 +83,7 @@ export default function AdminAccountManagement() {
   useEffect(() => {
 
     fetchAdmins();
-  }, []);
+  }, [fetchAdmins]);
 
 
   const handleDeleteAdmin = async (adminId: string) => {
