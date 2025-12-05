@@ -41,6 +41,7 @@ import { Admin } from "@/type/administrator.type";
 import { Spinner } from "@/components/ui/spinner";
 import { ToasterConfirm } from "@/components/ToasterConfimer";
 import CreateAdminForm from "@/components/CreateAdminForm";
+import { EditAdminAccountForm } from "@/components/EditAdminAccountForm";
 import { Badge } from "@/components/ui/badge";
 
 type SortOrder = 'asc' | 'desc' | null;
@@ -51,6 +52,10 @@ export default function AdminAccountManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState<SortOrder>(null);
+  const [editDialog, setEditDialog] = useState<{ open: boolean; admin: Admin | null }>({
+    open: false,
+    admin: null,
+  });
   const fetchAdmins = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -158,9 +163,9 @@ export default function AdminAccountManagement() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div className='flex flex-col gap-2'>
-          <h1 className="text-3xl font-bold">Quản lý tài khoản Admin</h1>
-          <p className="text-gray-500 mt-1">Tổng số: {admins.length} tài khoản quản trị</p>
+        <div className='flex flex-col gap-2 justify-center w-full'>
+          <h1 className="text-3xl font-bold self-center font-roboto-bold">Quản lý tài khoản Admin</h1>
+          <p className="text-blue-600 mt-1  font-roboto-condensed-bold">Tổng: {admins.length} tài khoản</p>
         </div>
       </div>
 
@@ -280,6 +285,11 @@ export default function AdminAccountManagement() {
                         Copy User ID
                       </DropdownMenuItem>
                       <DropdownMenuItem
+                        onClick={() => setEditDialog({ open: true, admin: admin })}
+                      >
+                        Sửa vai trò quản trị
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
                         className="text-red-600"
                         onClick={() => handleDeleteAdmin(admin.admin_id)}
                       >
@@ -293,6 +303,26 @@ export default function AdminAccountManagement() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialog.open} onOpenChange={(open) => setEditDialog(s => ({ ...s, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sửa vai trò quản trị</DialogTitle>
+          </DialogHeader>
+          {editDialog.admin && (
+            <EditAdminAccountForm
+              open={editDialog.open}
+              onOpenChange={(open) => setEditDialog(s => ({ ...s, open }))}
+              admin={editDialog.admin}
+              onSuccess={() => {
+                fetchAdmins();
+                setEditDialog({ open: false, admin: null });
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -39,6 +39,7 @@ import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { Permission } from '@/type/administrator.type';
 import { CreatePermissionForm } from '@/components/CreatePermissionForm';
+import { PermissionDetailDialog } from '@/components/PermissionDetailDialog';
 
 export default function PermissionsPage() {
   const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -46,6 +47,7 @@ export default function PermissionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
   const [editDialog, setEditDialog] = useState<{ open: boolean; permission: Permission | null }>({ open: false, permission: null });
+  const [detailDialog, setDetailDialog] = useState<{ open: boolean; permission: Permission | null }>({ open: false, permission: null });
 
   useEffect(() => {
     fetchPermission();
@@ -199,6 +201,9 @@ export default function PermissionsPage() {
                       <DropdownMenuItem onClick={() => navigator.clipboard.writeText(permission.permission_id)}>
                         Copy ID
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setDetailDialog({ open: true, permission: permission })} >
+                        Xem chi tiết
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setEditDialog({ open: true, permission: permission })} >
                         Chỉnh sửa
                       </DropdownMenuItem>
@@ -213,7 +218,7 @@ export default function PermissionsPage() {
           </TableBody>
         </Table>
       </div>
-      {/* Dialog */}
+      {/* Edit Dialog */}
       <Dialog open={editDialog.open} onOpenChange={(open) => setEditDialog(s => ({ ...s, open }))}>
         <DialogContent>
           <DialogHeader>
@@ -232,6 +237,15 @@ export default function PermissionsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Detail Dialog */}
+      {detailDialog.permission && (
+        <PermissionDetailDialog
+          open={detailDialog.open}
+          onOpenChange={(open) => setDetailDialog(s => ({ ...s, open }))}
+          permission={detailDialog.permission}
+        />
+      )}
     </div>
   );
 }

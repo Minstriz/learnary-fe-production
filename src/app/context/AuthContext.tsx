@@ -37,13 +37,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuthOnLoad = async () => {
       const existingToken = sessionStorage.getItem('accessToken');
-      
       // Nếu KHÔNG có token -> skip luôn, không gọi API
       if (!existingToken) {
         setIsLoading(false);
         return;
       }
-
       // Nếu CÓ token -> gọi refresh để verify
       try {
         const response = await api.post('/auth/refresh');
