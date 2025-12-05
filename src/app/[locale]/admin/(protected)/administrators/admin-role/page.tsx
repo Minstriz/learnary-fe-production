@@ -43,6 +43,18 @@ import { Spinner } from "@/components/ui/spinner";
 import { ToasterConfirm } from "@/components/ToasterConfimer";
 import { Badge } from '@/components/ui/badge';
 
+const getUniqueResourcesFromRole = (role: AdminRoleWithPermissions): string[] => {
+  if (!role.permissions || role.permissions.length === 0) {
+    return [];
+  }
+  
+  const resourceNames = role.permissions.flatMap((p) =>
+    p.permission.resources?.map((r) => r.resource?.resource_name) || []
+  );
+  
+  return Array.from(new Set(resourceNames)).filter(Boolean) as string[];
+};
+
 export default function AdminRolePage() {
   const [adminRoles, setAdminRoles] = useState<AdminRoleWithPermissions[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -116,13 +128,12 @@ export default function AdminRolePage() {
       </div>
     );
   }
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className='flex flex-col gap-2 w-full'>
           <h1 className="text-3xl font-bold self-center font-roboto-bold">Vai trò cấp bậc quản trị</h1>
-          <p className="text-blue-600 mt-1  font-roboto-condensed-bold">Tổng số: {adminRoles.length} vai trò</p>
+          <p className="text-blue-600 mt-1  font-roboto-condensed-bold">Tổng: {adminRoles.length} vai trò</p>
         </div>
       </div>
 
@@ -171,6 +182,7 @@ export default function AdminRolePage() {
             <TableRow>
               <TableHead>Vai trò</TableHead>
               <TableHead> Quyền </TableHead>
+              <TableHead> Tài nguyên quản lý </TableHead>
               <TableHead className='flex items-center gap-2'>
                 <div className="p-2 bg-purple-50 text-purple-600 rounded-md">
                   <Wrench className="h-4 w-4" />
@@ -203,6 +215,21 @@ export default function AdminRolePage() {
                       ))}</div>
                     ) : (
                       <p className='text-red-500'>Chưa được gán quyền</p>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    {role.permissions && role.permissions.length > 0 ? (
+                      <div className="font-medium font-roboto flex flex-wrap gap-2">
+                        {getUniqueResourcesFromRole(role).map((resourceName, index) => (
+                          <Badge key={index} variant="outline" className="border border-green-500 text-green-600">
+                            {resourceName}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className='text-red-500'>Chưa được gán tài nguyên quản lý</p>
                     )}
                   </div>
                 </TableCell>
