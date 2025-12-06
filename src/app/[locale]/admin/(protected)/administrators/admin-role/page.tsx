@@ -259,10 +259,10 @@ export default function AdminRolePage() {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => setDetailDialog({ open: true, adminRole: role })}>
-                        Xem chi tiết
+                        Cấu hình quyền
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setEditDialog({ open: true, adminRole: role })} >
-                        Chỉnh sửa
+                        Sửa thông tin
                       </DropdownMenuItem>
                       <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteAdminRole(role.admin_role_id)}>
                         Xóa vai trò

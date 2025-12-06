@@ -201,8 +201,8 @@ export default function PermissionsPage() {
                       <DropdownMenuItem onClick={() => navigator.clipboard.writeText(permission.permission_id)}>
                         Copy ID
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setDetailDialog({ open: true, permission: permission })} >
-                        Xem chi tiết
+                      <DropdownMenuItem onClick={() => setDetailDialog({ open: true, permission: permission })}>
+                        Cấp tài nguyên
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setEditDialog({ open: true, permission: permission })} >
                         Chỉnh sửa

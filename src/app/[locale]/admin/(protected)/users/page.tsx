@@ -155,7 +155,7 @@ export default function UserManagement() {
    const fetchUsers = async () => {
       try {
          setIsLoading(true);
-         const response = await api.get("/users");
+         const response = await api.get("/users/getUserExceptAdmin");
          const rawData = response.data || [];
          // Map data
          const mappedData: User[] = rawData.map((item: {

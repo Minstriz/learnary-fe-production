@@ -149,7 +149,7 @@ export default function ResourceTypesPage() {
           
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="cursor-pointer">
+              <Button className="cursor-pointer hover:text-white bg-white text-blue-600 hover:bg-blue-700 border border-blue-600">
                 <Plus className="mr-2 h-4 w-4" />
                 Thêm loại tài nguyên
               </Button>
