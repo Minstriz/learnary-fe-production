@@ -68,16 +68,42 @@ export type Option = {
   order_index?: number;
 }
 
-enum StatusCourse {
+export enum StatusCourse {
   Draft = "Draft",
   Published = "Published",
   Archived = "Archived",
 }
 
+export enum CourseGroupType {
+  Combo = "Combo",
+  Group = "Group"
+}
+
+export type Group = {
+  group_id: string;
+  name: string;
+  description: string;
+  type: CourseGroupType;
+  discount: number;
+  createdAt?: string;
+  updatedAt?: string;
+  hasCourseGroup?: CourseGroupWithCourse[];
+}
+
+export type CourseGroup = {
+  course_id: string;
+  group_id: string;
+  order_index: number;
+}
+
+export type CourseGroupWithCourse = CourseGroup & {
+  belongToCourse: Course;
+}
+
 export type Level = {
-  level_id:string,
-  level_name:string,
-  slug:string,
+  level_id: string;
+  level_name: string;
+  order_index: number;
 }
 
 export type Chapter = {

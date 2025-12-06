@@ -45,7 +45,7 @@
         return;
       }
       const initData = async () => {
-        try {        
+        try {
           const [catRes, lvlRes] = await Promise.all([api.get('/categories'), api.get('/levels')]);
           const catData = catRes.data?.data || catRes.data || [];
           const lvlData = lvlRes.data?.data || lvlRes.data || [];
