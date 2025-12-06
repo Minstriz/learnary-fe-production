@@ -140,29 +140,27 @@ const Video: React.FC<VideoProps> = ({ video_url }) => {
                         },
                     });
                     
-                    // Remove crossorigin attribute sau khi Plyr init
                     if (videoRef.current) {
                         videoRef.current.removeAttribute('crossorigin');
                     }
                     
                     playerRef.current.on('ready', () => {
                         setIsLoading(false);
-                        // Remove lại lần nữa để chắc chắn
                         if (videoRef.current) {
                             videoRef.current.removeAttribute('crossorigin');
                         }
                     });
 
                     playerRef.current.on('play', () => {
-                        console.log('Video playing');
+                        
                     });
 
                     playerRef.current.on('pause', () => {
-                        console.log('Video paused');
+                        
                     });
 
                     playerRef.current.on('ended', () => {
-                        console.log('Video ended');
+                       
                     });
 
                     playerRef.current.on('timeupdate', () => {

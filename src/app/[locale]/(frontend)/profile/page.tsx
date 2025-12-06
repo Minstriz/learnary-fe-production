@@ -76,7 +76,7 @@ type AccountSecurity = {
   createdAt?: string;
   updatedAt?: string;
 }
-type UpdateUserData = Omit<UserProps, "user_id" | "role" | "isActive" | "last_login" | "email">
+type UpdateUserData = Omit<UserProps, "user_id" | "role" | "isActive" | "last_login" | "email" |"createdAt">
 
 export default function ProfilePage() {
   const isMobile = useIsMobile();
@@ -206,7 +206,7 @@ export default function ProfilePage() {
           setFormData({
             fullName: userData.fullName || "", phone: userData.phone || "", avatar: userData.avatar || "",
             dateOfBirth: userData.dateOfBirth, address: userData.address || "", city: userData.city || "",
-            nation: userData.nation || "", bio: userData.bio || "", createdAt: userData.createdAt,
+            nation: userData.nation || "", bio: userData.bio || "", 
           });
         }
       } catch (error) { console.log("Lỗi fetch user", error) }
