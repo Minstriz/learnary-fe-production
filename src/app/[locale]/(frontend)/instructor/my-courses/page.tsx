@@ -18,6 +18,7 @@ import api from '@/app/lib/axios';
 import { isAxiosError } from 'axios'; // [SỬA] Dùng isAxiosError
 import { useAuth } from '@/app/context/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 type Course = {
   course_id: string;
   title: string;
@@ -41,7 +42,7 @@ export default function MyCoursesPage() {
     if (isAuthLoading) return;
 
     if (!isLoggedIn || user?.role !== "INSTRUCTOR" && user?.role !== "ADMIN") {
-      alert('Bạn không có quyền truy cập trang này.');
+      toast.info('Bạn không có quyền truy cập trang này.');
       router.push(`/`); 
       return;
     }

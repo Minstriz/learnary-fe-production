@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ChapterBox from '@/components/ChapterBox'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import "plyr/dist/plyr.css";
@@ -29,7 +29,6 @@ const CourseDetailPage = () => {
   const router = useRouter();
   const slug = params?.slug as string;
 
-  const playerRef = useRef<Plyr | null>(null);
   const [pageIsLoading, setPageIsLoading] = useState<boolean>(true);
   const [course, setCourse] = useState<Course | null>(null);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
@@ -68,36 +67,10 @@ const CourseDetailPage = () => {
         setPageIsLoading(false);
       }
     };
-
     if (slug) {
       fetchCourse();
     }
   }, [slug, router]);
-
-  const setupPlayer = async () => {
-    if (!playerRef.current) {
-      const Plyr = await import('plyr');
-      playerRef.current = new Plyr.default("#player", {
-        quality: {
-          options: [360, 720, 1080, 2160],
-          default: 1080,
-        },
-      });
-    }
-  }
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setupPlayer();
-    }, 500);
-
-    return () => {
-      if (playerRef.current) {
-        playerRef.current.destroy();
-      }
-      clearTimeout(timer);
-    }
-  }, []);
 
   const handleLessonSelect = (lesson: Lesson) => {
     setCurrentLesson(lesson);
@@ -156,7 +129,7 @@ const CourseDetailPage = () => {
             <div className='flex flex-col justify-items-center w-full '>
               <div className="video grow h-fit rounded overflow-hidden mt-4 ">
                 {currentLesson.video_url ? (
-                  <Video video_url={currentLesson.video_url}></Video>
+                  <Video key={currentLesson.lesson_id} video_url={currentLesson.video_url}></Video>
                 ) : (
                   <p className="text-center p-8">Video hiện tại đang lỗi! Chúng tôi đang cố gắng khắc phục, bạn kiên nhẫn nhé!</p>
                 )}
@@ -226,7 +199,7 @@ const CourseDetailPage = () => {
             {currentLesson && (
               <div className='pt-2'>
                 {currentLesson.video_url ? (
-                  <Video video_url={currentLesson.video_url}></Video>
+                  <Video key={currentLesson.lesson_id} video_url={currentLesson.video_url}></Video>
                 ) : (
                   <div className='flex flex-col items-center gap-10 border-red-500 border-2 rounded p-10'>
                     <TriangleAlert size={150} className='text-red-600'/>
