@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import { Lesson } from './Lesson'
 import ListLessonRaw from '@/Mock/MockData/ListLesson.json'
+import { toast } from 'sonner'
 
 export type LessonRawData = {
     lesson_id: string
@@ -61,7 +62,7 @@ const LessonList: React.FC<LessonListProps> = ({
 
     const handleLockClick = (id: string) => {
         console.log('🔒 Lesson bị khóa:', id)
-        alert('⚠️ Bài học này yêu cầu Premium!')
+        toast.warning('⚠️ Bài học này yêu cầu Premium!')
     }
 
     const handleOpen = (id: string) => {

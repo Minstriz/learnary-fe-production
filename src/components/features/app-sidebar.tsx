@@ -9,6 +9,7 @@ import {
   SquareStack,
   Users,
   ShieldUser,
+  ArrowLeftRight,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { NavMain } from "@/components/features/nav-main";
@@ -82,6 +83,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         { title: "Quản lý người dùng", url: `${adminBasePath}/users` },
         { title: "Quản lý giảng viên", url: `${adminBasePath}/users/instructors-management` },
         { title: "Quản lý học viên", url: `${adminBasePath}/users/learners-management` }
+      ],
+    },
+    {
+      title: "Transactions",
+      url: `${adminBasePath}/transactions`,
+      icon: ArrowLeftRight,
+      isActive: pathname.startsWith(`${adminBasePath}/transactions`),
+      items: [
+        { title: "Tất cả giao dịch", url: `${adminBasePath}/transactions` },
+        { title: "Yêu cầu rút tiền", url: `${adminBasePath}/transactions/withdraw` },
       ],
     },
     {

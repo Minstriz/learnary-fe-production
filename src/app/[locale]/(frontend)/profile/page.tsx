@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { EnvelopeIcon, MapPinIcon, CalendarIcon, CameraIcon, AcademicCapIcon, CheckBadgeIcon, UserIcon } from "@heroicons/react/24/outline";
+import { EnvelopeIcon, MapPinIcon, CalendarIcon, CameraIcon, AcademicCapIcon, CheckBadgeIcon, UserIcon, BuildingLibraryIcon } from "@heroicons/react/24/outline";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -221,6 +221,16 @@ export default function ProfilePage() {
         const instrRes = await api.get(`/instructors/user/${user.id}`);
         if (instrRes.data && instrRes.data.data) {
           setInstructorInfo(instrRes.data.data);
+          
+          // Load bank account info
+          const bankRes = await api.get(`/bank-account/${instrRes.data.data.instructor_id}`);
+          if (bankRes.data && bankRes.data.data) {
+            setInstructorFormData({
+              bank_name: bankRes.data.data.bank_name || "",
+              account_number: bankRes.data.data.account_number || "",
+              account_holder_name: bankRes.data.data.account_holder_name || ""
+            });
+          }
         }
       } catch (err) { console.log("User chưa là giảng viên", err); }
 
@@ -236,7 +246,19 @@ export default function ProfilePage() {
   };
 
   const handleInstructorUpdateSubmit = async () => {
+    if (!instructorInfo) {
+      toast.error("Không tìm thấy thông tin giảng viên");
+      return;
+    }
+
     try {
+      // Gọi API cập nhật bank account
+      await api.patch(`/bank-account/${instructorInfo.instructor_id}`, {
+        bank_name: instructorFormData.bank_name,
+        account_number: instructorFormData.account_number,
+        account_holder_name: instructorFormData.account_holder_name
+      });
+
       toast.success("Cập nhật thông tin giảng viên thành công!");
       setIsEditingInstructor(false);
       fetchInstructorData();
@@ -408,6 +430,15 @@ export default function ProfilePage() {
                                     <div><Label className="text-gray-400 text-xs">Email</Label><p className="text-sm font-semibold mt-1">{userInfo.email}</p></div>
                                     <div><Label className="text-gray-400 text-xs">SĐT</Label><p className="text-sm mt-1">{userInfo.phone || "N/A"}</p></div>
                                     <div><Label className="text-gray-400 text-xs">Địa chỉ</Label><p className="text-sm mt-1">{userInfo.address || "N/A"}</p></div>
+                                  </div>
+                                </div>
+
+                                <div className="mb-6">
+                                  <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2"><BuildingLibraryIcon className="w-5 h-5" /> Thông tin ngân hàng</h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                                    <div><Label className="text-gray-400 text-xs">Tên ngân hàng</Label><p className="text-sm font-semibold mt-1">{instructorFormData.bank_name || "Chưa cập nhật"}</p></div>
+                                    <div><Label className="text-gray-400 text-xs">Số tài khoản</Label><p className="text-sm font-semibold mt-1">{instructorFormData.account_number || "Chưa cập nhật"}</p></div>
+                                    <div><Label className="text-gray-400 text-xs">Chủ tài khoản</Label><p className="text-sm font-semibold mt-1">{instructorFormData.account_holder_name || "Chưa cập nhật"}</p></div>
                                   </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

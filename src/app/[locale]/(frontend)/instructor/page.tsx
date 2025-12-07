@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from '@/components/ui/button';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from 'sonner';
 
 // API Helper (Giả sử bạn sẽ có API thống kê sau này)
 // import api from '@/app/lib/axios';
@@ -56,7 +57,7 @@ export default function InstructorDashboard() {
     if (isAuthLoading) return;
 
     if (!isLoggedIn || user?.role !== "INSTRUCTOR") {
-      alert('Bạn không có quyền truy cập trang này.');
+      toast.error('Bạn không có quyền truy cập trang này.');
       router.push(`/`); 
       return;
     }
@@ -100,6 +101,9 @@ export default function InstructorDashboard() {
           <p className="text-muted-foreground mt-1">Chào mừng trở lại! Đây là tình hình hoạt động các khóa học của bạn.</p>
         </div>
         <div className="flex gap-3">
+          <Link href="/instructor/wallet">
+            <Button variant="outline">Quản lý ví</Button>
+          </Link>
           <Link href="/instructor/my-courses">
             <Button variant="outline">Quản lý khóa học</Button>
           </Link>

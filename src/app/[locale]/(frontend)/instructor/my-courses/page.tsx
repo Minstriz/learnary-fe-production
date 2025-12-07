@@ -17,6 +17,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import api from '@/app/lib/axios';
 import { isAxiosError } from 'axios'; // [SỬA] Dùng isAxiosError
 import { useAuth } from '@/app/context/AuthContext';
+import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 type Course = {
   course_id: string;
@@ -41,7 +42,7 @@ export default function MyCoursesPage() {
     if (isAuthLoading) return;
 
     if (!isLoggedIn || user?.role !== "INSTRUCTOR" && user?.role !== "ADMIN") {
-      alert('Bạn không có quyền truy cập trang này.');
+      toast.error('Bạn không có quyền truy cập trang này.');
       router.push(`/`); 
       return;
     }

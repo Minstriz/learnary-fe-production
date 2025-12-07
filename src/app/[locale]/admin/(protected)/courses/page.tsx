@@ -90,7 +90,7 @@ export default function CoursePage() {
 
       if (apiData.success && Array.isArray(apiData.data)) {
         setCourses(apiData.data);
-        toast.success(`Đã tải ${apiData.data.length} khóa học`);
+        // toast.success(`Đã tải ${apiData.data.length} khóa học`);
       } else if (Array.isArray(apiData)) {
         // Fallback nếu API trả về mảng trực tiếp
         setCourses(apiData);

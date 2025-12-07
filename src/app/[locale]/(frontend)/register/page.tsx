@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from 'sonner';
 
 
 export default function SignUpPage() {
@@ -41,7 +42,7 @@ export default function SignUpPage() {
         email, 
         password 
       });
-      alert('Đăng ký thành công! Vui lòng đăng nhập.');
+      toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
       router.push('/login');
     } catch (err) {
       if (isAxiosError(err)) {
