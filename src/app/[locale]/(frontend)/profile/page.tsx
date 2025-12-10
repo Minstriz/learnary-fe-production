@@ -103,7 +103,14 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<UpdateUserData>({
-    fullName: "", phone: "", avatar: "", dateOfBirth: undefined, address: "", city: "", nation: "", bio: ""
+    fullName: "",
+    phone: "",
+    avatar: undefined,
+    dateOfBirth: undefined,
+    address: "",
+    city: "",
+    nation: "",
+    bio: ""
   });
 
   const [instructorFormData, setInstructorFormData] = useState({
@@ -215,9 +222,14 @@ export default function ProfilePage() {
 
         if (userData) {
           setFormData({
-            fullName: userData.fullName || "", phone: userData.phone || "", avatar: userData.avatar || "",
-            dateOfBirth: userData.dateOfBirth, address: userData.address || "", city: userData.city || "",
-            nation: userData.nation || "", bio: userData.bio || "",
+            fullName: userData.fullName || "",
+            phone: userData.phone || "",
+            avatar: userData.avatar || undefined,
+            dateOfBirth: userData.dateOfBirth,
+            address: userData.address || "",
+            city: userData.city || "",
+            nation: userData.nation || "",
+            bio: userData.bio || "",
           });
         }
       } catch (error) { console.log("Lỗi fetch user", error) }
@@ -336,7 +348,11 @@ export default function ProfilePage() {
                     <div className={`flex ${isMobile ? 'flex-col items-center text-center' : 'flex-row items-end'} gap-6`}>
                       <div className={`${isMobile ? '-mt-16' : '-mt-20'} relative group`}>
                         <Avatar className={`${isMobile ? 'h-24 w-24' : 'h-32 w-32'} border-4 border-white shadow-lg`}>
-                          <AvatarImage src={formData.avatar || userInfo?.avatar} alt="User avatar" style={{ objectFit: "cover" }} />
+                          <AvatarImage
+                            src={formData.avatar || userInfo?.avatar || undefined}
+                            alt="User avatar"
+                            style={{ objectFit: "cover" }}
+                          />
                           <AvatarFallback className="text-2xl font-roboto-bold">{userInfo.fullName.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div onClick={handleAvatarClick} className={`absolute inset-0 rounded-full bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center cursor-pointer z-10`}>
@@ -357,9 +373,26 @@ export default function ProfilePage() {
                         </div>
 
                         <div className={`flex ${isMobile ? 'flex-col justify-center items-center' : 'flex-row'} gap-4 mt-4 text-gray-600`}>
-                          <div className="flex items-center gap-2"><EnvelopeIcon className="w-5 h-5" /><span className="font-roboto text-sm">{userInfo.email}</span></div>
-                          {(userInfo.city || userInfo.nation) && (<div className="flex items-center gap-2"><MapPinIcon className="w-5 h-5" /><span className="font-roboto text-sm">{[userInfo.city, userInfo.nation].filter(Boolean).join(', ')}</span></div>)}
-                          <div className="flex items-center gap-2"><CalendarIcon className="w-5 h-5" /><span className="font-roboto text-sm">Tham gia {userInfo.createdAt ? new Date(userInfo.createdAt).toLocaleDateString('vi-VN', { year: 'numeric' }) : 'N/A'}</span></div>
+                          <div className="flex items-center gap-2">
+                            <EnvelopeIcon className="w-5 h-5" />
+                            <span className="font-roboto text-sm">{userInfo.email}</span>
+                          </div>
+                          
+                          {(userInfo.city || userInfo.nation) && (
+                            <div className="flex items-center gap-2">
+                              <MapPinIcon className="w-5 h-5" />
+                              <span className="font-roboto text-sm">
+                                {[userInfo.city, userInfo.nation].filter(Boolean).join(', ')}
+                              </span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-2">
+                            <CalendarIcon className="w-5 h-5" />
+                            <span className="font-roboto text-sm">
+                              Tham gia {userInfo.createdAt ? new Date(userInfo.createdAt).toLocaleDateString('vi-VN', { year: 'numeric' }) : 'N/A'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -378,7 +411,6 @@ export default function ProfilePage() {
                       <TabsList className="flex gap-3 justify-between">
                         <TabsTrigger value="learner-profile" className='p-3 cursor-pointer hover:bg-gray-200 text-center'>Hồ sơ cá nhân</TabsTrigger>
 
-                        {/*  Instructor Tab */}
                         {userInfo.role === 'INSTRUCTOR' && (
                           <TabsTrigger value="instructor-profile" className='p-3 cursor-pointer hover:bg-gray-200'>Hồ sơ giảng viên</TabsTrigger>
                         )}
@@ -387,30 +419,76 @@ export default function ProfilePage() {
                       </TabsList>
                     </div>
 
-                    {/*USER PROFILE */}
                     <TabsContent value="learner-profile">
                       <div className="mt-6 bg-white rounded-2xl border-2 border-gray-200 shadow-sm p-6">
                         <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
                           <div>
                             <Label className="text-gray-400 text-sm mb-1">Họ và tên</Label>
-                            {isEditing ? <Input value={formData.fullName} onChange={(e) => handleInputChange('fullName', e.target.value)} className={errors.fullName ? 'border-red-500' : ''} /> : <p className="font-bold text-gray-800">{userInfo.fullName}</p>}
+                            {isEditing ? (
+                              <Input 
+                                value={formData.fullName} 
+                                onChange={(e) => handleInputChange('fullName', e.target.value)} 
+                                className={errors.fullName ? 'border-red-500' : ''} 
+                              />
+                            ) : (
+                              <p className="font-bold text-gray-800">{userInfo.fullName}</p>
+                            )}
                           </div>
-                          <div><Label className="text-gray-400 text-sm mb-1">Email</Label><p className="font-bold text-gray-800">{userInfo.email}</p></div>
+                          
+                          <div>
+                            <Label className="text-gray-400 text-sm mb-1">Email</Label>
+                            <p className="font-bold text-gray-800">{userInfo.email}</p>
+                          </div>
+                          
                           <div>
                             <Label className="text-gray-400 text-sm mb-1">Số điện thoại</Label>
-                            {isEditing ? <Input value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} /> : <p className="font-bold text-gray-800">{userInfo.phone || 'Chưa cập nhật'}</p>}
+                            {isEditing ? (
+                              <Input 
+                                value={formData.phone} 
+                                onChange={(e) => handleInputChange('phone', e.target.value)} 
+                              />
+                            ) : (
+                              <p className="font-bold text-gray-800">{userInfo.phone || 'Chưa cập nhật'}</p>
+                            )}
                           </div>
+                          
                           <div>
                             <Label className="text-gray-400 text-sm mb-1">Ngày sinh</Label>
-                            {isEditing ? <Input type="date" value={formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString().split('T')[0] : ""} onChange={(e) => handleInputChange('dateOfBirth', e.target.value ? new Date(e.target.value) : undefined)} /> : <p className="font-bold text-gray-800">{userInfo.dateOfBirth ? new Date(userInfo.dateOfBirth).toLocaleDateString('vi-VN') : 'Chưa có'}</p>}
+                            {isEditing ? (
+                              <Input 
+                                type="date" 
+                                value={formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString().split('T')[0] : ""} 
+                                onChange={(e) => handleInputChange('dateOfBirth', e.target.value ? new Date(e.target.value) : undefined)} 
+                              />
+                            ) : (
+                              <p className="font-bold text-gray-800">
+                                {userInfo.dateOfBirth ? new Date(userInfo.dateOfBirth).toLocaleDateString('vi-VN') : 'Chưa có'}
+                              </p>
+                            )}
                           </div>
+                          
                           <div>
                             <Label className="text-gray-400 text-sm mb-1">Địa chỉ</Label>
-                            {isEditing ? <Input value={formData.address} onChange={(e) => handleInputChange('address', e.target.value)} /> : <p className="font-bold text-gray-800">{userInfo.address || 'Chưa cập nhật'}</p>}
+                            {isEditing ? (
+                              <Input 
+                                value={formData.address} 
+                                onChange={(e) => handleInputChange('address', e.target.value)} 
+                              />
+                            ) : (
+                              <p className="font-bold text-gray-800">{userInfo.address || 'Chưa cập nhật'}</p>
+                            )}
                           </div>
+                          
                           <div className={isMobile ? '' : 'col-span-2'}>
                             <Label className="text-gray-400 text-sm mb-1">Tiểu sử</Label>
-                            {isEditing ? <Textarea value={formData.bio} onChange={(e) => handleInputChange('bio', e.target.value)} /> : <p className="text-gray-800">{userInfo.bio || "Chưa cập nhật"}</p>}
+                            {isEditing ? (
+                              <Textarea 
+                                value={formData.bio} 
+                                onChange={(e) => handleInputChange('bio', e.target.value)} 
+                              />
+                            ) : (
+                              <p className="text-gray-800">{userInfo.bio || "Chưa cập nhật"}</p>
+                            )}
                           </div>
                         </div>
 
@@ -453,49 +531,120 @@ export default function ProfilePage() {
                                 <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 mb-6 animate-in fade-in zoom-in-95">
                                   <h4 className="font-bold text-blue-900 mb-4">Chỉnh sửa thông tin thanh toán</h4>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div><Label>Tên ngân hàng</Label><Input value={instructorFormData.bank_name} onChange={(e) => setInstructorFormData({ ...instructorFormData, bank_name: e.target.value })} className="bg-white mt-1" placeholder="VD: Vietcombank" /></div>
-                                    <div><Label>Số tài khoản</Label><Input value={instructorFormData.account_number} onChange={(e) => setInstructorFormData({ ...instructorFormData, account_number: e.target.value })} className="bg-white mt-1" /></div>
-                                    <div className="md:col-span-2"><Label>Chủ tài khoản</Label><Input value={instructorFormData.account_holder_name} onChange={(e) => setInstructorFormData({ ...instructorFormData, account_holder_name: e.target.value })} className="bg-white mt-1" /></div>
+                                    <div>
+                                      <Label>Tên ngân hàng</Label>
+                                      <Input 
+                                        value={instructorFormData.bank_name} 
+                                        onChange={(e) => setInstructorFormData({ ...instructorFormData, bank_name: e.target.value })} 
+                                        className="bg-white mt-1" 
+                                        placeholder="VD: Vietcombank" 
+                                      />
+                                    </div>
+                                    
+                                    <div>
+                                      <Label>Số tài khoản</Label>
+                                      <Input 
+                                        value={instructorFormData.account_number} 
+                                        onChange={(e) => setInstructorFormData({ ...instructorFormData, account_number: e.target.value })} 
+                                        className="bg-white mt-1" 
+                                      />
+                                    </div>
+                                    
+                                    <div className="md:col-span-2">
+                                      <Label>Chủ tài khoản</Label>
+                                      <Input 
+                                        value={instructorFormData.account_holder_name} 
+                                        onChange={(e) => setInstructorFormData({ ...instructorFormData, account_holder_name: e.target.value })} 
+                                        className="bg-white mt-1" 
+                                      />
+                                    </div>
                                   </div>
-                                  <p className="text-xs text-blue-600 mt-3 italic">* Lưu ý: Để chỉnh sửa bằng cấp, vui lòng gửi yêu cầu xét duyệt mới.</p>
+                                  <p className="text-xs text-blue-600 mt-3 italic">
+                                    * Lưu ý: Để chỉnh sửa bằng cấp, vui lòng gửi yêu cầu xét duyệt mới.
+                                  </p>
                                 </div>
                               )}
 
                               <div className={isEditingInstructor ? "opacity-40 pointer-events-none grayscale-[0.5]" : ""}>
                                 <div className="mb-6">
-                                  <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2"><UserIcon className="w-5 h-5" /> Thông tin cá nhân</h4>
+                                  <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                    <UserIcon className="w-5 h-5" /> Thông tin cá nhân
+                                  </h4>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border">
-                                    <div><Label className="text-gray-400 text-xs">Họ và tên</Label><p className="text-sm font-semibold mt-1">{userInfo.fullName}</p></div>
-                                    <div><Label className="text-gray-400 text-xs">Email</Label><p className="text-sm font-semibold mt-1">{userInfo.email}</p></div>
-                                    <div><Label className="text-gray-400 text-xs">SĐT</Label><p className="text-sm mt-1">{userInfo.phone || "N/A"}</p></div>
-                                    <div><Label className="text-gray-400 text-xs">Địa chỉ</Label><p className="text-sm mt-1">{userInfo.address || "N/A"}</p></div>
+                                    <div>
+                                      <Label className="text-gray-400 text-xs">Họ và tên</Label>
+                                      <p className="text-sm font-semibold mt-1">{userInfo.fullName}</p>
+                                    </div>
+                                    
+                                    <div>
+                                      <Label className="text-gray-400 text-xs">Email</Label>
+                                      <p className="text-sm font-semibold mt-1">{userInfo.email}</p>
+                                    </div>
+                                    
+                                    <div>
+                                      <Label className="text-gray-400 text-xs">SĐT</Label>
+                                      <p className="text-sm mt-1">{userInfo.phone || "N/A"}</p>
+                                    </div>
+                                    
+                                    <div>
+                                      <Label className="text-gray-400 text-xs">Địa chỉ</Label>
+                                      <p className="text-sm mt-1">{userInfo.address || "N/A"}</p>
+                                    </div>
                                   </div>
                                 </div>
 
                                 <div className="mb-6">
-                                  <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2"><BuildingLibraryIcon className="w-5 h-5" /> Thông tin ngân hàng</h4>
+                                  <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                    <BuildingLibraryIcon className="w-5 h-5" /> Thông tin ngân hàng
+                                  </h4>
                                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-linear-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                                    <div><Label className="text-gray-400 text-xs">Tên ngân hàng</Label><p className="text-sm font-semibold mt-1">{instructorFormData.bank_name || "Chưa cập nhật"}</p></div>
-                                    <div><Label className="text-gray-400 text-xs">Số tài khoản</Label><p className="text-sm font-semibold mt-1">{instructorFormData.account_number || "Chưa cập nhật"}</p></div>
-                                    <div><Label className="text-gray-400 text-xs">Chủ tài khoản</Label><p className="text-sm font-semibold mt-1">{instructorFormData.account_holder_name || "Chưa cập nhật"}</p></div>
+                                    <div>
+                                      <Label className="text-gray-400 text-xs">Tên ngân hàng</Label>
+                                      <p className="text-sm font-semibold mt-1">{instructorFormData.bank_name || "Chưa cập nhật"}</p>
+                                    </div>
+                                    
+                                    <div>
+                                      <Label className="text-gray-400 text-xs">Số tài khoản</Label>
+                                      <p className="text-sm font-semibold mt-1">{instructorFormData.account_number || "Chưa cập nhật"}</p>
+                                    </div>
+                                    
+                                    <div>
+                                      <Label className="text-gray-400 text-xs">Chủ tài khoản</Label>
+                                      <p className="text-sm font-semibold mt-1">{instructorFormData.account_holder_name || "Chưa cập nhật"}</p>
+                                    </div>
                                   </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                   <div className="p-4 border rounded-lg shadow-sm">
                                     <Label className="text-gray-400 text-sm mb-1">Xác thực</Label>
-                                    <div className="mt-1">{instructorInfo?.isVerified ? <Badge className="bg-green-500"><CheckBadgeIcon className="w-4 h-4 mr-1" /> Đã xác thực</Badge> : <Badge className="bg-yellow-500">Chờ xác thực</Badge>}</div>
+                                    <div className="mt-1">
+                                      {instructorInfo?.isVerified ? (
+                                        <Badge className="bg-green-500">
+                                          <CheckBadgeIcon className="w-4 h-4 mr-1" /> Đã xác thực
+                                        </Badge>
+                                      ) : (
+                                        <Badge className="bg-yellow-500">Chờ xác thực</Badge>
+                                      )}
+                                    </div>
                                   </div>
+                                  
                                   <div className="p-4 border rounded-lg shadow-sm">
                                     <Label className="text-gray-400 text-sm mb-1">Trạng thái</Label>
-                                    <p className={`font-bold mt-1 ${instructorInfo?.status === 'Active' ? 'text-green-600' : 'text-red-500'}`}>{instructorInfo?.status || "N/A"}</p>
+                                    <p className={`font-bold mt-1 ${instructorInfo?.status === 'Active' ? 'text-green-600' : 'text-red-500'}`}>
+                                      {instructorInfo?.status || "N/A"}
+                                    </p>
                                   </div>
                                 </div>
 
                                 <hr className="my-6" />
                                 <div>
-                                  <h4 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2"><AcademicCapIcon className="w-6 h-6 text-[#371D8C]" /> Bằng cấp & Chứng chỉ</h4>
+                                  <h4 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
+                                    <AcademicCapIcon className="w-6 h-6 text-[#371D8C]" /> Bằng cấp & Chứng chỉ
+                                  </h4>
                                   {qualifications.length === 0 ? (
-                                    <div className="text-center py-8 bg-gray-50 rounded border border-dashed"><p className="text-gray-500">Chưa có bằng cấp.</p></div>
+                                    <div className="text-center py-8 bg-gray-50 rounded border border-dashed">
+                                      <p className="text-gray-500">Chưa có bằng cấp.</p>
+                                    </div>
                                   ) : (
                                     <div className="grid grid-cols-1 gap-4">
                                       {qualifications.map((qual) => (
@@ -503,11 +652,17 @@ export default function ProfilePage() {
                                           <div className="flex flex-col md:flex-row justify-between gap-4">
                                             <div className="flex-1">
                                               <div className="flex items-center gap-2 mb-2">
-                                                <Badge variant="outline" className="text-[#371D8C] border-[#371D8C]">{qual.type}</Badge>
-                                                <span className="text-xs text-gray-400">{new Date(qual.issue_date).toLocaleDateString('vi-VN')}</span>
+                                                <Badge variant="outline" className="text-[#371D8C] border-[#371D8C]">
+                                                  {qual.type}
+                                                </Badge>
+                                                <span className="text-xs text-gray-400">
+                                                  {new Date(qual.issue_date).toLocaleDateString('vi-VN')}
+                                                </span>
                                               </div>
                                               <h5 className="font-bold text-lg text-gray-800">{qual.title}</h5>
-                                              <p className="text-sm text-gray-600">Chuyên môn: <b>{qual.specialization?.specialization_name}</b></p>
+                                              <p className="text-sm text-gray-600">
+                                                Chuyên môn: <b>{qual.specialization?.specialization_name}</b>
+                                              </p>
                                             </div>
                                             <div>
                                               <Badge className={qual.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}>

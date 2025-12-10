@@ -35,9 +35,11 @@ const CourseDetailPage = () => {
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [isQuizDialogOpen, setIsQuizDialogOpen] = useState(false);
   const [lessonProgress, setLessonProgress] = useState<LessonProgressMap>({});
-  const [canLearn, setCanLearn] = useState(false)
+  const [canLearn, setCanLearn] = useState(false);
+  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
   const verifiedLearnerCourse = useCallback(async () => {
     try {
+      setIsCheckingAccess(true);
       const res = await api.get(`learner-courses/verifyLearnerCourse/${course?.course_id}`)
       console.log(res)
       if (res.status === 200 && res.data) {
@@ -50,7 +52,10 @@ const CourseDetailPage = () => {
       }
     } catch (error) {
       console.log(error)
+      setCanLearn(false);
       toast.error("Bạn không có quyền truy cập khóa học này!")
+    } finally {
+      setIsCheckingAccess(false);
     }
   }, [course?.course_id])
 
@@ -159,7 +164,7 @@ const CourseDetailPage = () => {
     toast.success('Chúc mừng bạn đã hoàn thành bài kiểm tra!');
   };
 
-  if (pageIsLoading) {
+  if (pageIsLoading || isCheckingAccess) {
     return (
       <div className='w-full h-full flex items-center justify-center min-h-screen'>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
