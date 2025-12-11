@@ -4,9 +4,10 @@ import "plyr/dist/plyr.css";
 
 interface VideoProps {
     video_url: string,
+    onCompleted?:() => void;
 }
 
-const Video: React.FC<VideoProps> = ({ video_url }) => {
+const Video: React.FC<VideoProps> = ({ video_url, onCompleted }) => {
     const isMobile = useIsMobile();
     const playerRef = useRef<Plyr | null>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -160,7 +161,7 @@ const Video: React.FC<VideoProps> = ({ video_url }) => {
                     });
 
                     playerRef.current.on('ended', () => {
-                       
+                       onCompleted?.();
                     });
 
                     playerRef.current.on('timeupdate', () => {
@@ -194,7 +195,7 @@ const Video: React.FC<VideoProps> = ({ video_url }) => {
             }
             clearTimeout(timer);
         };
-    }, [video_url]);
+    }, [video_url,onCompleted]);
 
     return (
         <div className={`${isMobile ? "h-fit" : "h-fit min-h-[500px]"} relative rounded-2xl`}>

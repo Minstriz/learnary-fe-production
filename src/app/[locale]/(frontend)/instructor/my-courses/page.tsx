@@ -54,7 +54,6 @@ export default function MyCoursesPage() {
         const res = await api.get('/courses/instructor/my-courses');
         setAllCourses(res.data);
       } catch (err) {
-        // [SỬA] Áp dụng pattern lỗi
         if (isAxiosError(err)) {
           setError(err.response?.data?.message || 'Không thể tải khóa học.');
         } else {
@@ -80,7 +79,6 @@ export default function MyCoursesPage() {
     router.push(`/instructor/edit-course/${courseId}`);
   };
 
-  // [SỬA] Đưa code Skeleton trở lại
   const renderSkeletons = () =>
     Array.from({ length: 3 }).map((_, i) => (
       <Card key={i}>

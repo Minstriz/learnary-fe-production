@@ -2,7 +2,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { PlayCircle, FileText, Award, Infinity, Smartphone, Download } from 'lucide-react';
+import { PlayCircle, FileText, Award, Infinity, Smartphone, Download, Link } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { PLACEHOLDER_THUMBNAIL } from '@/const/urls';
 // import Link from 'next/link';
@@ -21,9 +21,10 @@ interface CourseSidebarProps {
   }>;
   onBuyNow?: () => void;
   isLoading?: boolean;
+  isEnrolled?: boolean;
 }
 
-export default function CourseSidebar({ thumbnail, price, original_price, sale_off, includes, course_id, onBuyNow, isLoading }: CourseSidebarProps) {//course_slug,
+export default function CourseSidebar({ thumbnail, price, original_price, sale_off, includes, onBuyNow, isLoading, isEnrolled, course_slug, course_id }: CourseSidebarProps) {
   const t = useTranslations("Course-Detail-Sidebar");
   original_price = 1200000
   sale_off = 50
@@ -43,7 +44,6 @@ export default function CourseSidebar({ thumbnail, price, original_price, sale_o
     return new Intl.NumberFormat('vi-VN').format(priceValue) + ' ₫';
   };
 
-  // const hasThumbnail = thumbnail && thumbnail.trim() !== "";
   return (
     <div className="sticky border-gray-200 bg-white shadow-lg">
       <div className="relative aspect-video w-full overflow-hidden">
@@ -68,33 +68,44 @@ export default function CourseSidebar({ thumbnail, price, original_price, sale_o
           </div>
         </div>
 
-        {/* <Link href={`/course-learn/${course_slug}`}>
-          <Button className="w-full text-white cursor-pointer mb-3 bg-pink-600 transition-all duration-300 ease-in-out hover:bg-linear-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 font-roboto-bold py-6 text-lg">
-            {t("btnEnroll")}
-          </Button>
-        </Link> */}
-        {/* <Button  
-          className="w-full mb-3 font-roboto-bold py-6 cursor-pointer bg-pink-600 hover:bg-pink-700 text-lg text-white" 
-        >
-          <Link href={``}>{t("btnCard")}</Link> 
-        </Button>  */}
-        <FavoriteButton courseId={course_id} variant="button" className="w-full mb-3 font-roboto-bold py-6 cursor-pointer bg-pink-600 hover:bg-pink-700 text-lg text-white" />
-        <div className="flex gap-2 mb-3">
-          <Button 
-            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-roboto-bold py-6 text-lg cursor-pointer"
-            onClick={onBuyNow}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Đang tạo link...' : 'Mua ngay'}
-          </Button>
-        </div>
+        {isEnrolled ? (
+          <Link href={`/course-learn/${course_slug}`} className="block mb-6">
+            <Button className="w-full text-white cursor-pointer bg-green-600 hover:bg-green-700 font-bold py-6 text-lg">
+              Tham gia ngay
+            </Button>
+          </Link>
+        ) : (
+          <>
+            <Button variant="outline" className="w-full mb-3 font-roboto-bold py-6 cursor-pointer">
+              <Link href={``}>{t("btnCard")}</Link>
+            </Button>
+            <FavoriteButton courseId={course_id} variant="button" className="w-full mb-3 font-roboto-bold py-6 cursor-pointer bg-pink-600 hover:bg-pink-700 text-lg text-white" />
+            {!isLoading ? (
+              <Button 
+                className="w-full cursor-pointer bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 text-lg mb-6" 
+                onClick={onBuyNow} 
+                disabled={isLoading}
+              >
+                Mua ngay
+              </Button>
+            ) : (
+              <Button 
+                className="w-full cursor-not-allowed bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 text-lg mb-6" 
+                onClick={onBuyNow} 
+                disabled={isLoading}
+              >
+                Đang tạo link...
+              </Button>
+            )}
+          </>
+        )}
 
         <div className="space-y-3">
-          <h3 className="font-roboto-bold text-sm mb-4">{t("courseIncludes")}</h3>
+          <h3 className="font-roboto-bold text-sm mb-4 pt-5">{t("courseIncludes")}</h3>
           {includes.map((item, index) => (
-            <div key={index} className="flex items-center gap-3 font-roboto text-sm">
+            <div key={index} className="flex items-start gap-3 font-roboto text-sm">
               <span className="text-gray-700">{getIcon(item.icon)}</span>
-              <span className="text-gray-700">{item.text}</span>
+              <span className="text-gray-700 break-all">{item.text}</span>
             </div>
           ))}
         </div>

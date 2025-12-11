@@ -9,33 +9,106 @@ import { BookOpen, GraduationCap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { LearnerCourse } from "@/type/course.type";
 
+interface LessonProgressData {
+  lesson_id: string;
+  is_completed: boolean;
+  completed_at: string | null;
+  lesson: {
+    chapter_id: string;
+    belongChapter: {
+      course_id: string;
+    };
+  };
+}
+
+interface CourseProgress {
+  // Index Signature (chữ ký chỉ mục), cho phép object có số lượng properties động với type của key là string, còn tên key có thể là bất kì tên nào.
+  /* SAU KHI MAP NÓ SẼ RA NHƯ NÀY
+        const courseProgress: CourseProgress = {
+      "course-123": {
+        totalLessons: 10,
+        completedLessons: 5,
+        progress: 50
+      },
+      "course-456": {
+        totalLessons: 20,
+        completedLessons: 15,
+        progress: 75
+      },
+      ...
+    };
+   */
+  [course_id: string]: {
+    totalLessons: number;
+    completedLessons: number;
+    progress: number;
+  };
+}
+
 export default function LearnAreaPage() {
   const { isLoggedIn } = useAuth();
   const [courses, setCourses] = useState<LearnerCourse[]>([]);
+  const [courseProgress, setCourseProgress] = useState<CourseProgress>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (isLoggedIn) {
-      fetchMyCourses();
+      fetchData();
     } else {
       setIsLoading(false);
     }
   }, [isLoggedIn]);
 
-  const fetchMyCourses = async () => {
+  const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get("/learner-courses/my-courses");
-      const data = response.data;
-      setCourses(Array.isArray(data.data) ? data.data : []);
+      const [coursesResponse, progressResponse] = await Promise.all([
+        api.get("/learner-courses/my-courses"),
+        api.get("/lesson-progress/my")
+      ]);
+      const coursesData = Array.isArray(coursesResponse.data.data) ? coursesResponse.data.data : [];
+      const progressData: LessonProgressData[] = Array.isArray(progressResponse.data.data) ? progressResponse.data.data : [];
+      const progressMap: CourseProgress = {};
+
+      coursesData.forEach((enrolledCourse: LearnerCourse) => {
+        const courseId = enrolledCourse.course_id;
+        const totalLessons = enrolledCourse.course?.chapter?.reduce((total, chapter) => {
+          return total + (chapter.lessons?.length || 0);
+        }, 0) || 0;
+        progressMap[courseId] = {
+          totalLessons,
+          completedLessons: 0,
+          progress: 0
+        };
+      });
+
+      progressData.forEach((lessonProgress) => {
+        if (lessonProgress.is_completed) {
+          const courseId = lessonProgress.lesson.belongChapter.course_id;
+          if (progressMap[courseId]) {
+            progressMap[courseId].completedLessons++;
+          }
+        }
+      });
+
+      Object.keys(progressMap).forEach(courseId => {
+        const { totalLessons, completedLessons } = progressMap[courseId];
+        progressMap[courseId].progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+      });
+
+      setCourses(coursesData);
+      setCourseProgress(progressMap);
     } catch (error) {
-      console.error("Error fetching courses:", error);
-      toast.error("Không thể tải danh sách khóa học của bạn");
-      setCourses([]); 
+      console.error("Error fetching data:", error);
+      toast.error("Không thể tải dữ liệu");
+      setCourses([]);
+      setCourseProgress({});
     } finally {
       setIsLoading(false);
     }
   };
+  const completedCount = Object.values(courseProgress).filter(p => p.progress >= 100).length;
+  const inProgressCount = Object.values(courseProgress).filter(p => p.progress > 0 && p.progress < 100).length;
 
   if (!isLoggedIn) {
     return (
@@ -98,9 +171,7 @@ export default function LearnAreaPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Đã hoàn thành</p>
-                <p className="text-2xl font-bold">
-                  {courses.filter(c => (c.progress || 0) >= 100).length}
-                </p>
+                <p className="text-2xl font-bold">{completedCount}</p>
               </div>
             </div>
           </CardContent>
@@ -114,9 +185,7 @@ export default function LearnAreaPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Đang học</p>
-                <p className="text-2xl font-bold">
-                  {courses.filter(c => (c.progress || 0) > 0 && (c.progress || 0) < 100).length}
-                </p>
+                <p className="text-2xl font-bold">{inProgressCount}</p>
               </div>
             </div>
           </CardContent>
@@ -140,7 +209,7 @@ export default function LearnAreaPage() {
               key={enrolledCourse.course_id}
               course={enrolledCourse.course}
               enrolledAt={enrolledCourse.enrolledAt}
-              progress={enrolledCourse.progress || 0}
+              progress={courseProgress[enrolledCourse.course_id]?.progress || 0}
             />
           ))}
         </div>

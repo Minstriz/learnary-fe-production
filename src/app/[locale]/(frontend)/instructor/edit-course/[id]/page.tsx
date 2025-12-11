@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { ImageUploadDialog } from '@/components/UploadImageDialog';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, } from "@/components/ui/accordion";
@@ -140,7 +141,6 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     // --- HANDLERS (Thêm/Sửa/Xóa) ---
     const handleAddChapter = async () => {
         if (!course) return;
-
         try {
             const response = await api.post(`/chapters`, {
                 course_id: courseId,
@@ -191,9 +191,6 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         if (!course) return;
         const chapterId = course.chapter[chapterIndex].chapter_id;
         const lessonTitle = "Bài học mới";
-
-        console.log('Creating lesson with chapter_id:', chapterId);
-
         try {
             const response = await api.post(`/lessons`, {
                 chapter_id: chapterId,
@@ -201,12 +198,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 slug: slugify(lessonTitle),
                 duration: "00:00"
             });
-
-            console.log('Lesson created response:', response.data);
-
             const newLesson = response.data.data || response.data;
             setNewlyCreatedLessons(prev => [...prev, newLesson.lesson_id]);
-
             updateCourseState((draft) => {
                 draft.chapter[chapterIndex].lessons.push({
                     lesson_id: newLesson.lesson_id,
@@ -266,16 +259,12 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
 
     const rollbackChanges = async () => {
         try {
-            // Xóa tất cả lessons mới tầo
             for (const lessonId of newlyCreatedLessons) {
                 await api.delete(`/lessons/${lessonId}`);
             }
-
-            // Xóa tất cả chapters mới tạo
             for (const chapterId of newlyCreatedChapters) {
                 await api.delete(`/chapters/${chapterId}`);
             }
-
             setNewlyCreatedChapters([]);
             setNewlyCreatedLessons([]);
             setHasUnsavedChanges(false);
@@ -325,7 +314,6 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     return;
                 }
 
-                // Gộp 'course' và 'videoStaging'
                 const finalPayload = JSON.parse(JSON.stringify(course)) as Course;
                 finalPayload.chapter.forEach((chap: Chapter) => {
                     chap.lessons.forEach((lesson: Lesson & { video_url?: string }) => {
@@ -402,29 +390,36 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                             <LayoutList className="w-4 h-4 mr-2" /> Khoá học của tôi
                         </Button>
                     </Link>
-
-                    <Button variant="outline" onClick={() => handleAction('save')} disabled={isSaving || course.status !== 'Draft'} className='cursor-pointer hover:bg-gray-200'>
+                    <Button title='Bạn sẽ không thể lưu nháp nếu có video bài học' variant="outline" onClick={() => handleAction('save')} disabled={!canSaveDraft || isSaving || course.status !== 'Draft'} className={`${!canSaveDraft ? 'cursor-not-allowed hover:bg-gray-200' : 'cursor-pointer hover:bg-gray-200'}`}>
                         <Save className="w-4 h-4 mr-2" /> Lưu nháp
                     </Button>
-                    <Button onClick={() => handleAction('submit')} disabled={isSaving || course.status !== 'Draft'}>
+                    <Button onClick={() => handleAction('submit')} disabled={isSaving || course.status !== 'Draft'} className='cursor-pointer text-blue-600 bg-white border border-blue-600 hover:bg-blue-600 hover:text-white'>
                         <Send className="w-4 h-4 mr-2" /> Gửi duyệt
                     </Button>
                 </div>
             </div>
-            <div className="container mx-auto max-w-7xl p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="container mx-auto max-w-screen p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div className="lg:col-span-4 space-y-6">
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Thông tin khóa học</CardTitle>
-                            <CardDescription>Các thông tin cơ bản để học viên tìm thấy khóa học của bạn.</CardDescription>
+                        <CardHeader className='flex flex-col items-center text-black '>
+                            <CardTitle className='font-roboto-bold text-xl'>Thông tin cơ bản của khóa học</CardTitle>
+                            <CardDescription className='text-sm font-robotoitalic'>Các thông tin cơ bản để học viên tìm thấy khóa học của bạn.</CardDescription>
                         </CardHeader>
+                        <div className='h-px bg-linear-to-r from-transparent via-gray-300 to-transparent border-t'>
+                        </div>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <Label>Tiêu đề</Label>
+                                <div className='flex gap-1'>
+                                    <Label className='text-blue-700 font-roboto-condensed-bold'>Tiêu đề</Label>
+                                    <p className='text-red-600'>*</p>
+                                </div>
                                 <Input value={course.title} onChange={(e) => updateCourseState(d => d.title = e.target.value)} />
                             </div>
                             <div className="space-y-2">
-                                <Label>Danh mục</Label>
+                                <div className='flex gap-1'>
+                                    <Label className='text-blue-700 font-roboto-condensed-bold'>Danh mục</Label>
+                                    <p className='text-red-600'>*</p>
+                                </div>
                                 <Select value={course.category_id} onValueChange={(v) => updateCourseState(d => d.category_id = v)}>
                                     <SelectTrigger><SelectValue placeholder="Chọn danh mục" /></SelectTrigger>
                                     <SelectContent>
@@ -433,7 +428,10 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label>Cấp độ</Label>
+                                <div className='flex gap-1'>
+                                    <Label className='text-blue-700 font-roboto-condensed-bold'>Cấp độ</Label>
+                                    <p className='text-red-600'>*</p>
+                                </div>
                                 <Select value={course.level_id} onValueChange={(v) => updateCourseState(d => d.level_id = v)}>
                                     <SelectTrigger><SelectValue placeholder="Chọn cấp độ" /></SelectTrigger>
                                     <SelectContent>
@@ -442,7 +440,10 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label>Giá (VNĐ)</Label>
+                                <div className='flex gap-1'>
+                                    <Label className='text-blue-700 font-roboto-condensed-bold'>Giá của khóa học</Label>
+                                    <p className='text-red-600'>*</p>
+                                </div>
                                 <Input
                                     type="text"
                                     value={priceDisplay}
@@ -458,17 +459,46 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Ảnh bìa (URL)</Label>
-                                <Input value={course.thumbnail || ''} onChange={(e) => updateCourseState(d => d.thumbnail = e.target.value)} placeholder="https://..." />
-                                {/* TODO: Thay bằng component Upload Image */}
+                                <div className='flex gap-1'>
+                                    <Label className='text-blue-700 font-roboto-condensed-bold'>Ảnh bìa</Label>
+                                    <p className='text-red-600'>*</p>
+                                </div>
+                                <ImageUploadDialog
+                                    onUploadSuccess={(url) => { updateCourseState(d => d.thumbnail = `${url}t=${Date.now()}`) }}
+                                    courseId={`${course.course_id}`}
+                                    userId={`${user?.id}`}
+                                    currentImageUrl={course.thumbnail ? `${course.thumbnail ?? ""}?t=${Date.now()}` : ""}
+                                />
                             </div>
                             <div className="space-y-2">
-                                <Label>Yêu cầu của khóa học</Label>
-                                <Textarea rows={4} value={course.requirement || ''} onChange={(e) => updateCourseState(d => d.requirement = e.target.value)} />
+                                <div className='flex gap-1'>
+                                    <Label className='text-blue-700 font-roboto-condensed-bold'>Yêu cầu của khóa học</Label>
+                                    <p className='text-red-600'>*</p>
+                                </div>
+                                <Textarea
+                                    rows={4}
+                                    value={course.requirement || ''}
+                                    onChange={(e) => updateCourseState(d => d.requirement = e.target.value)}
+                                    maxLength={350}
+                                />
+                                <p className="text-xs text-gray-500 text-right">
+                                    {course.requirement?.length || 0}/350 ký tự
+                                </p>
                             </div>
                             <div className="space-y-2">
-                                <Label>Mô tả ngắn</Label>
-                                <Textarea rows={4} value={course.description || ''} onChange={(e) => updateCourseState(d => d.description = e.target.value)} />
+                                <div className='flex gap-1'>
+                                    <Label className='text-blue-700 font-roboto-condensed-bold'>Mô tả khóa học</Label>
+                                    <p className='text-red-600'>*</p>
+                                </div>
+                                <Textarea
+                                    rows={4}
+                                    maxLength={500}
+                                    value={course.description || ''}
+                                    onChange={(e) => updateCourseState(d => d.description = e.target.value)}
+                                />
+                                <p className="text-xs text-gray-500 text-right">
+                                    {course.description?.length || 0}/500 ký tự
+                                </p>
                             </div>
                         </CardContent>
                     </Card>

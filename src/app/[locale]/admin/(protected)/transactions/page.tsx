@@ -13,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Spinner } from "@/components/ui/spinner";
 import { Search, RefreshCw, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
-// --- Types ---
 type TransactionStatus = "Pending" | "Success" | "Cancel" | "Refund";
 type TransactionType = "Withdraw" | "Deposit" | "Pay" | "Refund";
 type StatusFilter = TransactionStatus | "ALL";

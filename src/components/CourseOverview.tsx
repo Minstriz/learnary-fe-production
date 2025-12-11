@@ -15,15 +15,15 @@ export default function CourseOverview({ what_you_learn = [], requirement = "" }
           {(what_you_learn || []).map((item, index) => (
             <div key={index} className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-gray-900 shrink-0 mt-0.5" />
-              <span className="font-roboto text-gray-700">{item}</span>
+              <span className="font-roboto text-gray-700 break-all">{item}</span>
             </div>
           ))}
         </div>
       </div>
 
       <div>
-        <h2 className="font-roboto-condensed-bold text-2xl mb-4">Requirements</h2>
-        <p className="font-roboto text-gray-700 leading-relaxed whitespace-pre-line">
+        <h2 className="font-roboto-condensed-bold text-2xl mb-4 break-all">Requirements</h2>
+        <p className="font-roboto text-gray-700 leading-relaxed whitespace-pre-line break-all">
           {requirement}
         </p>
       </div>

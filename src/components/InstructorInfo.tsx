@@ -1,7 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
 import { Star, Users, PlayCircle } from 'lucide-react';
-
 import { InstructorWithData } from '@/type/user.type';
 
 type InstructorInfoProps = {
@@ -9,7 +8,6 @@ type InstructorInfoProps = {
 };
 
 export default function InstructorInfo({ instructor }: InstructorInfoProps) {
-  // Lấy thông tin user nếu có
   const user = instructor?.user;
   const avatar = user?.avatar && user.avatar.trim() !== ''? user.avatar: '';
   const fullName = user?.fullName || 'Instructor';
@@ -26,7 +24,7 @@ export default function InstructorInfo({ instructor }: InstructorInfoProps) {
       <div className="flex flex-col md:flex-row gap-6">
         <div className="shrink-0">
           <Image
-            src={avatar}
+            src={avatar || "/images/temp/Profile-PNG-Photo.png"}
             alt="avatar instructor"
             width={120}
             height={120}

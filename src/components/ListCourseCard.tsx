@@ -16,7 +16,7 @@ const fetchListCourses = async (): Promise<Course[]> => {
     const res = await api.get("/courses");
     const data = res.data.data;
     if (!data || data.length === 0) {
-      toast.info("Hệ thống chưa có khoá học nào");
+      /* toast.info("Hệ thống chưa có khoá học nào"); */
       return [];
     }
     const PublishedCourse = data.filter((course: Course) => course.status === "Published");
