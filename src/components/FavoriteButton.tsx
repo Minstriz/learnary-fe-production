@@ -96,7 +96,7 @@ export default function FavoriteButton({
     const iconSizes = {
         sm: 'w-4 h-4',
         md: 'w-5 h-5',
-        lg: 'w-6 h-6'
+        lg: 'w-9 h-9'
     };
 
     if (variant === 'icon') {
@@ -135,7 +135,7 @@ export default function FavoriteButton({
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pink-600 mr-2"></div>
             ) : (
                 <Heart 
-                    className={`${iconSizes[size]} mr-2 ${isFavorite ? 'fill-pink-600' : ''}`}
+                    className={`${iconSizes[size]} ${isFavorite ? 'fill-pink-600' : ''}`}
                 />
             )}
             {isFavorite ? 'Đã yêu thích' : 'Yêu thích'}

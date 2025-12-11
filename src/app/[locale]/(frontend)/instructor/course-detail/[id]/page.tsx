@@ -279,11 +279,13 @@ export default function CourseDetailPage() {
                 <div className="lg:col-span-1">
                   <div className="sticky top-24">
                     <CourseSidebar
+                      course_id={course.course_id}
                       course_slug={course.slug || ""}
                       thumbnail={course.thumbnail}
                       price={course.price}
                       original_price={course.original_price}
                       includes={mappedIncludes}
+                      isPreviewMode={true}
                     />
                   </div>
                 </div>

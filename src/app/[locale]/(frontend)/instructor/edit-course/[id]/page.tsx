@@ -291,8 +291,22 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
             })
         );
     }, [course, videoStaging, allChaptersHaveLessons]);
+
+    const allRequiredFieldsFilled = useMemo(() => {
+        if (!course) return false;
+        return (
+            course.title.trim() !== '' &&
+            course.category_id.trim() !== '' &&
+            course.level_id.trim() !== '' &&
+            course.price > 0 &&
+            course.thumbnail.trim() !== '' &&
+            course.requirement.trim() !== '' &&
+            course.description.trim() !== ''
+        );
+    }, [course]);
+
     const canSaveDraft = !hasAnyVideo && course?.status === 'Draft';
-    const canSubmit = allChaptersHaveLessons && allLessonsHaveVideo && course?.status === 'Draft';
+    const canSubmit = allChaptersHaveLessons && allLessonsHaveVideo && allRequiredFieldsFilled && course?.status === 'Draft';
 
     const handleAction = async (action: 'save' | 'submit') => {
         if (!course) return;
@@ -310,7 +324,18 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 toast.success("Đã lưu bản nháp thành công! Bạn có thể xem tất cả khoá học của bạn tại trang khoá học của tôi!");
             } else {
                 if (!canSubmit) {
-                    toast.error("Tất cả lesson đều phải có video và chapter buộc phải có lesson.");
+                    if (!allRequiredFieldsFilled) {
+                        toast.error("Vui lòng điền đầy đủ tất cả thông tin bắt buộc (có dấu *)");
+                        return;
+                    }
+                    if (!allChaptersHaveLessons) {
+                        toast.error("Mỗi chương phải có ít nhất một bài học.");
+                        return;
+                    }
+                    if (!allLessonsHaveVideo) {
+                        toast.error("Tất cả bài học đều phải có video.");
+                        return;
+                    }
                     return;
                 }
 
@@ -393,7 +418,12 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     <Button title='Bạn sẽ không thể lưu nháp nếu có video bài học' variant="outline" onClick={() => handleAction('save')} disabled={!canSaveDraft || isSaving || course.status !== 'Draft'} className={`${!canSaveDraft ? 'cursor-not-allowed hover:bg-gray-200' : 'cursor-pointer hover:bg-gray-200'}`}>
                         <Save className="w-4 h-4 mr-2" /> Lưu nháp
                     </Button>
-                    <Button onClick={() => handleAction('submit')} disabled={isSaving || course.status !== 'Draft'} className='cursor-pointer text-blue-600 bg-white border border-blue-600 hover:bg-blue-600 hover:text-white'>
+                    <Button 
+                        title={!canSubmit ? 'Vui lòng điền đầy đủ thông tin và thêm video cho tất cả bài học' : 'Gửi khóa học để admin phê duyệt'}
+                        onClick={() => handleAction('submit')} 
+                        disabled={!canSubmit || isSaving || course.status !== 'Draft'} 
+                        className={`${!canSubmit ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} text-blue-600 bg-white border border-blue-600 hover:bg-blue-600 hover:text-white`}
+                    >
                         <Send className="w-4 h-4 mr-2" /> Gửi duyệt
                     </Button>
                 </div>

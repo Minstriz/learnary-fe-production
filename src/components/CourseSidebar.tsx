@@ -2,10 +2,10 @@
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { PlayCircle, FileText, Award, Infinity, Smartphone, Download, Link } from 'lucide-react';
+import { PlayCircle, FileText, Award, Infinity, Smartphone, Download } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { PLACEHOLDER_THUMBNAIL } from '@/const/urls';
-// import Link from 'next/link';
+import Link from 'next/link';
 import FavoriteButton from '@/components/FavoriteButton';
 
 interface CourseSidebarProps {
@@ -22,9 +22,10 @@ interface CourseSidebarProps {
   onBuyNow?: () => void;
   isLoading?: boolean;
   isEnrolled?: boolean;
+  isPreviewMode?: boolean;
 }
 
-export default function CourseSidebar({ thumbnail, price, original_price, sale_off, includes, onBuyNow, isLoading, isEnrolled, course_slug, course_id }: CourseSidebarProps) {
+export default function CourseSidebar({ thumbnail, price, original_price, sale_off, includes, onBuyNow, isLoading, isEnrolled, course_slug, course_id, isPreviewMode = false }: CourseSidebarProps) {
   const t = useTranslations("Course-Detail-Sidebar");
   original_price = 1200000
   sale_off = 50
@@ -67,7 +68,16 @@ export default function CourseSidebar({ thumbnail, price, original_price, sale_o
             )}
           </div>
         </div>
-
+        
+        {!isEnrolled && (
+          <FavoriteButton 
+            courseId={course_id} 
+            variant="button" 
+            size="lg"
+            className={`w-full mb-3 py-6 border-2 font-roboto-bold text-base transition-all duration-300 ease-in-out shadow-md hover:shadow-lg ${isPreviewMode ? 'opacity-60 cursor-not-allowed pointer-events-none' : ''}`}
+          />
+        )}
+        
         {isEnrolled ? (
           <Link href={`/course-learn/${course_slug}`} className="block mb-6">
             <Button className="w-full text-white cursor-pointer bg-green-600 hover:bg-green-700 font-bold py-6 text-lg">
@@ -76,15 +86,11 @@ export default function CourseSidebar({ thumbnail, price, original_price, sale_o
           </Link>
         ) : (
           <>
-            <Button variant="outline" className="w-full mb-3 font-roboto-bold py-6 cursor-pointer">
-              <Link href={``}>{t("btnCard")}</Link>
-            </Button>
-            <FavoriteButton courseId={course_id} variant="button" className="w-full mb-3 font-roboto-bold py-6 cursor-pointer bg-pink-600 hover:bg-pink-700 text-lg text-white" />
             {!isLoading ? (
               <Button 
-                className="w-full cursor-pointer bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 text-lg mb-6" 
-                onClick={onBuyNow} 
-                disabled={isLoading}
+                className={`w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 text-lg mb-6 shadow-md hover:shadow-lg transition-all duration-300 ${isPreviewMode ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                onClick={isPreviewMode ? undefined : onBuyNow} 
+                disabled={isLoading || isPreviewMode}
               >
                 Mua ngay
               </Button>

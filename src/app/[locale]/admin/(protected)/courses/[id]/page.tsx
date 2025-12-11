@@ -415,12 +415,14 @@ export default function AdminCourseDetailPage() {
                         <div className="lg:col-span-1">
                             <div className="sticky top-24">
                                 <CourseSidebar
+                                    course_id={course.course_id}
                                     course_slug={course.slug || "No Slug Found!"}
                                     thumbnail={course.thumbnail}
                                     price={course.price}
                                     original_price={course.original_price}
                                     // sale_off={course.sale_off}
                                     includes={mappedIncludes}
+                                    isPreviewMode={true}
                                 />
                                 <div className="mt-4 bg-blue-50 text-blue-700 p-4 rounded-md text-sm border border-blue-200 flex gap-3 items-start shadow-sm">
                                     <Eye className="h-5 w-5 shrink-0 mt-0.5"/> 
