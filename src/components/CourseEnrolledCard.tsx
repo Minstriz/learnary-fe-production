@@ -13,21 +13,23 @@ interface CourseEnrolledCardProps {
     course: Course;
     enrolledAt?: string;
     progress?: number;
+    isLocked?: boolean;
 }
 
 export default function CourseEnrolledCard({
     course,
     enrolledAt,
-    progress = 0
+    progress = 0,
+    isLocked = false,
 }: CourseEnrolledCardProps) {
     const router = useRouter();
-
     const handleContinueLearning = () => {
+        if (isLocked) return; // Không cho click nếu bị khóa
         router.push(`/course-learn/${course.slug}`);
     };
 
     return (
-        <Card className="hover:shadow-lg transition-all duration-300 overflow-hidden group">
+        <Card className="hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer">
             <div className="relative h-48 w-full overflow-hidden bg-gray-200">
                 {course.thumbnail ? (
                     <Image
@@ -108,9 +110,14 @@ export default function CourseEnrolledCard({
                 </div>
                 <Button
                     onClick={handleContinueLearning}
-                    className="w-full group/btn hover:bg-pink-600 hover:text-white transition-colors cursor-pointer bg-white text-pink-600 border border-pink-600 ">
-                    {progress > 0 ? "Tiếp tục học" : "Bắt đầu học"}
-                    <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+                    disabled={isLocked}
+                    className={`w-full group/btn transition-colors ${
+                        isLocked 
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-300' 
+                            : 'hover:bg-pink-600 hover:text-white cursor-pointer bg-white text-pink-600 border border-pink-600'
+                    }`}>
+                    {isLocked ? "Đã khóa" : (progress > 0 ? "Tiếp tục học" : "Bắt đầu học")}
+                    {!isLocked && <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />}
                 </Button>
             </CardContent>
         </Card>

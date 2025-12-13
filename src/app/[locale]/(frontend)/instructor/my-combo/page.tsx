@@ -49,6 +49,7 @@ export default function MyComboPage() {
         );
       });
       setCombos(instructorCombos);
+
     } catch (error) {
       toast.error("Không thể tải danh sách combo");
       console.error(error);
@@ -56,7 +57,6 @@ export default function MyComboPage() {
       setIsLoading(false);
     }
   };
-
   const handleEditCombo = (combo: Group) => {
     setSelectedCombo(combo);
     setEditDialogOpen(true);
@@ -157,7 +157,7 @@ export default function MyComboPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-xl text-gray-700 font-roboto-condensed-bold">
               Giảm Giá Trung Bình
@@ -165,11 +165,11 @@ export default function MyComboPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-700" >
-              {combos.length > 0 ? Math.round(combos.reduce((sum, c) => sum + c.discount, 0) / combos.length): 0}
+              {combos.length > 0 ? Math.round(combos.reduce((sum, c) => sum + c.discount, 0) / combos.length) : 0}
               %
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {combos.length === 0 ? (
@@ -210,18 +210,18 @@ export default function MyComboPage() {
                   <div>
                     <p className="text-sm text-gray-600">Giá Combo</p>
                     <p className="text-2xl font-bold text-green-600">
-                      {new Intl.NumberFormat('vi-VN', { 
-                        style: 'currency', 
-                        currency: 'VND' 
+                      {new Intl.NumberFormat('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
                       }).format(calculateComboPrice(combo))}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-600">Tiết Kiệm</p>
                     <p className="text-lg font-semibold text-red-500">
-                      -{new Intl.NumberFormat('vi-VN', { 
-                        style: 'currency', 
-                        currency: 'VND' 
+                      -{new Intl.NumberFormat('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
                       }).format(calculateSavings(combo))}
                     </p>
                   </div>
@@ -242,9 +242,9 @@ export default function MyComboPage() {
                         )}
                         <span className="flex-1 truncate">{cg.belongToCourse.title}</span>
                         <span className="text-gray-600 font-medium">
-                          {new Intl.NumberFormat('vi-VN', { 
-                            style: 'currency', 
-                            currency: 'VND' 
+                          {new Intl.NumberFormat('vi-VN', {
+                            style: 'currency',
+                            currency: 'VND'
                           }).format(cg.belongToCourse.price || 0)}
                         </span>
                       </div>
@@ -270,7 +270,7 @@ export default function MyComboPage() {
                     <Edit className="h-4 w-4 mr-2" />
                     Chỉnh Sửa
                   </Button>
-                  <Button variant="destructive"  className="flex-1 cursor-pointer" onClick={() => handleDeleteClick(combo)}>
+                  <Button variant="destructive" className="flex-1 cursor-pointer" onClick={() => handleDeleteClick(combo)}>
                     <Trash2 className="h-4 w-4 mr-2" />
                     Xóa
                   </Button>

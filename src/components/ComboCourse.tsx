@@ -100,7 +100,7 @@ const ComboCourse: React.FC<ComboCourseProps> = ({ combo }) => {
                     {combo.description || "Gói combo tiết kiệm cho bạn"}
                   </h5>
                 </div>
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <Badge variant="outline" className="text-xs text-purple-700 border-purple-300">
                     {courseCount} khóa học
                   </Badge>
