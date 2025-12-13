@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import api from "@/app/lib/axios";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import CourseEnrolledCard from "@/components/CourseEnrolledCard";
 import { BookOpen, GraduationCap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { LearnerCourse } from "@/type/course.type";
+import ListCourseOfCombo from "@/components/ListCourseOfCombo";
 
 interface LessonProgressData {
   lesson_id: string;
@@ -22,22 +23,6 @@ interface LessonProgressData {
 }
 
 interface CourseProgress {
-  // Index Signature (chữ ký chỉ mục), cho phép object có số lượng properties động với type của key là string, còn tên key có thể là bất kì tên nào.
-  /* SAU KHI MAP NÓ SẼ RA NHƯ NÀY
-        const courseProgress: CourseProgress = {
-      "course-123": {
-        totalLessons: 10,
-        completedLessons: 5,
-        progress: 50
-      },
-      "course-456": {
-        totalLessons: 20,
-        completedLessons: 15,
-        progress: 75
-      },
-      ...
-    };
-   */
   [course_id: string]: {
     totalLessons: number;
     completedLessons: number;
@@ -45,36 +30,57 @@ interface CourseProgress {
   };
 }
 
+interface CourseInGroup {
+  group_id: string;
+  course_id: string;
+  order_index: number;
+  createdAt: string;
+  updateAt: string;
+  belongToGroup: {
+    group_id: string;
+  };
+}
+
+interface ComboData {
+  group_id: string;
+  group_name: string;
+  courses: Array<{
+    learnerCourse: LearnerCourse;
+    order_index: number;
+    progress: number;
+    isLocked: boolean;
+  }>;
+}
+
 export default function LearnAreaPage() {
   const { isLoggedIn } = useAuth();
   const [courses, setCourses] = useState<LearnerCourse[]>([]);
   const [courseProgress, setCourseProgress] = useState<CourseProgress>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [comboCourses, setComboCourses] = useState<ComboData[]>([]);
+  const [standaloneCourses, setStandaloneCourses] = useState<LearnerCourse[]>([]);
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      fetchData();
-    } else {
-      setIsLoading(false);
-    }
-  }, [isLoggedIn]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const [coursesResponse, progressResponse] = await Promise.all([
         api.get("/learner-courses/my-courses"),
-        api.get("/lesson-progress/my")
+        api.get("/lesson-progress/my"),
       ]);
-      const coursesData = Array.isArray(coursesResponse.data.data) ? coursesResponse.data.data : [];
-      const progressData: LessonProgressData[] = Array.isArray(progressResponse.data.data) ? progressResponse.data.data : [];
-      const progressMap: CourseProgress = {};
 
+      const coursesData: LearnerCourse[] = Array.isArray(coursesResponse.data.data) ? coursesResponse.data.data : [];
+      const progressData: LessonProgressData[] = Array.isArray(progressResponse.data.data) ? progressResponse.data.data : [];
+      console.log("Fetched courses:", coursesData);
+      console.log("Fetched progress:", progressData);
+      // Tính progress cho mỗi course
+      const progressMap: CourseProgress = {};
       coursesData.forEach((enrolledCourse: LearnerCourse) => {
         const courseId = enrolledCourse.course_id;
         const totalLessons = enrolledCourse.course?.chapter?.reduce((total, chapter) => {
           return total + (chapter.lessons?.length || 0);
         }, 0) || 0;
+
         progressMap[courseId] = {
           totalLessons,
           completedLessons: 0,
@@ -98,6 +104,10 @@ export default function LearnAreaPage() {
 
       setCourses(coursesData);
       setCourseProgress(progressMap);
+
+      // Nhóm courses theo combo
+      await groupCoursesByCombo(coursesData, progressMap);
+
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Không thể tải dữ liệu");
@@ -106,7 +116,101 @@ export default function LearnAreaPage() {
     } finally {
       setIsLoading(false);
     }
+  }, []);
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [isLoggedIn, fetchData]);
+  const groupCoursesByCombo = async (coursesData: LearnerCourse[], progressMap: CourseProgress) => {
+    try {
+      const courseGroupMap: Map<string, CourseInGroup[]> = new Map();
+      const groupPromises = coursesData.map(async (course) => {
+        try {
+          const response = await api.get(`/course-groups/find-group-of-course/${course.course_id.trim()}`);
+          const groups: CourseInGroup[] = response.data.data || [];
+          if (groups.length > 0) {
+            courseGroupMap.set(course.course_id.trim(), groups);
+          }
+        } catch (error) {
+          console.error(`Error fetching groups for course ${course.course_id}:`, error);
+        }
+      });
+
+      await Promise.all(groupPromises);
+      //nhóm các khóa học chung 1 group_id với nhau
+      const groupCoursesMap: Map<string, Array<{
+        learnerCourse: LearnerCourse;//course
+        order_index: number;//vị trí của course trong group
+      }>> = new Map();
+
+      //set là ctdl để lưu trữ các giá trị duy nhất (unique), 1 set không có phép giá trị trùng lặp
+      const coursesInCombo = new Set<string>();
+
+      coursesData.forEach((course) => {
+        const groups = courseGroupMap.get(course.course_id.trim());
+        if (groups && groups.length > 0) {
+          groups.forEach((groupInfo) => {
+            const groupId = groupInfo.group_id.trim();
+            if (!groupCoursesMap.has(groupId)) {
+              groupCoursesMap.set(groupId, []);
+            }
+            groupCoursesMap.get(groupId)!.push({
+              learnerCourse: course, //thông tin khóa học
+              order_index: groupInfo.order_index //thứ tự học của khóa học trong group
+            });
+            coursesInCombo.add(course.course_id.trim());
+          });
+        }
+      });
+
+      //entrires() là lấy ra cặp key-value của mảng
+      const comboDataPromises = Array.from(groupCoursesMap.entries()).map(async ([groupId, courses]) => {
+        try {
+          const groupResponse = await api.get(`/course-groups/${groupId}/courses`);
+          const groupName = groupResponse.data[0]?.belongToGroup?.name || "Combo";
+          courses.sort((a, b) => a.order_index - b.order_index);
+          const coursesWithLockStatus = courses.map((courseData, index) => {
+            const progress = progressMap[courseData.learnerCourse.course_id]?.progress || 0;
+            let isLocked = false;
+            if (index > 0) {
+              const previousCourse = courses[index - 1];
+              const previousProgress = progressMap[previousCourse.learnerCourse.course_id]?.progress || 0;
+              isLocked = previousProgress < 100;
+            }
+
+            return {
+              learnerCourse: courseData.learnerCourse,
+              order_index: courseData.order_index,
+              progress,
+              isLocked
+            };
+          });
+
+          return {
+            group_id: groupId,
+            group_name: groupName,
+            courses: coursesWithLockStatus
+          };
+        } catch (error) {
+          console.error(`Error fetching group details for ${groupId}:`, error);
+          return null;
+        }
+      });
+      const comboData = (await Promise.all(comboDataPromises)).filter((combo): combo is ComboData => combo !== null);
+      setComboCourses(comboData);
+
+      // Set standalone courses (courses không thuộc combo nào)
+      const standalone = coursesData.filter((course) => !coursesInCombo.has(course.course_id.trim()));
+      setStandaloneCourses(standalone);
+    } catch (error) {
+      console.error("Error grouping courses by combo:", error);
+      toast.error("Không thể nhóm khóa học theo combo");
+    }
   };
+
   const completedCount = Object.values(courseProgress).filter(p => p.progress >= 100).length;
   const inProgressCount = Object.values(courseProgress).filter(p => p.progress > 0 && p.progress < 100).length;
 
@@ -203,16 +307,42 @@ export default function LearnAreaPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((enrolledCourse) => (
-            <CourseEnrolledCard
-              key={enrolledCourse.course_id}
-              course={enrolledCourse.course}
-              enrolledAt={enrolledCourse.enrolledAt}
-              progress={courseProgress[enrolledCourse.course_id]?.progress || 0}
-            />
-          ))}
-        </div>
+        <>
+          {/* khóa học riêng lẻ */}
+          {standaloneCourses.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold mb-4">Khóa học của bạn</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {standaloneCourses.map((enrolledCourse) => (
+                  <CourseEnrolledCard
+                    key={enrolledCourse.course_id}
+                    course={enrolledCourse.course}
+                    enrolledAt={enrolledCourse.enrolledAt}
+                    progress={courseProgress[enrolledCourse.course_id]?.progress || 0}
+                    isLocked={false}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          {/* khóa học theo combo */}
+          {comboCourses.length > 0 && (
+            <div className="mb-8 mt-10">
+              <h2 className="text-2xl font-bold mb-4">Combo khóa học của bạn</h2>
+              <div className="space-y-6">
+                {comboCourses.map((combo) => (
+                  <ListCourseOfCombo
+                    key={combo.group_id}
+                    group_id={combo.group_id}
+                    group_name={combo.group_name}
+                    courses={combo.courses}
+                    courseProgress={courseProgress}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
