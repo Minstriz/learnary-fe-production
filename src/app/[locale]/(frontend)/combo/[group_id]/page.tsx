@@ -135,7 +135,7 @@ export default function ComboDetailPage() {
     return (
         <div className="min-h-screen bg-white">
             {/* Header Section */}
-            <div className="bg-gradient-to-r from-purple-900 to-purple-700 text-white py-8 px-4 md:px-10">
+            <div className="bg-linear-to-r from-purple-900 to-purple-700 text-white py-8 px-4 md:px-10">
                 <div className="max-w-7xl mx-auto">
                     <Badge className="mb-3 bg-purple-600 text-white hover:bg-purple-500 cursor-default">
                         <Package className="w-3 h-3 mr-1" />
@@ -237,7 +237,7 @@ export default function ComboDetailPage() {
                                         {comboData.hasCourseGroup?.map((cg, index) => (
                                             <div key={cg.course_id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                                                 <div className="flex gap-4">
-                                                    <div className="flex-shrink-0">
+                                                    <div className="shrink-0">
                                                         <div className="relative w-32 h-20 rounded overflow-hidden">
                                                             <Image
                                                                 src={cg.belongToCourse.thumbnail || PLACEHOLDER_THUMBNAIL}

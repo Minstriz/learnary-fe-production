@@ -24,7 +24,7 @@ const TabLinks = () => {
     ]
 }
 export default function CourseTabsCombo({ children }: CourseTabsProps) {
-    const links = TabLinks();
+  const links = TabLinks();
 
   return (
     <Tabs defaultValue="overview" className="w-full">
