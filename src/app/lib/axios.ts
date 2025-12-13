@@ -11,6 +11,9 @@
   // Bộ chặn (Interceptor)
   api.interceptors.request.use(
     (config) => {
+
+      if (typeof window === 'undefined') return config;
+      if (config.url?.includes('/auth/refresh')) return config;
       // Lấy token từ sessionStorage  
       const token = sessionStorage.getItem('accessToken');
 
@@ -18,6 +21,9 @@
         // Nếu có token, gắn nó vào header
         config.headers.Authorization = `Bearer ${token}`;
         
+      }else {
+        // Quan trọng: Nếu không có token, xóa header này đi để tránh gửi rác
+        delete config.headers.Authorization;
       }
       return config; 
     },
@@ -33,8 +39,12 @@
       const originalRequest = error.config;
       //  KIỂM TRA XEM CÓ PHẢI CHÍNH LÀ REQUEST /refresh BỊ LỖI KHÔNG
       const isRefreshRequest = originalRequest.url.endsWith('/auth/refresh');
-      // Nếu lỗi 401 (Hết hạn) VÀ chưa thử lại
-      if (error.response.status === 401 && !originalRequest._retry && !isRefreshRequest) {
+      
+      // CHỈ thử refresh nếu ĐÃ CÓ token trong sessionStorage
+      const hasToken = sessionStorage.getItem('accessToken');
+      
+      // Nếu lỗi 401 (Hết hạn) VÀ chưa thử lại VÀ đã có token
+      if (error.response?.status === 401 && !originalRequest._retry && !isRefreshRequest && hasToken) {
         originalRequest._retry = true; // Đánh dấu đã thử lại
         
         try {
@@ -53,8 +63,20 @@
         } catch (refreshError) {
           // Nếu "két sắt" (RT) cũng hết hạn -> Đẩy về trang login
           sessionStorage.removeItem('accessToken');
-          window.location.href = '/login'; // Buộc tải lại trang login
-          return Promise.reject(refreshError);
+          // CHỈ redirect nếu user đang ở trang yêu cầu authentication
+          const protectedRoutes = ['/profile', '/learn-area', '/instructor', '/admin'];
+          const currentPath = window.location.pathname;
+          const isProtectedPage = protectedRoutes.some(route => currentPath.includes(route));
+          if (isProtectedPage) {
+            // Nếu trang bắt buộc -> Redirect về Login
+            window.location.href = '/login';
+            return Promise.reject(refreshError);
+          } else {
+            // Nếu trang KHÔNG bắt buộc (Ví dụ: Trang chủ, Trang Combo)
+            // -> Xóa header Authorization và gọi lại API gốc một lần nữa dưới tư cách Khách (Guest)
+            delete originalRequest.headers['Authorization'];
+            return api(originalRequest);
+          }
         }
       }
       return Promise.reject(error);

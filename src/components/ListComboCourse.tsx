@@ -13,7 +13,7 @@ type ListComboCourseProps = {
 
 const fetchListCombos = async (): Promise<Group[]> => {
   try {
-    const res = await api.get("/groups/type/Combo");
+    const res = await api.get("/groups");
     const data = res.data;
     if (!data || data.length === 0) {
       toast.info("Hệ thống chưa có combo nào");

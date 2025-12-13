@@ -99,7 +99,7 @@ export default function CourseDetailPage() {
             if (isAxiosError(err)) {
                 const errorMessage = err.response?.data?.error
                     || err.response?.data?.message
-                    || "Thanh toán thất bại";
+                    || "Thanh toán thất bại"
                 toast.error(errorMessage);
             } else {
                 toast.error("Có lỗi xảy ra khi tạo link thanh toán");

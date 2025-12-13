@@ -71,7 +71,8 @@ export default function LearnAreaPage() {
 
       const coursesData: LearnerCourse[] = Array.isArray(coursesResponse.data.data) ? coursesResponse.data.data : [];
       const progressData: LessonProgressData[] = Array.isArray(progressResponse.data.data) ? progressResponse.data.data : [];
-
+      console.log("Fetched courses:", coursesData);
+      console.log("Fetched progress:", progressData);
       // Tính progress cho mỗi course
       const progressMap: CourseProgress = {};
       coursesData.forEach((enrolledCourse: LearnerCourse) => {
