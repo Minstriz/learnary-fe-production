@@ -294,12 +294,10 @@ export default function CourseDetailPage() {
           </div>
         )}
 
-        {/* CONTENT VIEW */}
         {viewMode === 'content' && (
           <div className="animate-in fade-in zoom-in-95 duration-300">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
-                {/* VIDEO PLAYER */}
                 <div className="relative w-full aspect-video rounded-lg overflow-hidden border bg-black shadow-lg z-10">
             {currentVideoUrl ? (
               <Video key={currentVideoUrl} video_url={currentVideoUrl} />
@@ -451,7 +449,7 @@ export default function CourseDetailPage() {
             <CardHeader className="flex flex-row items-center gap-4 pb-2">
               <div className="relative h-16 w-16 min-w-16">
                 {/* <Image
-                    src={course.instructor?.user?.avatar || '/default-avatar.png'}
+                    src={course.instructor?.user?.avatar || '/images/temp/Profile-PNG-Photo.png'}
                     alt={course.instructor?.user?.fullName || 'Giảng viên'}
                     fill
                     className="rounded-full object-cover border-2 border-primary/10"

@@ -41,11 +41,8 @@ const CourseDetailPage = () => {
     try {
       setIsCheckingAccess(true);
       const res = await api.get(`learner-courses/verifyLearnerCourse/${course?.course_id}`)
-      console.log(res)
       if (res.status === 200 && res.data) {
         setCanLearn(true)
-        console.log(res.status)
-        console.log(res.data)
       }
       else {
         setCanLearn(false)
