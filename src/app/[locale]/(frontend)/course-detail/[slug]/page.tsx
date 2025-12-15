@@ -86,7 +86,6 @@ export default function CourseDetailPage() {
             const { checkoutUrl } = response.data;
 
             if (checkoutUrl) {
-                // Lưu thông tin để redirect sau khi thanh toán thành công
                 sessionStorage.setItem('payment_course_slug', courseData.slug || '');
                 window.location.href = checkoutUrl;
             } else {

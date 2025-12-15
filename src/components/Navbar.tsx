@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   Heart,
+  MessageCircle,
 } from "lucide-react";
 
 
@@ -118,6 +119,9 @@ function Navbar() {
               </div>
             )}
           </Link >
+          <Link href="/chat" title={"Tin nhắn của bạn"}>
+            <MessageCircle className="h-6 w-6 cursor-pointer hover:text-pink-600"></MessageCircle>
+          </Link>
           <Link href="/my-favorite" title={"Giỏ hàng"}>
             <Heart className="h-6 w-6 cursor-pointer hover:text-pink-600"></Heart>
           </Link>

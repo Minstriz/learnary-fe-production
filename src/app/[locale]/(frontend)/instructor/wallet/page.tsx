@@ -260,7 +260,7 @@ export default function MyWalletPage() {
                 </Link>
                 
                 {/* --- CARD 1: HIỂN THỊ SỐ DƯ --- */}
-                <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 text-white shadow-lg">
+                <div className="bg-linear-to-r from-purple-600 to-blue-600 rounded-2xl p-8 text-white shadow-lg">
                     <h2 className="text-lg font-medium opacity-90">Số dư khả dụng</h2>
                     <div className="text-4xl font-bold mt-2">
                         {wallet ? formatVND(wallet.balance) : '0 đ'}
