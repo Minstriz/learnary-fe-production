@@ -1,0 +1,405 @@
+@startuml Learnary Use Case Diagram
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+' ============ ACTORS ============
+actor "Người học\n(Learner)" as learner #LightBlue
+actor "Giảng viên\n(Instructor)" as instructor #LightGreen
+actor "Quản trị viên\n(Admin)" as admin #LightCoral
+actor "Hệ thống thanh toán\n(Payment Gateway)" as payment_system #LightGray
+
+' ============ AUTHENTICATION SYSTEM ============
+rectangle "Hệ thống Xác thực" #AliceBlue {
+  
+  usecase "UC01: Đăng ký\ntài khoản" as UC01
+  usecase "UC01.1: Nhập thông tin\nđăng ký" as UC01_1
+  usecase "UC01.2: Xác nhận\nmật khẩu" as UC01_2
+  usecase "UC01.3: Tạo tài khoản" as UC01_3
+  
+  usecase "UC02: Đăng nhập" as UC02
+  usecase "UC02.1: Đăng nhập\nvới Google OAuth" as UC02_1
+  usecase "UC02.2: Xác thực\nthông tin" as UC02_2
+  
+  usecase "UC03: Quên mật khẩu" as UC03
+  usecase "UC03.1: Gửi OTP\nqua email" as UC03_1
+  usecase "UC03.2: Xác thực OTP" as UC03_2
+  usecase "UC03.3: Đặt lại\nmật khẩu mới" as UC03_3
+  
+  ' Relationships - Sắp xếp để gợi ý thứ tự
+  UC01 ..> UC01_1 : <<include>>\n(bước 1)
+  UC01_1 .> UC01_2 : (tiếp theo)
+  UC01_2 .> UC01_3 : (kết thúc)
+  
+  UC02 ..> UC02_2 : <<include>>
+  UC02_1 .> UC02 : <<extend>>
+  
+  UC03 ..> UC03_1 : <<include>>\n(bước 1)
+  UC03_1 .> UC03_2 : (bước 2)
+  UC03_2 .> UC03_3 : (bước 3)
+}
+
+' ============ ACCOUNT MANAGEMENT ============
+rectangle "Quản lý Tài khoản" #Honeydew {
+  
+  usecase "UC04: Quản lý\nhồ sơ cá nhân" as UC04
+  usecase "UC04.1: Xem thông tin\ncá nhân" as UC04_1
+  usecase "UC04.2: Cập nhật\nthông tin" as UC04_2
+  usecase "UC04.3: Upload/Thay đổi\navatar" as UC04_3
+  usecase "UC04.4: Đổi mật khẩu" as UC04_4
+  usecase "UC04.5: Xác thực email\n(tùy chọn)" as UC04_5
+  
+  ' Relationships
+  UC04 ..> UC04_1 : <<include>>
+  UC04_2 .> UC04 : <<extend>>
+  UC04_3 .> UC04 : <<extend>>
+  UC04_4 .> UC04 : <<extend>>
+  UC04_5 .> UC04 : <<extend>>
+}
+
+' ============ INSTRUCTOR REGISTRATION ============
+rectangle "Đăng ký Giảng viên" #MistyRose {
+  
+  usecase "UC05: Đăng ký\ntrở thành giảng viên" as UC05
+  usecase "UC05.1: Điền thông tin\ngiảng viên" as UC05_1
+  usecase "UC05.2: Upload bằng cấp/\nChứng chỉ" as UC05_2
+  usecase "UC05.3: Gửi yêu cầu\nphê duyệt" as UC05_3
+  usecase "UC05.4: Xem lịch sử\nđăng ký" as UC05_4
+  
+  ' Relationships - Quy trình tuần tự
+  UC05 ..> UC05_1 : <<include>>
+(bước 1)
+  UC05_1 .> UC05_2 : (bước 2)
+  UC05_2 .> UC05_3 : (bước 3)
+  UC05_4 .> UC05 : <<extend>>
+}
+
+' ============ INSTRUCTOR TEACHING MANAGEMENT ============
+rectangle "Quản lý Giảng dạy" #LightYellow {
+  
+  usecase "UC06: Quản lý\ngiảng dạy" as UC06
+  usecase "UC06.1: Xem dashboard\ngiảng viên" as UC06_1
+  usecase "UC06.2: Xem thống kê\nhọc viên" as UC06_2
+  usecase "UC06.3: Xem doanh thu" as UC06_3
+  
+  usecase "UC07: Tạo khóa học" as UC07
+  usecase "UC07.1: Nhập thông tin\ncơ bản" as UC07_1
+  usecase "UC07.2: Thêm chương học" as UC07_2
+  usecase "UC07.3: Thêm bài học" as UC07_3
+  usecase "UC07.4: Upload video\nbài giảng" as UC07_4
+  usecase "UC07.5: Tạo quiz/\nbài tập" as UC07_5
+  usecase "UC07.6: Upload tài nguyên\nbài học" as UC07_6
+  
+  usecase "UC07b: Chỉnh sửa\nkhóa học" as UC07b
+  usecase "UC07b.1: Sửa thông tin\ncơ bản" as UC07b_1
+  usecase "UC07b.2: Sửa/Xóa\nchương học" as UC07b_2
+  usecase "UC07b.3: Sửa/Xóa\nbài học" as UC07b_3
+  usecase "UC07b.4: Xem học viên\nđã đăng ký" as UC07b_4
+  usecase "UC07b.5: Xem đánh giá\nkhóa học" as UC07b_5
+  
+  usecase "UC08: Quản lý combo" as UC08
+  usecase "UC08.1: Tạo combo\nkhóa học" as UC08_1
+  usecase "UC08.2: Chỉnh sửa combo" as UC08_2
+  usecase "UC08.3: Xóa combo" as UC08_3
+  
+  usecase "UC09: Quản lý\nkhóa học của tôi" as UC09
+  usecase "UC09.1: Xem danh sách\nkhóa học" as UC09_1
+  usecase "UC09.2: Lọc/Tìm kiếm\nkhóa học" as UC09_2
+  
+  usecase "UC10: Gửi yêu cầu\nphê duyệt khóa học" as UC10
+  usecase "UC10.1: Kiểm tra\ntính đầy đủ" as UC10_1
+  usecase "UC10.2: Gửi đến admin" as UC10_2
+  
+  usecase "UC11: Quản lý ví" as UC11
+  usecase "UC11.1: Xem số dư\nvà lịch sử" as UC11_1
+  usecase "UC11.2: Cập nhật thông tin\nngân hàng" as UC11_2
+  usecase "UC11.3: Yêu cầu rút tiền" as UC11_3
+  usecase "UC11.4: Xem giao dịch" as UC11_4
+  
+  ' Relationships
+  UC06 ..> UC06_1 : <<include>>
+  UC06_2 .> UC06 : <<extend>>
+  UC06_3 .> UC06 : <<extend>>
+   ..> UC07_1 : <<include>>\n(bước 1)
+  UC07_1 .> UC07_2 : (bước 2)
+  UC07_2 .> UC07_3 : (bước 3)
+  UC07_4 .> UC07_3 : <<extend>>
+  UC07_5 .> UC07_3 : <<extend>>
+  UC07_6 .> UC07_3 : <<extend>>
+  
+  UC07b ..> UC07b_1 : <<include>>
+  UC07b_2 .> UC07b : <<extend>>
+  UC07b_3 .> UC07b : <<extend>>
+  UC07b_4 .> UC07b : <<extend>>
+  UC07b_5 .> UC07b : <<extend>>
+  UC07_7 .> UC07_4 : <<extend>>
+  
+  UC08_1 .> UC08 : <<extend>>
+  UC08_2 .> UC08 : <<extend>>
+  UC08_3 .> UC08 : <<extend>>
+  
+  UC09 ..> UC09_1 : <<include>>
+  UC09_2 .> UC09 : <<extend>>
+  
+  UC11_2 .> UC11 : <<extend>>
+  UC11_3 .> UC11 : <<extend>>
+  UC11_4 .> UC11 : <<extend>>
+  
+  UC11 ..> UC11_1 : <<include>>
+(bước 1)
+  UC11_1 .> UC11_2 : (bước 2)
+  UC11_2 .> UC11_3 : (bước 3)
+}
+
+' ============ LEARNING MANAGEMENT ============
+rectangle "Quản lý Học tập" #LavenderBlush {
+  
+  usecase "UC12: Quản lý\nkhóa học yêu thích" as UC12
+  usecase "UC12.1: Thêm vào\nyêu thích" as UC12_1
+  usecase "UC12.2: Xóa khỏi\nyêu thích" as UC12_2
+  usecase "UC12.3: Xem danh sách\nyêu thích" as UC12_3
+  
+  usecase "UC13: Thanh toán\nkhóa học" as UC13
+  usecase "UC13.1: Chọn phương thức\nthanh toán" as UC13_1
+  usecase "UC13.2: Xử lý thanh toán\nqua Gateway" as UC13_2
+  usecase "UC13.3: Xác nhận\nthanh toán" as UC13_3
+  usecase "UC13.4: Cập nhật\nkhóa học đã mua" as UC13_4
+  
+  usecase "UC14: Quản lý\nkhóa học đã mua" as UC14
+  usecase "UC14.1: Xem danh sách\nkhóa học" as UC14_1
+  usecase "UC14.2: Lọc/Tìm kiếm\nkhóa học" as UC14_2
+  usecase "UC14.3: Xem tiến độ\nhọc tập" as UC14_3
+  
+  usecase "UC15: Trải nghiệm\nhọc tập" as UC15
+  usecase "UC15.1: Xem video\nbài giảng" as UC15_1
+  usecase "UC15.2: Làm quiz/\nbài tập" as UC15_2
+  usecase "UC15.3: Ghi chú\nbài học" as UC15_3
+  usecase "UC15.4: Đánh giá\nkhóa học" as UC15_4
+  usecase "UC15.5: Download\ntài nguyên" as UC15_5
+  usecase "UC15.6: Đánh dấu\nhoàn thành" as UC15_6
+  
+  ' Relationships
+  UC12_1 .> UC12 : <<extend>>
+  UC12_2 .> UC12 : <<extend>>
+  UC12 ..> UC12_3 : <<include>>
+  
+  UC13 ..> UC13_1 : <<include>>
+(bước 1)
+  UC13_1 .> UC13_2 : (bước 2)
+  UC13_2 .> UC13_3 : (bước 3)
+  UC13_3 .> UC13_4 : (bước 4)
+  
+  UC14 ..> UC14_1 : <<include>>
+  UC14_2 .> UC14 : <<extend>>
+  UC14_3 .> UC14 : <<extend>>
+  
+  UC15 ..> UC15_1 : <<include>>
+  UC15_2 .> UC15 : <<extend>>
+  UC15_3 .> UC15 : <<extend>>
+  UC15_4 .> UC15 : <<extend>>
+  UC15_5 .> UC15 : <<extend>>
+  UC15_6 .> UC15_1 : <<extend>>
+}
+
+' ============ ADMIN SYSTEM MANAGEMENT ============
+rectangle "Quản trị Hệ thống" #Lavender {
+  
+  usecase "UC16: Quản lý\nhệ thống" as UC16
+  usecase "UC16.1: Xem dashboard\nquản trị" as UC16_1
+  usecase "UC16.2: Xem thống kê\ntổng quan" as UC16_2
+  usecase "UC16.3: Quản lý phân quyền" as UC16_3
+  
+  usecase "UC17: Quản lý\ndanh mục/cấp độ" as UC17
+  usecase "UC17.1: Tạo/Sửa/Xóa\ndanh mục" as UC17_1
+  usecase "UC17.2: Tạo/Sửa/Xóa\ncấp độ" as UC17_2
+  usecase "UC17.3: Tạo/Sửa/Xóa\nloại tài nguyên" as UC17_3
+  
+  usecase "UC18: Quản lý\nngười dùng" as UC18
+  usecase "UC18.1: Xem danh sách\nngười dùng" as UC18_1
+  usecase "UC18.2: Tìm kiếm/Lọc\nngười dùng" as UC18_2
+  usecase "UC18.3: Xem chi tiết\nngười dùng" as UC18_3
+  usecase "UC18.4: Kích hoạt/Vô hiệu hóa\ntài khoản" as UC18_4
+  
+  usecase "UC19: Phê duyệt\nđơn đăng ký giảng viên" as UC19
+  usecase "UC19.1: Xem danh sách\nđơn đăng ký" as UC19_1
+  usecase "UC19.2: Xem chi tiết\nbằng cấp" as UC19_2
+  usecase "UC19.3: Phê duyệt\nđơn đăng ký" as UC19_3
+  usecase "UC19.4: Từ chối\nđơn đăng ký" as UC19_4
+  
+  usecase "UC20: Quản lý\nkhóa học" as UC20
+  usecase "UC20.1: Xem danh sách\nkhóa học" as UC20_1
+  usecase "UC20.2: Xem chi tiết\nkhóa học" as UC20_2
+  usecase "UC20.3: Phê duyệt\nkhóa học" as UC20_3
+  usecase "UC20.4: Từ chối\nkhóa học" as UC20_4
+  usecase "UC20.5: Ẩn/Hiện\nkhóa học" as UC20_5
+  
+  usecase "UC21: Quản lý\ngiao dịch" as UC21
+  usecase "UC21.1: Xem danh sách\ngiao dịch" as UC21_1
+  usecase "UC21.2: Lọc/Tìm kiếm\ngiao dịch" as UC21_2
+  usecase "UC21.3: Xem chi tiết\ngiao dịch" as UC21_3
+  usecase "UC21.4: Xuất báo cáo\ngiao dịch" as UC21_4
+  
+  usecase "UC22: Xử lý\nyêu cầu rút tiền" as UC22
+  usecase "UC22.1: Xem danh sách\nyêu cầu" as UC22_1
+  usecase "UC22.2: Xem chi tiết\nyêu cầu" as UC22_2
+  usecase "UC22.3: Phê duyệt\nrút tiền" as UC22_3
+  usecase "UC22.4: Từ chối\nrút tiền" as UC22_4
+  usecase "UC22.5: Đánh dấu\nđã chuyển khoản" as UC22_5
+  
+  ' Relationships
+  UC16 ..> UC16_1 : <<include>>
+  UC16_2 .> UC16 : <<extend>>
+  UC16_3 .> UC16 : <<extend>>
+  
+  UC17_1 .> UC17 : <<extend>>
+  UC17_2 .> UC17 : <<extend>>
+  UC17_3 .> UC17 : <<extend>>
+  
+  UC18 ..> UC18_1 : <<include>>
+  UC18_2 .> UC18 : <<extend>>
+  UC18_3 .> UC18 : <<extend>>
+  UC18_4 .> UC18 : <<extend>>
+  
+  UC19 ..> UC19_1 : <<include>>
+(bước 1)
+  UC19_1 .> UC19_2 : (bước 2)
+  UC19_3 .> UC19 : <<extend>>
+(phê duyệt)
+  UC19_4 .> UC19 : <<extend>>
+(từ chối)
+  
+  UC20 ..> UC20_1 : <<include>>
+  UC20_2 .> UC20 : <<extend>>
+  UC20_3 .> UC20 : <<extend>>
+  UC20_4 .> UC20 : <<extend>>
+  UC20_5 .> UC20 : <<extend>>
+  
+  UC21 ..> UC21_1 : <<include>>
+  UC21_2 .> UC21 : <<extend>>
+  UC21_3 .> UC21 : <<extend>>
+  UC21_4 .> UC21 : <<extend>>
+  
+  UC22 ..> UC22_1 : <<include>>
+(bước 1)
+  UC22_1 .> UC22_2 : (bước 2)
+  UC22_3 .> UC22 : <<extend>>
+(phê duyệt)
+  UC22_4 .> UC22 : <<extend>>
+(từ chối)
+  UC22_5 .> UC22_3 : <<extend>>
+(hoàn tất)
+}
+
+' ============ ACTOR CONNECTIONS ============
+
+' Learner use cases
+learner -- UC01
+learner -- UC02
+learner -- UC03
+learner -- UC04
+learner -- UC05
+learner -- UC12
+learner -- UC13
+learner -- UC14
+learner -- UC15
+
+' Instructor use cases
+instructor -- UC02
+instructor -- UC03
+instructor -- UC04
+instructor -- UC06
+instructor -- UC07
+instructor -- UC07b
+instructor -- UC08
+instructor -- UC09
+instructor -- UC10
+instructor -- UC11
+instructor -- UC12
+instructor -- UC13
+
+' Admin use cases
+admin -- UC02
+admin -- UC04
+admin -- UC16
+admin -- UC17
+admin -- UC18
+admin -- UC19
+admin -- UC20
+admin -- UC21
+admin -- UC22
+
+' External system
+payment_system -- UC13_2
+
+' ============ NOTES ============
+note right of UC01
+  **Quy trình đăng ký:**
+  1. Nhập họ tên, email, password
+  2. Xác nhận mật khẩu khớp
+  3. Tạo tài khoản → Chuyển đến login
+  
+  *Lưu ý: Xác thực email là tùy chọn,
+  thực hiện sau trong trang profile*
+end note
+
+note right of UC03
+  **Quy trình quên mật khẩu:**
+  1. Nhập email → Gửi OTP
+  2. Xác thực OTP (6 số)
+  3. Đặt mật khẩu mới
+end note
+
+note right of UC05
+  **Yêu cầu trở thành giảng viên:**
+  - Upload bằng cấp/chứng chỉ
+  - Thông tin ngâmới:**
+  1. Thông tin cơ bản (title, description)
+  2. Thêm chương học (chapters)
+  3. Thêm bài học (lessons)
+  4. Upload video/quiz/tài nguyên
+end note
+
+note right of UC11
+  **Quản lý ví giảng viên:**
+  - Xem số dư hiện tại
+  - Lịch sử giao dịch
+  - Cập nhật tài khoản ngân hàng
+  - Yêu cầu rút tiền về ngân hàng
+note right of UC07
+  **Tạo khóa học bao gồm:**
+  - Thông tin cơ bản
+  - Chương → Bài học
+  - Video, Quiz, Tài nguyên
+end note
+
+note right of UC13
+  **Thanh toán qua:**
+  - VNPay
+  - PayOS
+  - Momo
+end note
+
+note right of UC15
+  **Học tập tương tác:**
+  - Xem video
+  - Làm bài tập/quiz
+  - Ghi chú cá nhân
+  - Đánh giá & review
+end note
+
+note right of UC19
+  **Admin kiểm tra:**
+  - Bằng cấp hợp lệ
+  - Thông tin chính xác
+  - Chuyên môn phù hợp
+end note
+
+note right of UC22
+  **Xử lý rút tiền:**
+  - Kiểm tra số dư
+  - Xác thực thông tin
+  - Chuyển khoản
+  - Cập nhật trạng thái
+end note
+
+@enduml

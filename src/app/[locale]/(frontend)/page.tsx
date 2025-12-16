@@ -2,8 +2,7 @@
 import { useState, useEffect } from "react";
 import Hero from "@/components/Hero";
 import ListTopic from "@/components/ListTopic";
-import ListCourseCard from "@/components/ListCourseCard";
-import ListComboCourse from "@/components/ListComboCourse";
+import CourseListWithFilters from "@/components/CourseListWithFilters";
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -25,14 +24,19 @@ export default function HomePage() {
   }
   
   return (
-    <div className="w-full min-h-screen ">
+    <div className="w-full min-h-screen">
       <section className="min-h-screen">
         <Hero />
       </section>
       <section className="min-h-screen shadow-2xl pb-20">
         <ListTopic />
-        <ListCourseCard title="Tất cả khoá học" />
-        <ListComboCourse title="Combo khoá học" />
+        
+        <div className="mt-8">
+          <h2 className="text-3xl font-roboto-condensed-bold text-center mb-8">
+            Khám phá khóa học & Combo
+          </h2>
+          <CourseListWithFilters />
+        </div>
       </section>
     </div>
   );

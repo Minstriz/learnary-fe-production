@@ -2,6 +2,8 @@
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { useAuth } from '@/app/context/AuthContext';
 import { PlayCircle, FileText, Award, Infinity, Smartphone, Download } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { PLACEHOLDER_THUMBNAIL } from '@/const/urls';
@@ -26,6 +28,7 @@ interface CourseSidebarProps {
 }
 
 export default function CourseSidebar({ thumbnail, price, original_price, sale_off, includes, onBuyNow, isLoading, isEnrolled, course_slug, course_id, isPreviewMode = false }: CourseSidebarProps) {
+  const { isLoggedIn } = useAuth();
   const t = useTranslations("Course-Detail-Sidebar");
   original_price = 1200000
   sale_off = 50
@@ -89,7 +92,18 @@ export default function CourseSidebar({ thumbnail, price, original_price, sale_o
             {!isLoading ? (
               <Button 
                 className={`w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 text-lg mb-6 shadow-md hover:shadow-lg transition-all duration-300 ${isPreviewMode ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-                onClick={isPreviewMode ? undefined : onBuyNow} 
+                onClick={isPreviewMode ? undefined : () => {
+                  if (!isLoggedIn) {
+                    toast.error('Bạn cần đăng nhập để mua khóa học!');
+                    setTimeout(() => {
+                      window.location.href = '/login';
+                    }, 1200);
+                    return;
+                  }
+                  if (window.confirm('Bạn có chắc chắn muốn mua khóa học này?')) {
+                    if (onBuyNow) onBuyNow();
+                  }
+                }} 
                 disabled={isLoading || isPreviewMode}
               >
                 Mua ngay
