@@ -92,7 +92,6 @@
             quiz: null
           }]
       };  
-      console.log("Submitting payload:", payload);
       try {
         const res = await api.post('/courses', payload);
         const courseId = res.data?.data?.course_id || res.data?.course_id || res.data?.id;
