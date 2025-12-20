@@ -144,6 +144,7 @@ export default function ProfilePage() {
       const today = new Date();
       const age = today.getFullYear() - birthDate.getFullYear();
       if (age < 13) newErrors.dateOfBirth = "Bạn phải ít nhất 13 tuổi";
+      toast.warning("Bạn phải ít nhất 13 tuổi!");
     }
 
     setErrors(newErrors);
