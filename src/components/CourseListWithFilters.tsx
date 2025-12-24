@@ -9,6 +9,7 @@ import CourseSearchBar from "./CourseSearchBar";
 import CourseFilters from "./CourseFilters";
 // import { useIsMobile } from "@/hooks/useIsMobile";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface CoursesByCategory {
   category: Category;
@@ -107,8 +108,7 @@ const CourseListWithFilters: React.FC = () => {
   const [selectedLevel, setSelectedLevel] = useState("all");
   const [displayType, setDisplayType] = useState<DisplayType>("all");
   const [isLoading, setIsLoading] = useState(true);
-  // const isMobile = useIsMobile();
-  // Track expanded categories and combos
+  const isMobile = useIsMobile();
   const [expandedCategories, setExpandedCategories] = useState<{ [key: string]: boolean }>({});
   const [combosExpanded, setCombosExpanded] = useState(false);
 
@@ -122,7 +122,6 @@ const CourseListWithFilters: React.FC = () => {
         fetchLevels(),
       ]);
       
-      // Fallback: If levels API failed (401 for public), extract from courses
       let finalLevels = levelsResult;
       if (levelsResult.length === 0 && coursesResult.length > 0) {
         const uniqueLevels: Level[] = [];
@@ -146,25 +145,20 @@ const CourseListWithFilters: React.FC = () => {
     fetchData();
   }, []);
 
-  // Filter courses based on search and filters
   const filteredCourses = useMemo(() => {
     const filtered = coursesData.filter((course) => {
-      // Search by name
       const matchesSearch = course.title
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase());
 
-      // Filter by price range
       const coursePrice = course.price ?? 0;
       const min = minPrice ? parseFloat(minPrice) : 0;
       const max = maxPrice ? parseFloat(maxPrice) : Infinity;
       const matchesPrice = coursePrice >= min && coursePrice <= max;
 
-      // Filter by category
       const matchesCategory =
         selectedCategory === "all" || course.category_id === selectedCategory;
 
-      // Filter by level
       const matchesLevel =
         selectedLevel === "all" || course.level_id === selectedLevel;
 
@@ -174,15 +168,12 @@ const CourseListWithFilters: React.FC = () => {
     return filtered;
   }, [coursesData, searchTerm, minPrice, maxPrice, selectedCategory, selectedLevel]);
 
-  // Filter combos based on search and filters
   const filteredCombos = useMemo(() => {
     return combosData.filter((combo) => {
-      // Search by name
       const matchesSearch = combo.name
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase());
 
-      // Calculate combo price (with discount)
       const totalPrice = combo.hasCourseGroup?.reduce((sum, cg) => {
         return sum + (cg.belongToCourse?.price || 0);
       }, 0) || 0;
@@ -196,11 +187,9 @@ const CourseListWithFilters: React.FC = () => {
     });
   }, [combosData, searchTerm, minPrice, maxPrice]);
 
-  // Group courses by category
   const coursesByCategory = useMemo(() => {
     const grouped: CoursesByCategory[] = [];
 
-    // If no categories available, show all courses in one group
     if (categories.length === 0 && filteredCourses.length > 0) {
       grouped.push({
         category: { category_id: "all", category_name: "Tất cả khóa học" },
@@ -208,8 +197,6 @@ const CourseListWithFilters: React.FC = () => {
       });
       return grouped;
     }
-
-    // If category filter is applied, only show that category
     if (selectedCategory !== "all") {
       const category = categories.find((cat) => cat.category_id === selectedCategory);
       if (category) {
@@ -219,7 +206,6 @@ const CourseListWithFilters: React.FC = () => {
         });
       }
     } else {
-      // Show all categories with their courses
       categories.forEach((category) => {
         const categoryCourses = filteredCourses.filter(
           (course) => course.category_id === category.category_id
@@ -232,7 +218,6 @@ const CourseListWithFilters: React.FC = () => {
         }
       });
 
-      // Add courses without category
       const coursesWithoutCategory = filteredCourses.filter(
         (course) => !course.category_id || !categories.find(cat => cat.category_id === course.category_id)
       );
@@ -266,8 +251,7 @@ const CourseListWithFilters: React.FC = () => {
 
   return (
     <div className="w-full px-4 md:px-8 lg:px-16 py-8">
-      {/* Search Bar and Filters */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6 items-start md:items-end">
+      <div className="flex flex-col md:flex-row gap-4 mb-3 items-start md:items-end">
         <div className="flex-1 w-full">
           <CourseSearchBar
             searchTerm={searchTerm}
@@ -291,37 +275,31 @@ const CourseListWithFilters: React.FC = () => {
         </div>
       </div>
 
-      {/* Display Type Toggle */}
       <div className="flex gap-3 mb-6 justify-center">
         <Button
           variant={displayType === "all" ? "default" : "outline"}
           onClick={() => setDisplayType("all")}
-          className={displayType === "all" ? "bg-pink-600 hover:bg-pink-700" : ""}
+          className={displayType === "all" ? "bg-pink-600 hover:bg-pink-700 cursor-pointer" : "cursor-pointer"}
         >
           Tất cả
         </Button>
         <Button
           variant={displayType === "courses" ? "default" : "outline"}
           onClick={() => setDisplayType("courses")}
-          className={displayType === "courses" ? "bg-pink-600 hover:bg-pink-700" : ""}
+          className={displayType === "courses" ? "bg-pink-600 hover:bg-pink-700 cursor-pointer" : "cursor-pointer"}
         >
           Khóa học đơn
         </Button>
         <Button
           variant={displayType === "combos" ? "default" : "outline"}
           onClick={() => setDisplayType("combos")}
-          className={displayType === "combos" ? "bg-pink-600 hover:bg-pink-700" : ""}
+          className={displayType === "combos" ? "bg-pink-600 hover:bg-pink-700 cursor-pointer" : "cursor-pointer"}
         >
           Combo
         </Button>
       </div>
-
-
-
-      {/* Display content based on selected type */}
       {displayType !== "combos" && (
         <>
-          {/* Courses grouped by category */}
           {coursesByCategory.length === 0 ? (
             displayType === "courses" ? (
               <div className="flex items-center justify-center w-full py-20">
@@ -329,18 +307,18 @@ const CourseListWithFilters: React.FC = () => {
               </div>
             ) : null
           ) : (
-            <div className="space-y-12">
+            <div className="space-y-10">
               {coursesByCategory.map((group) => {
                 const isExpanded = expandedCategories[group.category.category_id];
-                const showCourses = isExpanded ? group.courses : group.courses.slice(0, 4);
+                const showCourses = isExpanded ? group.courses : group.courses.slice(0, 5);
                 return (
                   <div key={group.category.category_id}>
                     <h2 className="text-2xl font-roboto-condensed-bold mb-6 border-b-2 border-pink-600 pb-2 inline-block">
                       {group.category.category_name}
                     </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                       {showCourses.map((course) => (
-                        <div key={course.course_id} className="w-full sm:w-1/2 lg:w-1/4">
+                        <div key={course.course_id} className={`${isMobile ? 'sm:w-1/2 lg:w-1/4' : ' sm:w-1/2 lg:w-1/4'}`}>
                           <SingleCourseCard course={course} />
                         </div>
                       ))}
@@ -349,7 +327,7 @@ const CourseListWithFilters: React.FC = () => {
                       <div className="flex justify-center mt-4">
                         <Button
                           variant="outline"
-                          className="border-pink-600 text-pink-600 hover:bg-pink-50"
+                          className="border-pink-600 text-pink-600 hover:bg-pink-700 cursor-pointer hover:text-white"
                           onClick={() => setExpandedCategories((prev) => ({
                             ...prev,
                             [group.category.category_id]: !isExpanded,
@@ -367,7 +345,6 @@ const CourseListWithFilters: React.FC = () => {
         </>
       )}
 
-      {/* Combos section */}
       {displayType !== "courses" && (
         <div className={displayType === "all" && coursesByCategory.length > 0 ? "mt-12" : ""}>
           {filteredCombos.length === 0 ? (
@@ -383,18 +360,18 @@ const CourseListWithFilters: React.FC = () => {
                   Combo khóa học
                 </h2>
               )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {(combosExpanded ? filteredCombos : filteredCombos.slice(0, 4)).map((combo) => (
-                  <div key={combo.group_id} className="w-full sm:w-1/2 lg:w-1/4">
+              <div className={`${isMobile ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 justify-items-center' : 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 justify-items-start'}`}>
+                {(combosExpanded ? filteredCombos : filteredCombos.slice(0, 5)).map((combo) => (
+                  <div key={combo.group_id} className={`${isMobile ? 'flex flex-col justify-center sm:w-1/2 lg:w-1/4' : ' sm:w-1/2 lg:w-1/4'}`}>
                     <ComboCourse combo={combo} />
                   </div>
                 ))}
               </div>
-              {filteredCombos.length > 4 && (
+              {filteredCombos.length > 5 && (
                 <div className="flex justify-center mt-4">
                   <Button
                     variant="outline"
-                    className="border-pink-600 text-pink-600 hover:bg-pink-50"
+                    className="border-pink-600 text-pink-600 hover:bg-pink-700 cursor-pointer hover:text-white"
                     onClick={() => setCombosExpanded((prev) => !prev)}
                   >
                     {combosExpanded ? "Ẩn bớt" : "Xem thêm"}
@@ -406,7 +383,6 @@ const CourseListWithFilters: React.FC = () => {
         </div>
       )}
       
-      {/* Show message when both are empty */}
       {coursesByCategory.length === 0 && filteredCombos.length === 0 && displayType === "all" && (
         <div className="flex items-center justify-center w-full py-20">
           <p className="text-gray-500 text-lg">Không tìm thấy khóa học hoặc combo nào phù hợp</p>
