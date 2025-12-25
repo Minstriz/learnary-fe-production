@@ -1,19 +1,68 @@
 import { useIsMobile } from '@/hooks/useIsMobile'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState,useCallback } from 'react'
 import "plyr/dist/plyr.css";
+import { toast } from 'sonner';
+import api from '@/app/lib/axios';
 
 interface VideoProps {
-    video_url: string,
-    onCompleted?:() => void;
+    video_url: string;
+    lesson_id?: string;
+    onCompleted?: () => void;
 }
 
-const Video: React.FC<VideoProps> = ({ video_url, onCompleted }) => {
+const Video: React.FC<VideoProps> = ({
+    video_url,
+    lesson_id,
+    onCompleted,
+}) => {
     const isMobile = useIsMobile();
     const playerRef = useRef<Plyr | null>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const lastWatchTimeRef = useRef(0);
+    const maxWatchTimeRef = useRef(0);
+    const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const [progressLoaded, setProgressLoaded] = useState(false);
+    useEffect(() => {
+        const fetchProgress = async () => {
+            if (!lesson_id) {
+                setProgressLoaded(true);
+                return;
+            }
+            try {
+                const response = await api.get(`/lesson-progress/${lesson_id}`);
+                const progress = response.data?.data;
+                if (progress) {
+                    lastWatchTimeRef.current = progress.last_watch_time || 0;
+                    maxWatchTimeRef.current = progress.max_watch_time || 0;
+                }
+            } catch {
+
+            } finally {
+                setProgressLoaded(true);
+            }
+        };
+        fetchProgress();
+    }, [lesson_id]);
+    const saveWatchTime = useCallback(async (last_time: number, max_time: number) => {
+        if (!lesson_id) {
+            return;
+        }
+        try {
+            await api.post('/lesson-progress/watch-time', {
+                lesson_id,
+                last_watch_time: Math.floor(last_time),
+                max_watch_time: Math.floor(max_time),
+            });
+        } catch (error) {
+            console.error('Failed to save watch time:', error);
+        }
+    },[lesson_id]);
 
     useEffect(() => {
+        if (!progressLoaded) {
+            return;
+        }
         const setupPlayer = async () => {
             if (!playerRef.current && videoRef.current) {
                 try {
@@ -34,7 +83,7 @@ const Video: React.FC<VideoProps> = ({ video_url, onCompleted }) => {
                             'settings',
                             'pip',
                             'airplay',
-                           /*  'download', */
+                            /*  'download', */
                             'fullscreen'
                         ],
 
@@ -44,9 +93,8 @@ const Video: React.FC<VideoProps> = ({ video_url, onCompleted }) => {
                             default: 720,
                             options: [360, 480, 720, 1080, 1440, 2160],
                             forced: true,
-                            onChange: (quality: number) => {
-                                console.log('Quality changed to:', quality);
-                            },
+                            /* onChange: (quality: number) => {
+                            }, */
                         },
 
                         speed: {
@@ -140,62 +188,98 @@ const Video: React.FC<VideoProps> = ({ video_url, onCompleted }) => {
                             },
                         },
                     });
-                    
                     if (videoRef.current) {
                         videoRef.current.removeAttribute('crossorigin');
                     }
-                    
                     playerRef.current.on('ready', () => {
                         setIsLoading(false);
                         if (videoRef.current) {
                             videoRef.current.removeAttribute('crossorigin');
                         }
+                        if (lastWatchTimeRef.current > 0 && playerRef.current) {
+                            playerRef.current.currentTime = lastWatchTimeRef.current;
+                        }
                     });
-
                     playerRef.current.on('play', () => {
-                        
-                    });
+                        if (saveIntervalRef.current) {
+                            clearInterval(saveIntervalRef.current);
+                        }
+                        saveIntervalRef.current = setInterval(() => {
+                            const currentTime = playerRef.current?.currentTime || 0;
+                            const newMaxWatchTime = Math.max(maxWatchTimeRef.current, currentTime);
 
+                            lastWatchTimeRef.current = currentTime;
+                            maxWatchTimeRef.current = newMaxWatchTime;
+                            saveWatchTime(currentTime, newMaxWatchTime);
+                        }, 10000); // lưu mỗi 10 giây
+                    });
                     playerRef.current.on('pause', () => {
-                        
+                        const currentTime = playerRef.current?.currentTime || 0;
+                        const newMaxWatchTime = Math.max(maxWatchTimeRef.current, currentTime);
+                        lastWatchTimeRef.current = currentTime;
+                        maxWatchTimeRef.current = newMaxWatchTime;
+                        saveWatchTime(currentTime, newMaxWatchTime);
+                        if (saveIntervalRef.current) {
+                            clearInterval(saveIntervalRef.current);
+                            saveIntervalRef.current = null;
+                        }
                     });
-
                     playerRef.current.on('ended', () => {
-                       onCompleted?.();
+                        const duration = playerRef.current?.duration || 0;
+                        saveWatchTime(duration, duration);
+                        if (saveIntervalRef.current) {
+                            clearInterval(saveIntervalRef.current);
+                            saveIntervalRef.current = null;
+                        }
+                        onCompleted?.();
                     });
-
                     playerRef.current.on('timeupdate', () => {
                         const currentTime = playerRef.current?.currentTime || 0;
-                        const duration = playerRef.current?.duration || 0;
-                        const progress = (currentTime / duration) * 100;
-                        
-                        if (Math.floor(currentTime) % 5 === 0) {
-                            console.log('Progress:', progress.toFixed(2) + '%');
+                        if (currentTime > maxWatchTimeRef.current) {
+                            maxWatchTimeRef.current = currentTime;
+                        }
+                    });
+                    playerRef.current.on('seeking', () => {
+                        const currentTime = playerRef.current?.currentTime || 0;
+                        const allowedMaxTime = maxWatchTimeRef.current /* + 5 */; // cho phép tua tới thêm 5 giây
+                        if (currentTime > allowedMaxTime && playerRef.current) {
+                            playerRef.current.currentTime = allowedMaxTime;
+                            toast.warning('Bạn chỉ có thể tua tới vị trí đã xem!', {
+                                duration: 2000,
+                            });
                         }
                     });
 
-                } catch (error) {
-                    console.error('Error setting up player:', error);
+                } catch {
                 }
             }
         };
-        
+
         const timer = setTimeout(() => {
             setupPlayer();
         }, 100);
-        
+
         return () => {
+            if (playerRef.current) {
+                const currentTime = playerRef.current.currentTime || 0;
+                const newMaxWatchTime = Math.max(maxWatchTimeRef.current, currentTime);
+                saveWatchTime(currentTime, newMaxWatchTime);
+            }
+            if (saveIntervalRef.current) {
+                clearInterval(saveIntervalRef.current);
+                saveIntervalRef.current = null;
+            }
             if (playerRef.current) {
                 try {
                     playerRef.current.destroy();
-                } catch (e) {
-                    console.log(e)
+                } catch {
+                    // Ignore destroy error
                 }
                 playerRef.current = null;
             }
             clearTimeout(timer);
         };
-    }, [video_url,onCompleted]);
+    }, [video_url, onCompleted, saveWatchTime, progressLoaded, lesson_id]);
 
     return (
         <div className={`${isMobile ? "h-fit" : "h-fit min-h-[500px]"} relative rounded-2xl`}>
