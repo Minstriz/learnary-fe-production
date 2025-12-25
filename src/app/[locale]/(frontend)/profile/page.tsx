@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner";
 import Link from "next/link";
+import axios from "axios";
 
 
 type UserProps = {
@@ -144,9 +145,8 @@ export default function ProfilePage() {
       const today = new Date();
       const age = today.getFullYear() - birthDate.getFullYear();
       if (age < 13) newErrors.dateOfBirth = "Bạn phải ít nhất 13 tuổi";
-      toast.warning("Bạn phải ít nhất 13 tuổi!");
+      toast.warning("Bạn phải trên 13 tuổi!")
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -193,8 +193,22 @@ export default function ProfilePage() {
       toast.success("Cập nhật hồ sơ thành công");
       return res.data;
     } catch (error) {
-      console.error(error);
-      toast.error("Cập nhật hồ sơ thất bại");
+      if(axios.isAxiosError(error)) {
+        const status = error.response?.status
+        const errMsg = error.response?.data.error;
+        switch(status) {
+          case 409:
+            toast.info(errMsg || "Số điện thoại đã được sử dụng, vui lòng sử dụng số khác")
+            break;
+          case 404:
+             toast.info(errMsg || "Lỗi không tìm thấy người dùng")
+             break;
+          default:
+            toast.error("Cập nhật hồ sơ thất bại")
+        }
+      } else {
+        toast.error("Cập nhật hồ sơ thất bại");
+      }
     }
   }
 
@@ -246,7 +260,6 @@ export default function ProfilePage() {
         if (instrRes.data && instrRes.data.data) {
           setInstructorInfo(instrRes.data.data);
 
-          // Load bank account info
           const bankRes = await api.get(`/bank-account/${instrRes.data.data.instructor_id}`);
           if (bankRes.data && bankRes.data.data) {
             setInstructorFormData({
@@ -276,7 +289,6 @@ export default function ProfilePage() {
     }
 
     try {
-      // Gọi API cập nhật bank account
       await api.patch(`/bank-account/${instructorInfo.instructor_id}`, {
         bank_name: instructorFormData.bank_name,
         account_number: instructorFormData.account_number,
@@ -323,11 +335,11 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.log(error)
-      if(error && typeof error === 'object' && 'response' in error) {
+      if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as AxiosError<{ message?: string; error?: string }>;
         const errorMessage = axiosError.response?.data?.message || axiosError.response?.data?.error;
         const statusCode = axiosError.response?.status;
-        
+
         if (statusCode === 401) {
           toast.error("Mật khẩu cũ không chính xác!");
         } else if (errorMessage?.includes("New password must be more than 6 characters")) {
@@ -371,7 +383,6 @@ export default function ProfilePage() {
 
             {userInfo && (
               <div className={`${isMobile ? 'mx-2' : 'mx-auto max-w-8xl mt-2'}`}>
-
                 <div className="relative">
                   <div className={`relative ${isMobile ? 'h-32' : 'h-48'} rounded-t-2xl overflow-hidden bg-linear-to-r from-slate-700 via-slate-800 to-slate-900`}>
                     <Image src={'/images/background/bg.jpg'} alt="Background Banner" fill className="object-cover opacity-50" />

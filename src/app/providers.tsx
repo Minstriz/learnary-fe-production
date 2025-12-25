@@ -3,7 +3,6 @@
 import { AuthProvider } from '@/app/context/AuthContext';
 import { NextIntlClientProvider } from "next-intl";
 import type { AbstractIntlMessages } from 'next-intl';
-import { Toaster as HotToaster } from "react-hot-toast"; 
 import { Toaster as SonnerToaster } from "@/components/ui/sonner"; 
 import { SidebarProvider } from "@/components/ui/sidebar"; 
 
@@ -19,7 +18,6 @@ export default function CoreProviders({ children, locale, messages }: Props) {
       <AuthProvider>
         <NextIntlClientProvider locale={locale} messages={messages} timeZone='Asia/Ho_Chi_Minh'>
           <SidebarProvider>
-            <HotToaster />
             <SonnerToaster richColors position="top-right" />
             {children}
           </SidebarProvider>
