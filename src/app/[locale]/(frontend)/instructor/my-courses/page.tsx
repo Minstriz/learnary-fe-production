@@ -162,11 +162,23 @@ function CourseCard({
   onView: (id: string) => void;
   onEdit: (id: string) => void;
 }) {
-  const isDraft = course.status === 'Draft';
+  // Cho phép sửa khi là Draft hoặc Published
+  let canEdit = course.status === 'Draft' || course.status === 'Published';
 
-  // [SỬA] Lỗi logic: Dùng 'course.status' thay vì 'status'
-  let badgeVariant: 'default' | 'secondary' | 'destructive' | 'outline' =
-    'secondary';
+  // Nếu bị từ chối (Archived), chỉ cho phép sửa trong 3 ngày sau updatedAt
+  if (course.status === 'Archived' && course.updatedAt) {
+    const updatedAt = new Date(course.updatedAt);
+    const now = new Date();
+    const diffMs = now.getTime() - updatedAt.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    if (diffDays > 3) {
+      canEdit = false;
+    } else {
+      canEdit = true;
+    }
+  }
+
+  let badgeVariant: 'default' | 'secondary' | 'destructive' | 'outline' = 'secondary';
   if (course.status === 'Published') badgeVariant = 'default';
   if (course.status === 'Pending') badgeVariant = 'outline';
   if (course.status === 'Archived') badgeVariant = 'destructive';
@@ -201,11 +213,13 @@ function CourseCard({
         <Button
           className="cursor-pointer"
           onClick={() => onEdit(course.course_id)}
-          disabled={!isDraft}
+          disabled={!canEdit}
           title={
-            isDraft
+            canEdit
               ? 'Chỉnh sửa khóa học'
-              : 'Chỉ có thể chỉnh sửa khóa học ở trạng thái bản nháp'
+              : course.status === 'Archived'
+                ? 'Chỉ có thể chỉnh sửa khóa học bị từ chối trong 3 ngày sau khi bị từ chối'
+                : 'Chỉ có thể chỉnh sửa khóa học ở trạng thái bản nháp hoặc đã xuất bản'
           }
         >
           Sửa
