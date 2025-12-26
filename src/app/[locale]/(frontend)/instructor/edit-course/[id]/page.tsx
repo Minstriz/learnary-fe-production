@@ -51,6 +51,8 @@ type Course = {
     category_id: string;
     level_id: string;
     chapter: Chapter[];
+    admin_note?: string | null;
+    updatedAt?: string;
 };
 
 type VideoStaging = Record<string, string>;
@@ -59,6 +61,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     const { id: courseId } = use(params);
     const router = useRouter();
     const [course, setCourse] = useState<Course | null>(null);
+    const [editLocked, setEditLocked] = useState(false);
     const [priceDisplay, setPriceDisplay] = useState<string>('');
     const [videoStaging, setVideoStaging] = useState<VideoStaging>({});
     const [categories, setCategories] = useState<Category[]>([]);
@@ -99,11 +102,25 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     });
                 }
 
-                setCourse(courseData);
-                setPriceDisplay(courseData.price > 0 ? formatNumberWithDots(courseData.price) : '');
-                setVideoStaging(newVideoStaging);
-                setCategories(catRes.data.data || catRes.data);
-                setLevels(lvlRes.data.data || lvlRes.data);
+                                setCourse(courseData);
+                                setPriceDisplay(courseData.price > 0 ? formatNumberWithDots(courseData.price) : '');
+                                setVideoStaging(newVideoStaging);
+                                setCategories(catRes.data.data || catRes.data);
+                                setLevels(lvlRes.data.data || lvlRes.data);
+                                // Nếu bị từ chối quá 3 ngày thì khóa sửa
+                                if (courseData.status === 'Archived' && courseData.updatedAt) {
+                                    const updatedAt = new Date(courseData.updatedAt);
+                                    const now = new Date();
+                                    const diffMs = now.getTime() - updatedAt.getTime();
+                                    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+                                    if (diffDays > 3) {
+                                        setEditLocked(true);
+                                    } else {
+                                        setEditLocked(false);
+                                    }
+                                } else {
+                                    setEditLocked(false);
+                                }
             } catch (err) {
                 console.error(err);
                 toast.info("Không thể tải dữ liệu. Vui lòng thử lại.");
@@ -306,22 +323,32 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     }, [course]);
 
     const canSaveDraft = !hasAnyVideo && course?.status === 'Draft';
-    const canSubmit = allChaptersHaveLessons && allLessonsHaveVideo && allRequiredFieldsFilled && course?.status === 'Draft';
+    // Cho phép gửi duyệt lại nếu bị từ chối (Archived) hoặc là bản nháp (Draft)
+    const canSubmit = allChaptersHaveLessons && allLessonsHaveVideo && allRequiredFieldsFilled && (course?.status === 'Draft' || course?.status === 'Archived');
 
     const handleAction = async (action: 'save' | 'submit') => {
         if (!course) return;
         setIsSaving(true);
         try {
             if (action === 'save') {
-                if (!canSaveDraft) {
-                    toast.warning("Chỉ có thể lưu nháp khi chưa có video nào.");
-                    return;
+                if (course.status === 'Published') {
+                    // Chỉ cho phép lưu thay đổi giá khi Published
+                    await api.put(`/courses/draft/${courseId}`, course);
+                    setHasUnsavedChanges(false);
+                    setNewlyCreatedChapters([]);
+                    setNewlyCreatedLessons([]);
+                    toast.success("Đã lưu thay đổi giá thành công!");
+                } else {
+                    if (!canSaveDraft) {
+                        toast.warning("Chỉ có thể lưu nháp khi chưa có video nào.");
+                        return;
+                    }
+                    await api.put(`/courses/draft/${courseId}`, course);
+                    setHasUnsavedChanges(false);
+                    setNewlyCreatedChapters([]);
+                    setNewlyCreatedLessons([]);
+                    toast.success("Đã lưu bản nháp thành công! Bạn có thể xem tất cả khoá học của bạn tại trang khoá học của tôi!");
                 }
-                await api.put(`/courses/draft/${courseId}`, course);
-                setHasUnsavedChanges(false);
-                setNewlyCreatedChapters([]);
-                setNewlyCreatedLessons([]);
-                toast.success("Đã lưu bản nháp thành công! Bạn có thể xem tất cả khoá học của bạn tại trang khoá học của tôi!");
             } else {
                 if (!canSubmit) {
                     if (!allRequiredFieldsFilled) {
@@ -376,8 +403,33 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
             </div>
         );
     }
+    if (editLocked) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen p-10">
+                <div className="p-6 bg-red-50 border border-red-200 rounded-md text-red-700 text-center max-w-lg">
+                    <h2 className="font-bold text-lg mb-2">Bạn không thể chỉnh sửa khóa học này</h2>
+                    <p>Khóa học đã bị từ chối và đã quá 3 ngày kể từ thời điểm bị từ chối. Nếu cần hỗ trợ, vui lòng liên hệ quản trị viên.</p>
+                    <Button className="mt-6" onClick={() => router.push('/instructor/my-courses')}>Quay lại danh sách khóa học</Button>
+                </div>
+            </div>
+        );
+    }
     return (
         <div className="min-h-screen bg-slate-50/50 pb-32">
+            {/* --- ADMIN NOTE (REJECTED) --- */}
+            {course.status === 'Archived' && course.admin_note && (
+                <div className="container mx-auto p-4 md:p-8">
+                    <div className="mb-6 animate-in fade-in slide-in-from-top-2">
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-md flex gap-3 text-red-800 shadow-sm items-start">
+                            <span className="font-bold text-sm uppercase">Khóa học bị từ chối</span>
+                            <div>
+                                <span className="font-bold">Lý do từ chối: </span>
+                                {course.admin_note}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* --- HEADER STICKY --- */}
             <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b px-6 py-4 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-4">
@@ -415,13 +467,31 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                             <LayoutList className="w-4 h-4 mr-2" /> Khoá học của tôi
                         </Button>
                     </Link>
-                    <Button title='Bạn sẽ không thể lưu nháp nếu có video bài học' variant="outline" onClick={() => handleAction('save')} disabled={!canSaveDraft || isSaving || course.status !== 'Draft'} className={`${!canSaveDraft ? 'cursor-not-allowed hover:bg-gray-200' : 'cursor-pointer hover:bg-gray-200'}`}>
-                        <Save className="w-4 h-4 mr-2" /> Lưu nháp
-                    </Button>
+                    {course.status === 'Published' ? (
+                        <Button
+                            title="Lưu thay đổi giá khóa học"
+                            variant="outline"
+                            onClick={() => handleAction('save')}
+                            disabled={isSaving}
+                            className="cursor-pointer hover:bg-gray-200"
+                        >
+                            <Save className="w-4 h-4 mr-2" /> Lưu thay đổi
+                        </Button>
+                    ) : (
+                        <Button
+                            title='Bạn sẽ không thể lưu nháp nếu có video bài học'
+                            variant="outline"
+                            onClick={() => handleAction('save')}
+                            disabled={!canSaveDraft || isSaving || course.status !== 'Draft'}
+                            className={`${!canSaveDraft ? 'cursor-not-allowed hover:bg-gray-200' : 'cursor-pointer hover:bg-gray-200'}`}
+                        >
+                            <Save className="w-4 h-4 mr-2" /> Lưu nháp
+                        </Button>
+                    )}
                     <Button 
                         title={!canSubmit ? 'Vui lòng điền đầy đủ thông tin và thêm video cho tất cả bài học' : 'Gửi khóa học để admin phê duyệt'}
                         onClick={() => handleAction('submit')} 
-                        disabled={!canSubmit || isSaving || course.status !== 'Draft'} 
+                        disabled={!canSubmit || isSaving} 
                         className={`${!canSubmit ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} text-blue-600 bg-white border border-blue-600 hover:bg-blue-600 hover:text-white`}
                     >
                         <Send className="w-4 h-4 mr-2" /> Gửi duyệt
@@ -443,14 +513,14 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                     <Label className='text-blue-700 font-roboto-condensed-bold'>Tiêu đề</Label>
                                     <p className='text-red-600'>*</p>
                                 </div>
-                                <Input value={course.title} onChange={(e) => updateCourseState(d => d.title = e.target.value)} />
+                                <Input value={course.title} onChange={(e) => updateCourseState(d => d.title = e.target.value)} disabled={course.status === 'Published'}/>
                             </div>
                             <div className="space-y-2">
                                 <div className='flex gap-1'>
                                     <Label className='text-blue-700 font-roboto-condensed-bold'>Danh mục</Label>
                                     <p className='text-red-600'>*</p>
                                 </div>
-                                <Select value={course.category_id} onValueChange={(v) => updateCourseState(d => d.category_id = v)}>
+                                <Select value={course.category_id} onValueChange={(v) => updateCourseState(d => d.category_id = v)} disabled={course.status === 'Published'}>
                                     <SelectTrigger><SelectValue placeholder="Chọn danh mục" /></SelectTrigger>
                                     <SelectContent>
                                         {categories.map(c => <SelectItem key={c.category_id} value={c.category_id}>{c.category_name}</SelectItem>)}
@@ -462,7 +532,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                     <Label className='text-blue-700 font-roboto-condensed-bold'>Cấp độ</Label>
                                     <p className='text-red-600'>*</p>
                                 </div>
-                                <Select value={course.level_id} onValueChange={(v) => updateCourseState(d => d.level_id = v)}>
+                                <Select value={course.level_id} onValueChange={(v) => updateCourseState(d => d.level_id = v)} disabled={course.status === 'Published'}>
                                     <SelectTrigger><SelectValue placeholder="Chọn cấp độ" /></SelectTrigger>
                                     <SelectContent>
                                         {levels.map(l => <SelectItem key={l.level_id} value={l.level_id}>{l.level_name}</SelectItem>)}
@@ -498,6 +568,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                     courseId={`${course.course_id}`}
                                     userId={`${user?.id}`}
                                     currentImageUrl={course.thumbnail ? `${course.thumbnail ?? ""}?t=${Date.now()}` : ""}
+                                    disabled={course.status === 'Published'}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -510,6 +581,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                     value={course.requirement || ''}
                                     onChange={(e) => updateCourseState(d => d.requirement = e.target.value)}
                                     maxLength={350}
+                                    disabled={course.status === 'Published'}
                                 />
                                 <p className="text-xs text-gray-500 text-right">
                                     {course.requirement?.length || 0}/350 ký tự
@@ -525,6 +597,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                     maxLength={500}
                                     value={course.description || ''}
                                     onChange={(e) => updateCourseState(d => d.description = e.target.value)}
+                                    disabled={course.status === 'Published'}
                                 />
                                 <p className="text-xs text-gray-500 text-right">
                                     {course.description?.length || 0}/500 ký tự
@@ -538,7 +611,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 <div className="lg:col-span-8 space-y-6">
                     <div className="flex items-center justify-between ">
                         <h2 className="text-2xl font-bold text-slate-800">Nội dung</h2>
-                        <Button size="lg" onClick={handleAddChapter} className='cursor-pointer'><PlusCircle className="w-4 h-4 mr-2 " /> Thêm chương</Button>
+                        <Button size="lg" onClick={handleAddChapter} className='cursor-pointer' disabled={course.status === 'Published'}><PlusCircle className="w-4 h-4 mr-2 " /> Thêm chương</Button>
                     </div>
                     <Accordion type="multiple" className="w-full space-y-4" defaultValue={course.chapter.map(c => c.chapter_id)}>
                         {course.chapter.map((chapter, cIdx) => (
@@ -550,9 +623,11 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                         className="border-transparent bg-transparent shadow-none font-bold text-slate-800 focus-visible:ring-0 px-2 h-9 flex-1 hover:bg-slate-100/50 focus:bg-white transition-all"
                                         value={chapter.chapter_title}
                                         onChange={(e) => updateCourseState(d => d.chapter[cIdx].chapter_title = e.target.value)}
+                                        disabled={course.status === 'Published'}
+                                        
                                     />
                                     <div className="flex items-center gap-1">
-                                        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-red-500" onClick={() => handleDeleteChapter(cIdx)}>
+                                        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-red-500" onClick={() => handleDeleteChapter(cIdx)} disabled={course.status === 'Published'}>
                                             <Trash2 size={18} />
                                         </Button>
                                         <AccordionTrigger className="py-0 hover:no-underline p-2" />
@@ -574,8 +649,9 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                                         value={lesson.title}
                                                         onChange={(e) => updateCourseState(d => d.chapter[cIdx].lessons[lIdx].title = e.target.value)}
                                                         placeholder="Tên bài học"
+                                                        disabled={course.status === 'Published'}
                                                     />
-                                                    <Button variant="ghost" size="icon" className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteLesson(cIdx, lIdx)}>
+                                                    <Button variant="ghost" size="icon" className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteLesson(cIdx, lIdx)} disabled={course.status === 'Published'}>
                                                         <Trash2 size={16} />
                                                     </Button>
                                                 </div>
@@ -585,6 +661,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                                         lessonId={lesson.lesson_id}
                                                         currentVideoUrl={videoStaging[lesson.lesson_id]}
                                                         onUploadSuccess={(videoUrl) => handleVideoUrlChange(lesson.lesson_id, videoUrl)}
+                                                        disabled={course.status === 'Published'}
                                                     />
                                                     {videoStaging[lesson.lesson_id] && (
                                                         <span className="text-xs text-green-600 flex items-center gap-1">
@@ -596,7 +673,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                         </div>
                                     ))}
 
-                                    <Button variant="ghost" className="w-full border border-dashed border-slate-300 text-slate-500 hover:text-primary hover:bg-primary/5" onClick={() => handleAddLesson(cIdx)}>
+                                    <Button variant="ghost" className="w-full border border-dashed border-slate-300 text-slate-500 hover:text-primary hover:bg-primary/5" onClick={() => handleAddLesson(cIdx)} disabled={course.status === 'Published'}>
                                         <Plus className="w-4 h-4 mr-2" /> Thêm bài học
                                     </Button>
 
@@ -611,6 +688,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                             <QuizEditDialog
                                                 quiz={chapter.quiz}
                                                 onSave={(newQuiz) => updateCourseState(d => d.chapter[cIdx].quiz = newQuiz)}
+                                                disabled={course.status === 'Published'}
                                             />
                                         </div>
                                         {chapter.quiz ? (
@@ -645,7 +723,13 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
 // =========================================
 // COMPONENT: QUIZ EDITOR DIALOG
 // =========================================
-function QuizEditDialog({ quiz, onSave }: { quiz?: Quiz | null | undefined, onSave: (q: Quiz | null) => void }) {
+interface QuizEditDialogProps {
+    quiz?: Quiz | null;
+    onSave: (q: Quiz | null) => void;
+    disabled?: boolean;
+}
+
+function QuizEditDialog({ quiz, onSave, disabled }: QuizEditDialogProps) {
     // State nội bộ để edit trước khi save
     const [localQuiz, setLocalQuiz] = useState<Quiz>(
         quiz || { title: "Bài kiểm tra", questions: [] }
@@ -667,7 +751,7 @@ function QuizEditDialog({ quiz, onSave }: { quiz?: Quiz | null | undefined, onSa
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant={quiz ? "outline" : "secondary"} size="sm" className="h-8">
+                <Button variant={quiz ? "outline" : "secondary"} size="sm" className="h-8" disabled={disabled}>
                     {quiz ? <><Pencil className="w-3.5 h-3.5 mr-1.5" /> Sửa Quiz</> : <><Plus className="w-3.5 h-3.5 mr-1.5" /> Thêm Quiz</>}
                 </Button>
             </DialogTrigger>
@@ -679,7 +763,7 @@ function QuizEditDialog({ quiz, onSave }: { quiz?: Quiz | null | undefined, onSa
                 <div className="flex-1 py-4 space-y-6 overflow-y-auto pr-2">
                     <div className="space-y-2">
                         <Label>Tiêu đề bài kiểm tra</Label>
-                        <Input value={localQuiz.title} onChange={e => updateLocalQuiz(q => q.title = e.target.value)} placeholder="Ví dụ: Kiểm tra kiến thức chương 1" />
+                        <Input value={localQuiz.title} onChange={e => updateLocalQuiz(q => q.title = e.target.value)} placeholder="Ví dụ: Kiểm tra kiến thức chương 1" disabled={disabled} />
                     </div>
 
                     <div className="space-y-4">
@@ -690,6 +774,7 @@ function QuizEditDialog({ quiz, onSave }: { quiz?: Quiz | null | undefined, onSa
                                     variant="ghost" size="icon"
                                     className="absolute top-2 right-2 text-slate-400 hover:text-red-500"
                                     onClick={() => updateLocalQuiz(draft => draft.questions.splice(qIdx, 1))}
+                                    disabled={disabled}
                                 >
                                     <Trash2 size={16} />
                                 </Button>
@@ -698,6 +783,7 @@ function QuizEditDialog({ quiz, onSave }: { quiz?: Quiz | null | undefined, onSa
                                         className="font-medium bg-white"
                                         placeholder={`Câu hỏi ${qIdx + 1}`}
                                         onChange={e => updateLocalQuiz(draft => draft.questions[qIdx].title = e.target.value)}
+                                        disabled={disabled}
                                     />
                                 </div>
                                 <div className="space-y-2 pl-4 border-l-2 border-slate-200 ml-1">
@@ -706,26 +792,28 @@ function QuizEditDialog({ quiz, onSave }: { quiz?: Quiz | null | undefined, onSa
                                             <Switch
                                                 checked={opt.is_correct}
                                                 onCheckedChange={(checked) => updateLocalQuiz(draft => {
-                                                    // Nếu chọn đáp án này là đúng, các đáp án khác phải sai (nếu chỉ cho phép 1 đáp án đúng)
+                                                    if (disabled) return;
                                                     if (checked) {
                                                         draft.questions[qIdx].options.forEach((o, i) => o.is_correct = i === oIdx);
                                                     } else {
                                                         draft.questions[qIdx].options[oIdx].is_correct = false;
                                                     }
                                                 })}
+                                                disabled={disabled}
                                             />
                                             <Input
                                                 className={`flex-1 h-9 ${opt.is_correct ? 'border-green-500 bg-green-50/50' : 'bg-white'}`}
                                                 value={opt.option_content}
                                                 onChange={e => updateLocalQuiz(draft => draft.questions[qIdx].options[oIdx].option_content = e.target.value)}
                                                 placeholder={`Lựa chọn ${oIdx + 1}`}
+                                                disabled={disabled}
                                             />
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-red-500" onClick={() => updateLocalQuiz(draft => draft.questions[qIdx].options.splice(oIdx, 1))}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-red-500" onClick={() => updateLocalQuiz(draft => draft.questions[qIdx].options.splice(oIdx, 1))} disabled={disabled}>
                                                 <X size={16} />
                                             </Button>
                                         </div>
                                     ))}
-                                    <Button variant="link" size="sm" className="h-auto p-0 text-blue-600" onClick={() => updateLocalQuiz(draft => draft.questions[qIdx].options.push({ option_content: '', is_correct: false }))}>
+                                    <Button variant="link" size="sm" className="h-auto p-0 text-blue-600" onClick={() => updateLocalQuiz(draft => draft.questions[qIdx].options.push({ option_content: '', is_correct: false }))} disabled={disabled}>
                                         <Plus className="w-3 h-3 mr-1" /> Thêm lựa chọn
                                     </Button>
                                 </div>
@@ -734,21 +822,21 @@ function QuizEditDialog({ quiz, onSave }: { quiz?: Quiz | null | undefined, onSa
                         <Button variant="outline" className="w-full border-dashed" onClick={() => updateLocalQuiz(draft => draft.questions.push({
                             title: '',
                             options: Array(2).fill(null).map(() => ({ option_content: '', is_correct: false }))
-                        }))}>
+                        }))} disabled={disabled}>
                             <PlusCircle className="w-4 h-4 mr-2" /> Thêm câu hỏi
                         </Button>
                     </div>
                 </div>
                 <DialogFooter className="flex justify-between sm:justify-between gap-2 mt-4 pt-4 border-t">
                     {quiz ? (
-                        <Button variant="destructive" onClick={() => { if (confirm("Xóa bài kiểm tra này?")) onSave(null); }}>
+                        <Button variant="destructive" onClick={() => { if (confirm("Xóa bài kiểm tra này?")) onSave(null); }} disabled={disabled}>
                             Xóa Quiz
                         </Button>
                     ) : <div></div>}
                     <div className="flex gap-2">
-                        <DialogClose asChild><Button variant="outline">Hủy</Button></DialogClose>
+                        <DialogClose asChild><Button variant="outline" disabled={disabled}>Hủy</Button></DialogClose>
                         {/* Khi bấm Lưu, gọi onSave để đẩy dữ liệu ra component cha */}
-                        <DialogClose asChild><Button onClick={() => onSave(localQuiz)}>Lưu Quiz</Button></DialogClose>
+                        <DialogClose asChild><Button onClick={() => onSave(localQuiz)} disabled={disabled}>Lưu Quiz</Button></DialogClose>
                     </div>
                 </DialogFooter>
             </DialogContent>

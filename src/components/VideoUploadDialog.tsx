@@ -21,6 +21,7 @@ interface VideoUploadDialogProps {
   currentVideoUrl?: string;
   onUploadSuccess: (videoUrl: string) => void;
   triggerButton?: React.ReactNode;
+  disabled?: boolean;
 }
 
 export function VideoUploadDialog({
@@ -28,6 +29,7 @@ export function VideoUploadDialog({
   currentVideoUrl,
   onUploadSuccess,
   triggerButton,
+  disabled = false,
 }: VideoUploadDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -112,7 +114,7 @@ export function VideoUploadDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {triggerButton || (
-          <Button variant="outline" size="sm" className="cursor-pointer hover:bg-gray-300">
+          <Button variant="outline" size="sm" className="cursor-pointer hover:bg-gray-300" disabled={disabled}>
             <Upload className="w-4 h-4 mr-2" />
             {currentVideoUrl ? "Thay đổi video" : "Upload video"}
           </Button>
@@ -145,7 +147,7 @@ export function VideoUploadDialog({
                   className="hidden"
                   accept="video/*"
                   onChange={handleFileSelect}
-                  disabled={isUploading}
+                  disabled={isUploading || disabled}
                 />
               </label>
             </div>
@@ -201,10 +203,10 @@ export function VideoUploadDialog({
           )}
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" className=" hover:bg-gray-300 cursor-pointer" onClick={() => setOpen(false)}  disabled={isUploading}>
+            <Button variant="outline" className=" hover:bg-gray-300 cursor-pointer" onClick={() => setOpen(false)}  disabled={isUploading || disabled}>
               Hủy
             </Button>
-            <Button onClick={handleUpload} disabled={!selectedFile || isUploading}>
+            <Button onClick={handleUpload} disabled={!selectedFile || isUploading || disabled}>
               {isUploading ? (
                 <div>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

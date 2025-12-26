@@ -12,9 +12,10 @@ interface ImageUploadProps {
     userId:string,
     courseId:string,
     currentImageUrl?: string,
+    disabled?: boolean,
     onUploadSuccess: (url: string) => void;
 }
-export function ImageUploadDialog({ currentImageUrl, onUploadSuccess, courseId, userId }: ImageUploadProps) {
+export function ImageUploadDialog({ currentImageUrl, onUploadSuccess, courseId, userId, disabled }: ImageUploadProps) {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | "">(currentImageUrl || "");
     const [isUpLoading, setIsUpLoading] = useState<boolean>(false);
@@ -99,9 +100,9 @@ export function ImageUploadDialog({ currentImageUrl, onUploadSuccess, courseId, 
             )}
 
             <div className="flex gap-2">
-                <Input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect}  disabled={isUpLoading} className="hidden"  id="thumbnail-upload" />
-                <Label htmlFor="thumbnail-upload" className="flex-1 cursor-pointer">
-                    <div className={` flex items-center justify-center gap-2  h-10 px-4 py-2  border-2 border-dashed rounded-md transition-colors ${isUpLoading ? 'border-slate-300 bg-slate-100 cursor-not-allowed' : 'border-slate-300 hover:border-primary hover:bg-primary/5' }`}>
+                <Input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect}  disabled={isUpLoading || disabled} className="hidden"  id="thumbnail-upload" />
+                <Label htmlFor="thumbnail-upload" className={`flex-1 ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`} >
+                    <div className={` flex items-center justify-center gap-2  h-10 px-4 py-2  border-2 border-dashed rounded-md transition-colors ${isUpLoading || disabled ? 'border-slate-300 bg-slate-100 cursor-not-allowed' : 'border-slate-300 hover:border-primary hover:bg-primary/5' }`}>
                         {isUpLoading ? (
                             <>
                                 <Loader2 className="animate-spin" size={18} />

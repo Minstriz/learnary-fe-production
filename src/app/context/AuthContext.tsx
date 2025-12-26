@@ -37,39 +37,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuthOnLoad = async () => {
       const existingToken = sessionStorage.getItem('accessToken');
-      // Nếu KHÔNG có token -> skip luôn, không gọi API
-      if (!existingToken) {
-        setIsLoading(false);
-        return;
-      }
-      // Nếu CÓ token -> gọi refresh để verify
       try {
-        const response = await api.post('/auth/refresh');
-        const { accessToken } = response.data;
-        const decodedUser = jwtDecode<AuthUser>(accessToken);
-        
-        // Trim whitespace từ backend
-        const cleanUser: AuthUser = {
-          id: decodedUser.id.trim(),
-          email: decodedUser.email.trim(),
-          role: decodedUser.role.trim(),
-          fullName: decodedUser.fullName.trim(),
-          avatar: decodedUser.avatar?.trim(),
-        };
-        setUser(cleanUser);
-        setToken(accessToken);
-        sessionStorage.setItem('accessToken', accessToken); 
+        let accessToken = existingToken;
+        // Nếu KHÔNG có token, thử gọi refresh để lấy lại từ cookie
+        if (!accessToken) {
+          const response = await api.post('/auth/refresh');
+          accessToken = response.data.accessToken;
+          if (accessToken) {
+            sessionStorage.setItem('accessToken', accessToken);
+          }
+        }
+        if (accessToken) {
+          const decodedUser = jwtDecode<AuthUser>(accessToken);
+          const cleanUser: AuthUser = {
+            id: decodedUser.id.trim(),
+            email: decodedUser.email.trim(),
+            role: decodedUser.role.trim(),
+            fullName: decodedUser.fullName.trim(),
+            avatar: decodedUser.avatar?.trim(),
+          };
+          setUser(cleanUser);
+          setToken(accessToken);
+        } else {
+          setUser(null);
+          setToken(null);
+          sessionStorage.removeItem('accessToken');
+        }
       } catch {
-        // Refresh failed -> xóa token cũ
         setUser(null);
         setToken(null);
-        sessionStorage.removeItem('accessToken'); 
+        sessionStorage.removeItem('accessToken');
       } finally {
         setIsLoading(false);
       }
     };
-    
-    checkAuthOnLoad();  
+    checkAuthOnLoad();
   }, []); // Chỉ chạy 1 lần khi mount
 
   const logout = useCallback(async() => {

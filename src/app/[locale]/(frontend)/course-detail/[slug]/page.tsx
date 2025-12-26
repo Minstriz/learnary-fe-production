@@ -19,6 +19,7 @@ import { useAuth } from '@/app/context/AuthContext';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
 import FeedbackBox from '@/components/FeedbackBox';
+import { QRCodeCanvas } from 'qrcode.react';
 export default function CourseDetailPage() {
     const params = useParams();
     const router = useRouter();
@@ -30,6 +31,66 @@ export default function CourseDetailPage() {
     const [error, setError] = useState<string | null>(null);
     const [isPaying, setIsPaying] = useState(false);
     const [canLearn, setCanLearn] = useState(false);
+    const [qrString, setQrString] = useState<string | null>(null);
+    const [showQRDialog, setShowQRDialog] = useState(false);
+    const [countdown, setCountdown] = useState<number>(120); // 2 phút
+    const countdownRef = React.useRef<NodeJS.Timeout | null>(null);
+    const [orderCode, setOrderCode] = useState<string | null>(null);
+    const [amount, setAmount] = useState<string | null>(null);
+    const formatVNCurrency = (value: string | number | null) => {
+        if (!value || isNaN(Number(value))) return '0 ₫';
+        return Number(value).toLocaleString('vi-VN') + ' ₫';
+    };
+    // Khi mở dialog QR, bắt đầu countdown
+    useEffect(() => {
+        if (showQRDialog && qrString) {
+            setCountdown(60);
+            countdownRef.current = setInterval(() => {
+                setCountdown((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(countdownRef.current!);
+                        setShowQRDialog(false);
+                        if (orderCode) {
+                            api.post('/payment/cancel', { orderCode })
+                                .then(() => toast.success('Hết thời gian thanh toán, giao dịch đã bị huỷ!'))
+                                .catch(() => toast.error('Huỷ giao dịch thất bại!'));
+                        }
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => {
+            if (countdownRef.current) clearInterval(countdownRef.current);
+        };
+    }, [showQRDialog, qrString, orderCode, router]);
+    
+        // Poll trạng thái giao dịch mỗi 3s khi QR đang mở
+        useEffect(() => {
+            if (!orderCode || !showQRDialog) return;
+            const interval = setInterval(async () => {
+                try {
+                    const res = await api.get(`/payment/status?orderCode=${orderCode}`);
+                    if (res.data.status === 'Success') {
+                        setShowQRDialog(false);
+                        setCanLearn(true); // Cập nhật ngay khi thanh toán thành công
+                        toast.success('Thanh toán thành công!');
+                        clearInterval(interval);
+                    }
+                    if (res.data.status === 'Cancel') {
+                        setShowQRDialog(false);
+                        toast.error('Giao dịch đã bị huỷ!');
+                        clearInterval(interval);
+                    }
+                } catch (err) {
+                    console.error('Error checking payment status:', err);
+                    // Có thể log hoặc bỏ qua
+                }
+            }, 3000);
+            return () => clearInterval(interval);
+        }, [orderCode, showQRDialog]);
+
     useEffect(() => {
         const fetchCourseData = async () => {
             setIsLoading(true);
@@ -76,22 +137,19 @@ export default function CourseDetailPage() {
 
         try {
             setIsPaying(true);
-            console.log("Đang tạo link thanh toán...");
-
             const response = await api.post('/payment/create-link', {
                 userId: user.id,
                 courseId: courseData.course_id
             });
-
-            const { checkoutUrl } = response.data;
-
-            if (checkoutUrl) {
-                sessionStorage.setItem('payment_course_slug', courseData.slug || '');
-                window.location.href = checkoutUrl;
+            const { qrCode, orderCode, amount } = response.data;
+            setOrderCode(orderCode);
+            setAmount(amount);
+            if (qrCode) {
+                setQrString(qrCode);
+                setShowQRDialog(true);
             } else {
-                toast.error("Không nhận được link thanh toán");
+                toast.error("Không nhận được mã QR");
             }
-
         } catch (err) {
             console.error("Payment Error:", err);
 
@@ -134,6 +192,29 @@ export default function CourseDetailPage() {
     };
     return (
         <div className="min-h-screen bg-white">
+            {/* Dialog hiển thị QR code */}
+            {showQRDialog && qrString && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center" style={{background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(2px)'}}>
+                    <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center w-[320px]">
+                        <h2 className="text-xl font-bold mb-4">Quét mã QR để thanh toán</h2>
+                        <QRCodeCanvas value={qrString} size={160} />
+                        <div className="mt-4 text-lg text-red-600 font-bold">Thời gian còn lại: {countdown}s</div>
+                        <div className="mt-4 text-sm text-gray-400 font-bold">Số tiền cần thanh toán: {formatVNCurrency(amount)}</div>
+                        <button className="mt-6 px-6 py-2 bg-red-500 text-white rounded cursor-pointer" onClick={async () => {
+                            setShowQRDialog(false);
+                            if (orderCode) {
+                                try {
+                                    await api.post('/payment/cancel', { orderCode });
+                                    toast.success('Giao dịch đã bị huỷ thành công!');
+                                } catch (err) {
+                                    console.error('Error cancelling payment:', err);
+                                    toast.error('Huỷ giao dịch thất bại!');
+                                }
+                            }
+                        }}>Đóng</button>
+                    </div>
+                </div>
+            )}
             <CourseHeader
                 category_name={courseData.category?.category_name ?? "Không có thông tin loại khoá học"}
                 title={courseData.title ?? "Không có tiêu đề khoá học"}
@@ -196,7 +277,6 @@ export default function CourseDetailPage() {
                     </div>
 
                     <div className="p-1 border rounded rounded-t-xl">
-
                         <CourseSidebar
                             course_slug={courseData.slug || "No Slug Found!"}
                             course_id={courseData.course_id}
@@ -211,8 +291,6 @@ export default function CourseDetailPage() {
                         />
                     </div>
                 </div>
-
-
             </div>
 
             <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-50">
