@@ -5,7 +5,7 @@ import {
   BookOpen,
   LayoutDashboard,
   MessageSquare,
-  Settings2,
+/*   Settings2, */
   SquareStack,
   Users,
   ShieldUser,
@@ -175,14 +175,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       ],
       requiredResources: ["TRANSACTION"],
     },
-    {
+/*     {
       title: "Cài đặt",
       url: `${adminBasePath}/settings`,
       icon: Settings2,
       isActive: pathname.startsWith(`${adminBasePath}/settings`),
       items: [],
-      requiredResources: [], // Accessible to all admins
-    },
+      requiredResources: [], 
+    }, */
     {
       title: "Người quản trị",
       url: `${adminBasePath}/administrators`,

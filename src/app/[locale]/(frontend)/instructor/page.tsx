@@ -133,16 +133,16 @@ export default function InstructorDashboard() {
         </div>
         <div className="flex gap-3">
           <Link href="/instructor/wallet">
-            <Button variant="outline" className="cursor-pointer">Quản lý ví</Button>
+            <Button variant="outline" className="cursor-pointer">Ví giảng viên</Button>
           </Link>
           <Link href="/instructor/my-courses">
-            <Button variant="outline" className="cursor-pointer">Quản lý khóa học</Button>
+            <Button variant="outline" className="cursor-pointer">Khóa học của bạn</Button>
           </Link>
           <Link href="/instructor/my-combo">
-            <Button variant="outline" className="cursor-pointer">Quản lý combo</Button>
+            <Button variant="outline" className="cursor-pointer">Combo khóa học</Button>
           </Link>
           <Link href="/instructor/create-course">
-            <Button className="shadow-lg hover:shadow-xl transition-all cursor-pointer">
+            <Button className="shadow-lg hover:shadow-xl transition-all cursor-pointer bg-pink-600 hover:bg-pink-700 hover:text-white">
               <Plus className="mr-2 h-4 w-4" /> Tạo khóa học mới
             </Button>
           </Link>
@@ -153,6 +153,7 @@ export default function InstructorDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard 
           title="Tổng doanh thu" 
+          
           value={formatCurrency(stats.totalRevenue)} 
           icon={DollarSign}
           note={stats.revenueGrowth >= 0 
@@ -218,7 +219,7 @@ export default function InstructorDashboard() {
                     />
                     <Bar 
                       dataKey="total" 
-                      fill="#0f172a" 
+                      fill="#FF1493" 
                       radius={[4, 4, 0, 0]}
                       maxBarSize={60}
                     />
@@ -276,13 +277,13 @@ function StatsCard({ title, value, icon: Icon, note }: { title: string, value: s
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle className="text-sm font-medium text-muted-foreground ">
           {title}
         </CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-2xl font-bold text-pink-600">{value}</div>
         {note && (
           <p className="text-xs text-muted-foreground mt-1">
             {note}

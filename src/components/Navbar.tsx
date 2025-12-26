@@ -30,10 +30,6 @@ export const NavbarLinks = (userRole?: string) => {
       name: t("home"),
       href: "/",
     },
-    {
-      name: t("explore"),
-      href: "/explore-courses",
-    },
   ];
   const learnerLink = userRole ? [
     {

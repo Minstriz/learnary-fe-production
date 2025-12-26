@@ -3,11 +3,12 @@ import React from 'react'
 import Image from 'next/image'
 import { BackgroundBeamsWithCollision } from '@/components/ui/background-hero'
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { Button } from './ui/button';
 export default function Hero() {
     const isMobile = useIsMobile();
     return (
-        <div className={`${isMobile ? 'w-full h-full overflow-hidden' : 'w-full h-screen overflow-hidden flex items-center'}`}>
-            <BackgroundBeamsWithCollision className={`${isMobile ? 'w-full h-full bg-white' : 'w-full h-full bg-white'}`}>
+        <div className={`${isMobile ? 'w-full h-[200px] overflow-hidden' : 'w-full h-screen overflow-hidden flex items-center'}`}>
+            <BackgroundBeamsWithCollision className={`${isMobile ? 'w-full h-[200px]' : 'w-full h-full bg-white'}`}>
                 {!isMobile && (
                     <>
                         <div className="w-full px-10 py-6 flex items-center gap-8 justify-center flex-col h-full">
@@ -60,8 +61,8 @@ export default function Hero() {
                 )}
 
                 {isMobile && (
-                    <div className="w-full h-full flex items-center justify-center">
-                        <div className="relative w-full h-full">
+                    <div className="w-full h-[200px] flex items-center justify-center">
+                        <div className="relative w-full h-[200px]">
                             <Image
                                 src="/resource/hero/hero1.jpg"
                                 alt="Hero 1"
@@ -69,11 +70,7 @@ export default function Hero() {
                                 className="object-cover object-top"
                                 priority
                             />
-
-                            {/* Overlay */}
                             <div className="absolute inset-0 bg-white/60"></div>
-
-                            {/* Content */}
                             <div className="absolute inset-0 flex flex-col items-center justify-center p-6 gap-6">
                                 <div className="max-w-[90%] sm:max-w-[320px] w-full flex flex-col gap-4">
                                     <h1 className="font-rosario text-2xl font-rosario-bold text-center text-black leading-tight">
@@ -84,20 +81,14 @@ export default function Hero() {
                                     </p>
                                 </div>
                                 
-                            {/*     <div className="flex flex-col gap-3 w-full max-w-[280px]">
-                                    <Button 
-                                        variant={'outline'}
-                                        className='cursor-pointer'
-                                    >
-                                        Khám phá khóa học
-                                    </Button>
+                                <div className="flex flex-col gap-3 w-full max-w-[280px]">
                                     <Button 
                                         variant="outline" 
                                         className='cursor-pointer'
                                     >
                                         Trở thành giảng viên
                                     </Button>
-                                </div> */}
+                                </div> 
                             </div>
                         </div>
                     </div>

@@ -33,7 +33,7 @@ const CourseFilters: React.FC<CourseFiltersProps> = ({
   const hasActiveFilters = selectedCategory !== "all" || selectedLevel !== "all";
 
   return (
-    <div className="w-full bg-white p-6 rounded-lg shadow-md mb-6">
+    <div className="w-full bg-white p-6 rounded-lg mb-6">
       <div className="flex items-center gap-3 mb-4">
         <Filter className="h-5 w-5 text-gray-600" />
         <h3 className="text-lg font-roboto-condensed-bold">Bộ lọc</h3>

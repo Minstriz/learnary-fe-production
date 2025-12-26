@@ -319,144 +319,148 @@ export default function EditComboDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-[95vw] sm:max-w-[95vw] w-full max-h-[90vh] overflow-hidden flex flex-col">
                 <DialogHeader>
-                    <DialogTitle>Chỉnh Sửa Combo Khóa Học</DialogTitle>
+                    <DialogTitle></DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="name">Tên Combo *</Label>
-                            <Input
-                                id="name"
-                                {...register("name")}
-                                placeholder="VD: Combo Lập Trình Web Từ Cơ Bản Đến Nâng Cao" />
-                            {errors.name && (
-                                <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <Label htmlFor="description">Mô Tả *</Label>
-                            <Textarea
-                                id="description"
-                                {...register("description")}
-                                placeholder="Mô tả chi tiết về combo khóa học..."
-                                rows={3}
-                            />
-                            {errors.description && (
-                                <p className="text-sm text-red-500 mt-1">{errors.description.message}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <Label htmlFor="discount">Giảm Giá (%) *</Label>
-                            <Input
-                                id="discount"
-                                type="number"
-                                {...register("discount", { valueAsNumber: true })}
-                                placeholder="VD: 20"
-                                min={0}
-                                max={100}
-                            />
-                            {errors.discount && (
-                                <p className="text-sm text-red-500 mt-1">{errors.discount.message}</p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="space-y-3">
-                        <Label>Thêm/Xóa Khóa Học</Label>
-
-                        <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto border rounded-lg p-3">
-                            {courses.map((course) => (
-                                <div
-                                    key={course.course_id}
-                                    className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded"
-                                >
-                                    <Checkbox
-                                        id={`edit-${course.course_id}`}
-                                        checked={selectedCourses.some((c) => c.course_id === course.course_id)}
-                                        onCheckedChange={() => handleCourseToggle(course)}
-                                    />
-                                    <label
-                                        htmlFor={`edit-${course.course_id}`}
-                                        className="flex-1 cursor-pointer text-sm"
-                                    >
-                                        <span className="font-medium">{course.title}</span>
-                                        <span className="ml-2 text-gray-500">
-                                            ({course.level?.level_name} - Order: {course.level?.order_index})
-                                        </span>
-                                    </label>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {selectedCourses.length >= 2 && (
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <Label>Thứ Tự Khóa Học ({selectedCourses.length} khóa học)</Label>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleAutoSort}
-                                >
-                                    Sắp Xếp Tự Động
-                                </Button>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 overflow-y-auto flex-1">
+                    <div className="grid grid-cols-3 gap-6 min-h-0">
+                        <div className="space-y-4">
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="name" className="text-pink-600">Tên Combo *</Label>
+                                <Input
+                                    id="name"
+                                    {...register("name")}
+                                    placeholder="VD: Combo Lập Trình Web Từ Cơ Bản Đến Nâng Cao" />
+                                {errors.name && (
+                                    <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>
+                                )}
                             </div>
 
-                            {hasOrderViolation && (
-                                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                    <AlertTriangle className="h-5 w-5 text-red-500" />
-                                    <p className="text-sm text-red-700">
-                                        Thứ tự không hợp lệ! Khóa học có level thấp hơn phải đứng trước.
-                                    </p>
-                                </div>
-                            )}
-
-                            <div className="space-y-2 border rounded-lg p-3 bg-gray-50">
-                                <DndContext
-                                    sensors={sensors}
-                                    collisionDetection={closestCenter}
-                                    onDragEnd={handleDragEnd}
-                                >
-                                    <SortableContext
-                                        items={selectedCourses.map((c) => c.course_id)}
-                                        strategy={verticalListSortingStrategy}
-                                    >
-                                        {selectedCourses.map((course, index) => (
-                                            <SortableCourseItem
-                                                key={course.course_id}
-                                                course={course}
-                                                index={index}
-                                                isFirst={index === 0}
-                                                onRemove={handleRemoveCourse}
-                                            />
-                                        ))}
-                                    </SortableContext>
-                                </DndContext>
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="description" className="text-pink-600">Mô Tả *</Label>
+                                <Textarea
+                                    id="description"
+                                    {...register("description")}
+                                    placeholder="Mô tả chi tiết về combo khóa học..."
+                                    rows={6}
+                                />
+                                {errors.description && (
+                                    <p className="text-sm text-red-500 mt-1">{errors.description.message}</p>
+                                )}
                             </div>
 
-                            <p className="text-xs text-gray-500">
-                                <Star className="h-3 w-3 text-yellow-500 fill-yellow-500 inline mr-1" />
-                                Khóa học đầu tiên sẽ được đánh dấu ưu tiên
-                            </p>
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="discount" className="text-pink-600">Giảm Giá (%) *</Label>
+                                <Input
+                                    id="discount"
+                                    type="number"
+                                    {...register("discount", { valueAsNumber: true })}
+                                    placeholder="VD: 20"
+                                    min={0}
+                                    max={100}
+                                />
+                                {errors.discount && (
+                                    <p className="text-sm text-red-500 mt-1">{errors.discount.message}</p>
+                                )}
+                            </div>
                         </div>
-                    )}
+                        <div className="space-y-3 min-w-[280px]">
+                            <Label className="text-pink-600">Chọn khóa học của bạn*</Label>
+
+                            <div className="grid grid-cols-1 gap-2 max-h-[400px] overflow-y-auto border rounded-lg p-3 bg-pink-50">
+                                {courses.map((course) => (
+                                    <div
+                                        key={course.course_id}
+                                        className="flex items-center space-x-2 p-2 hover:bg-white rounded transition-colors"
+                                    >
+                                        <Checkbox
+                                            id={`edit-${course.course_id}`}
+                                            checked={selectedCourses.some((c) => c.course_id === course.course_id)}
+                                            onCheckedChange={() => handleCourseToggle(course)}
+                                        />
+                                        <label
+                                            htmlFor={`edit-${course.course_id}`}
+                                            className="flex-1 cursor-pointer text-sm"
+                                        >
+                                            <span className="font-medium">{course.title}</span>
+                                            <span className="ml-2 text-gray-500">
+                                                ({course.level?.level_name} - Order: {course.level?.order_index})
+                                            </span>
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {selectedCourses.length >= 2 && (
+                            <div className="space-y-3 min-w-[280px]">
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-pink-600">Thứ Tự ({selectedCourses.length})</Label>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-pink-600 cursor-pointer border border-pink-600 hover:bg-pink-600 hover:text-white"
+                                        
+                                        onClick={handleAutoSort}
+                                    >
+                                        Sắp Xếp Tự Động
+                                    </Button>
+                                </div>
+
+                                {hasOrderViolation && (
+                                    <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                        <AlertTriangle className="h-5 w-5 text-red-500 shrink-0" />
+                                        <p className="text-xs text-red-700">
+                                            Thứ tự không hợp lệ! Level thấp phải đứng trước.
+                                        </p>
+                                    </div>
+                                )}
+
+                                <div className="space-y-2 border rounded-lg p-3 bg-gray-50 max-h-[350px] overflow-y-auto">
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCenter}
+                                        onDragEnd={handleDragEnd}
+                                    >
+                                        <SortableContext
+                                            items={selectedCourses.map((c) => c.course_id)}
+                                            strategy={verticalListSortingStrategy}
+                                        >
+                                            {selectedCourses.map((course, index) => (
+                                                <SortableCourseItem
+                                                    key={course.course_id}
+                                                    course={course}
+                                                    index={index}
+                                                    isFirst={index === 0}
+                                                    onRemove={handleRemoveCourse}
+                                                />
+                                            ))}
+                                        </SortableContext>
+                                    </DndContext>
+                                </div>
+
+                                <p className="text-xs text-gray-500">
+                                    <Star className="h-3 w-3 text-yellow-500 fill-yellow-500 inline mr-1" />
+                                    Khóa học đầu tiên được đánh dấu ưu tiên
+                                </p>
+                            </div>
+                        )}
+                    </div>
 
                     <DialogFooter>
                         <Button
                             type="button"
                             variant="outline"
+                            className="cursor-pointer"
                             onClick={() => onOpenChange(false)}
                             disabled={isSubmitting}
                         >
                             Hủy
                         </Button>
-                        <Button type="submit" disabled={isSubmitting}>
+                        <Button className="text-pink-600 cursor-pointer bg-white border border-pink-600 hover:bg-pink-600 hover:text-white" type="submit" disabled={isSubmitting}>
                             {isSubmitting ? "Đang cập nhật..." : "Cập Nhật"}
                         </Button>
                     </DialogFooter>

@@ -177,11 +177,22 @@ function CourseCard({
       canEdit = true;
     }
   }
-
-  let badgeVariant: 'default' | 'secondary' | 'destructive' | 'outline' = 'secondary';
-  if (course.status === 'Published') badgeVariant = 'default';
-  if (course.status === 'Pending') badgeVariant = 'outline';
-  if (course.status === 'Archived') badgeVariant = 'destructive';
+  
+  const getStatusBadge = () => {
+    switch (course.status) {
+      case 'Published':
+        return <Badge className="bg-green-500 hover:bg-green-600 text-white">Đã xuất bản</Badge>;
+      case 'Pending':
+        return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">Chờ duyệt</Badge>;
+      case 'Archived':
+        return <Badge className="bg-red-500 hover:bg-red-600 text-white">Bị từ chối</Badge>;
+      case 'Draft':
+        return <Badge className="bg-gray-500 hover:bg-gray-600 text-white">Bản nháp</Badge>;
+      default:
+        return <Badge variant="secondary">{course.status}</Badge>;
+    }
+  };
+  
 
   return (
     <Card>
@@ -204,7 +215,7 @@ function CourseCard({
         <p className="text-sm text-muted-foreground">
           Số chương: {course._count.chapter}
         </p>
-        <Badge variant={badgeVariant}>{course.status}</Badge>
+        {getStatusBadge()}
       </CardContent>
       <CardFooter className="gap-2">
         <Button variant="outline" className="cursor-pointer" onClick={() => onView(course.course_id)}>

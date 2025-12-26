@@ -104,13 +104,12 @@ export default function MyFavoritePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen  py-8">
             <div className="max-w-7xl mx-auto px-4 md:px-10">
-                {/* Header */}
                 <div className="mb-8">
                     <div className="flex items-center gap-3 mb-2">
                         <Heart className="w-8 h-8 text-pink-600 fill-pink-600" />
-                        <h1 className="font-rosario-bold text-3xl md:text-4xl">
+                        <h1 className="font-roboto-condensed-bold text-3xl md:text-4xl">
                             Khóa học yêu thích
                         </h1>
                     </div>
@@ -119,9 +118,8 @@ export default function MyFavoritePage() {
                     </p>
                 </div>
 
-                {/* Empty State */}
                 {favorites.length === 0 ? (
-                    <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                    <div className="flex flex-col justify-center h-screen align-center rounded-lg shadow-sm p-12 text-center">
                         <Heart className="w-20 h-20 text-gray-300 mx-auto mb-4" />
                         <h2 className="font-rosario-bold text-2xl mb-2">
                             Chưa có khóa học yêu thích
@@ -130,8 +128,8 @@ export default function MyFavoritePage() {
                             Hãy khám phá và thêm các khóa học bạn quan tâm vào danh sách yêu thích
                         </p>
                         <Button 
-                            className="bg-pink-600 hover:bg-pink-700"
-                            onClick={() => router.push('/explore-courses')}
+                            className="bg-pink-600 hover:bg-pink-700 cursor-pointer max-w-xl self-center"
+                            onClick={() => router.push('/')}
                         >
                             Khám phá khóa học
                         </Button>
@@ -144,8 +142,7 @@ export default function MyFavoritePage() {
                                 className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4 md:p-6"
                             >
                                 <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-6`}>
-                                    {/* Thumbnail */}
-                                    <div className="flex-shrink-0">
+                                    <div className="shrink-0">
                                         <Link href={`/course-detail/${favorite.course.slug}`}>
                                             <div className={`relative ${isMobile ? 'w-full h-48' : 'w-64 h-40'} rounded-lg overflow-hidden cursor-pointer group`}>
                                                 <Image

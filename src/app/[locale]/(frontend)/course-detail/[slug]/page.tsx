@@ -219,7 +219,7 @@ export default function CourseDetailPage() {
                 category_name={courseData.category?.category_name ?? "Không có thông tin loại khoá học"}
                 title={courseData.title ?? "Không có tiêu đề khoá học"}
                 description={courseData.description ?? "Không có mô tả khoá học"}
-                /* rating={courseData.rating} */
+          /*       rating={courseData.rating}  */
                 total_reviews={courseData.feedbacks?.length ?? 0}
                 total_students={courseData.learnerCourses?.length ?? 0}
                 created_by={courseData.instructor?.user?.fullName || "Chưa lấy được thông tin"} 

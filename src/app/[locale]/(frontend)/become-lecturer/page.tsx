@@ -65,6 +65,7 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
 export default function BecomeInstructorPage() {
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -94,7 +95,7 @@ export default function BecomeInstructorPage() {
   useEffect(() => {
     const fetchExistingQualifications = async () => {
       if (!user) return;
-
+      setIsLoading(true)
       try {
         const response = await api.get('/instructor-qualifications/my-qualifications');
         if (response.data && Array.isArray(response.data.data)) {
@@ -111,9 +112,11 @@ export default function BecomeInstructorPage() {
       }
     };
     fetchExistingQualifications();
+    setIsLoading(false)
   }, [user]);
 
   useEffect(() => {
+    setIsLoading(true)
     const fetchSpecializations = async () => {
       try {
         setLoadingSpecializations(true);
@@ -133,6 +136,7 @@ export default function BecomeInstructorPage() {
       }
     };
     fetchSpecializations();
+    setIsLoading(false)
   }, []);
 
   const handleInputChange = (field: keyof InstructorQualificationForm, value: string) => {
@@ -380,7 +384,18 @@ export default function BecomeInstructorPage() {
       setIsSubmitting(false);
     }
   };
-
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-16 px-4">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Đang tải...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className={`w-full min-h-screen bg-linear-to-br from-purple-50 via-white to-blue-50 ${isMobile ? 'p-4' : 'p-10'}`}>
       <div className={`mb-6 ${isMobile ? '' : 'ml-2'}`}>
@@ -858,7 +873,7 @@ export default function BecomeInstructorPage() {
                           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                             {qual.images.map((imageUrl, imgIndex) => (
                               <div key={`${qual.instructor_qualification_id}-img-${imgIndex}`} className="relative w-full aspect-square rounded border overflow-hidden group cursor-pointer hover:ring-2 hover:ring-purple-400 transition-all">
-                                <Image src={imageUrl} alt={`Minh chứng ${imgIndex + 1}`} fill className="object-cover"/>
+                                <Image src={imageUrl} alt={`Minh chứng ${imgIndex + 1}`} fill className="object-cover" />
                                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
                                   <span className="text-white opacity-0 group-hover:opacity-100 text-xs font-roboto-bold">
                                     #{imgIndex + 1}
@@ -880,7 +895,7 @@ export default function BecomeInstructorPage() {
           </ScrollArea>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setShowHistoryDialog(false)}className="font-roboto-bold cursor-pointer">
+            <Button type="button" variant="outline" onClick={() => setShowHistoryDialog(false)} className="font-roboto-bold cursor-pointer">
               Đóng
             </Button>
           </DialogFooter>
@@ -888,4 +903,5 @@ export default function BecomeInstructorPage() {
       </Dialog>
     </div>
   );
+
 }
