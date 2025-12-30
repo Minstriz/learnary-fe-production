@@ -38,7 +38,8 @@ enum VerifyStatus {
   Active = "Active",
   Inactive = "Inactive",
   Suspended = "Suspended",
-  Pending = "Pending"
+  Pending = "Pending",
+  Rejected = "Rejected"
 }
 
 // Type chung cho bảng hiển thị
@@ -78,6 +79,7 @@ type InstructorApi = {
 
 type QualificationRequestApi = {
   instructor_qualification_id?: string;
+  status?: string;
   user?: { user_id?: string; fullName?: string; email?: string; avatar?: string | null; phone?: string | null } | null;
   instructor?: { user?: { user_id?: string; fullName?: string; email?: string; avatar?: string | null; phone?: string | null }; user_id?: string } | null;
 };
@@ -98,9 +100,10 @@ export default function InstructorManagement() {
       setIsLoading(true);
       const [instructorsRes, requestsRes] = await Promise.all([
         api.get("/instructors"),
-        api.get("/instructor-qualifications?status=Pending") // API lấy danh sách chờ duyệt
+        api.get("/instructor-qualifications"),
+        // api.get("/instructor-qualifications?status=Rejected") // API lấy danh sách chờ duyệt
       ]);
-
+      console.log(instructorsRes, requestsRes);
       const instructorsRaw = instructorsRes.data.data || [];
       const requestsRaw = requestsRes.data.data || [];
 
@@ -122,7 +125,11 @@ export default function InstructorManagement() {
       const instructorUserIds = new Set(instructors.map(i => i.user_id));
       
       const applicants: CombinedInstructor[] = (requestsRaw as QualificationRequestApi[])
-        .filter((req) => !instructorUserIds.has(req.instructor?.user_id || req.user?.user_id || ''))
+        .filter((req) => {
+          const status = req.status as VerifyStatus;
+          if(status === VerifyStatus.Rejected) return false; // Loại bỏ các yêu cầu đã bị từ chối
+          return !instructorUserIds.has(req.instructor?.user_id || req.user?.user_id || '')
+        })
         .map((req) => ({
           id: req.instructor_qualification_id || '',
           user_id: req.user?.user_id || req.instructor?.user?.user_id || '',
@@ -132,7 +139,7 @@ export default function InstructorManagement() {
           phone: req.user?.phone || req.instructor?.user?.phone || null,
           bio: "Đang chờ phê duyệt hồ sơ giảng viên",
           type: "APPLICANT",
-          status: VerifyStatus.Pending,
+          status: (req.status as VerifyStatus) || VerifyStatus.Pending,
           isVerified: false,
           totalCourses: 0,
           totalStudents: 0,

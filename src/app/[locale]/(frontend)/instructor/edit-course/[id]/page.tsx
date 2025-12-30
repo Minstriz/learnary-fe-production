@@ -332,7 +332,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         try {
             if (action === 'save') {
                 if (course.status === 'Published') {
-                    // Chỉ cho phép lưu thay đổi giá khi Published
+                    // Chỉ cho phép lưu thay đổi giá và level khi Published
                     await api.put(`/courses/draft/${courseId}`, course);
                     setHasUnsavedChanges(false);
                     setNewlyCreatedChapters([]);
@@ -420,11 +420,14 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
             {course.status === 'Archived' && course.admin_note && (
                 <div className="container mx-auto p-4 md:p-8">
                     <div className="mb-6 animate-in fade-in slide-in-from-top-2">
-                        <div className="p-4 bg-red-50 border border-red-200 rounded-md flex gap-3 text-red-800 shadow-sm items-start">
-                            <span className="font-bold text-sm uppercase">Khóa học bị từ chối</span>
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-md flex flex-col gap-2 text-red-800 shadow-sm items-start">
+                            <span className="font-bold text-sm uppercase">Khóa học của bạn đã bị từ chối.</span>
                             <div>
                                 <span className="font-bold">Lý do từ chối: </span>
                                 {course.admin_note}
+                            </div>
+                            <div className="text-sm mt-1">
+                                Bạn có thể phản hồi lý do từ chối qua email trả lời trong vòng 3 ngày kể từ khi nhận được thông báo này. Sau 3 ngày, bạn sẽ không thể phản hồi nữa.
                             </div>
                         </div>
                     </div>
@@ -532,7 +535,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                     <Label className='text-blue-700 font-roboto-condensed-bold'>Cấp độ</Label>
                                     <p className='text-red-600'>*</p>
                                 </div>
-                                <Select value={course.level_id} onValueChange={(v) => updateCourseState(d => d.level_id = v)} disabled={course.status === 'Published'}>
+                                <Select value={course.level_id} onValueChange={(v) => updateCourseState(d => d.level_id = v)}>
                                     <SelectTrigger><SelectValue placeholder="Chọn cấp độ" /></SelectTrigger>
                                     <SelectContent>
                                         {levels.map(l => <SelectItem key={l.level_id} value={l.level_id}>{l.level_name}</SelectItem>)}

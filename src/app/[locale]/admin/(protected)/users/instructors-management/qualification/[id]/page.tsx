@@ -112,9 +112,7 @@ export default function InstructorQualificationPage() {
   const handleApprove = async () => {
     try {
       setProcessing(true);
-      
       await api.patch(`/instructor-qualifications/${id}/approve`); 
-      
       toast.success("Đã phê duyệt yêu cầu thành công!");
       setIsApproveOpen(false); 
       router.push("/admin/users/instructors-management"); 
@@ -132,7 +130,7 @@ export default function InstructorQualificationPage() {
       await api.patch(`/instructor-qualifications/${id}/reject`);
       toast.success("Đã từ chối yêu cầu.");
       setIsRejectOpen(false); 
-      router.push("/admin/users/instructor-management");
+      router.push("/admin/users/instructors-management");
     } catch (error) {
       const axiosErr = error as AxiosError<{ message?: string }>;
       toast.error(axiosErr?.response?.data?.message || "Thao tác thất bại");
