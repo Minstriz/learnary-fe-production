@@ -15,12 +15,14 @@ export default function FrontendLayout({
 
   return (
     <div className="min-h-screen flex flex-col">
-      <NavbarWrapper locale={locale}>
+      <div className="flex-1 flex flex-col">
+        <NavbarWrapper locale={locale}>
         <main className="flex-1">
           {children}
         </main>
       </NavbarWrapper>
-       <Footer /> 
+      </div>
+      <Footer />
     </div>
   );
 }

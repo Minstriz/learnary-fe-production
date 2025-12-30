@@ -12,9 +12,10 @@ import api from '@/app/lib/axios';
 
 type InstructorInfoProps = {
   instructor?: InstructorWithData;
+  isPreviewMode?: boolean;
 };
 
-export default function InstructorInfo({ instructor }: InstructorInfoProps) {
+export default function InstructorInfo({ instructor, isPreviewMode }: InstructorInfoProps) {
   const { user: currentUser, isLoggedIn } = useAuth();
   const router = useRouter();
   const [isLoadingChat, setIsLoadingChat] = useState(false);
@@ -102,7 +103,7 @@ export default function InstructorInfo({ instructor }: InstructorInfoProps) {
           </p>
           <Button
             onClick={handleStartChat}
-            disabled={isLoadingChat}
+            disabled={isLoadingChat || isPreviewMode}
             className="flex items-center gap-2"
           >
             <MessageCircle className="w-4 h-4" />
