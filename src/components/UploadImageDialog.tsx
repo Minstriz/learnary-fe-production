@@ -125,7 +125,7 @@ export function ImageUploadDialog({ currentImageUrl, onUploadSuccess, courseId, 
                 </p>
             )}
             <p className="text-xs text-muted-foreground">
-                Định dạng: PNG, Kích thước tối đa: 5MB. Tỷ lệ khuyến nghị: 16:9
+                Định dạng: PNG. Kích thước tối đa: 5MB. Tỷ lệ khuyến nghị: 16:9
             </p>
         </div>
     )

@@ -8,12 +8,12 @@ import { toast } from "sonner";
 // Icons
 import {  Lesson, Chapter } from "@/type/course.type";
 import {
-    ArrowLeft, CheckCircle, XCircle, Eye, PlayCircle, 
+    ArrowLeft, CheckCircle, Eye,XCircle, PlayCircle, 
     LayoutTemplate, MonitorPlay, Lock, PauseCircle, FileQuestion, Loader2
 } from "lucide-react";
 // UI Components
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea"; 
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -82,6 +82,7 @@ type CourseData = {
   created_by?: string; 
   last_updated?: string; 
   updatedAt?: string;
+  rejectedAt?: string;
   available_language: string;
   what_you_learn: string[];
   requirement: string[] | string; 
@@ -118,9 +119,9 @@ export default function AdminCourseDetailPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("marketing");
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
-  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState<boolean>(false);
-  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState<boolean>(false);
-  const [rejectReason, setRejectReason] = useState<string>("");
+    const [isApproveDialogOpen, setIsApproveDialogOpen] = useState<boolean>(false);
+    const [isRejectDialogOpen, setIsRejectDialogOpen] = useState<boolean>(false);
+    const [rejectReason, setRejectReason] = useState<string>("");
 
   useEffect(() => {
     if (!id) return;
@@ -185,27 +186,28 @@ export default function AdminCourseDetailPage() {
     }
   };
 
-  const handleReject = async () => {
-    if (!id) return;
-    if (!rejectReason.trim()) {
-        toast.error("Vui lòng nhập lý do từ chối để giảng viên biết cần sửa gì.");
-        return;
-    }
-    try {
-      setProcessing(true);
-      await api.post(`/courses/admin/reject/${id}`, { reason: rejectReason });
-      toast.success("Đã từ chối khóa học.");
-      setCourse(prev => prev ? { ...prev, status: 'Archived' } : null);
-      setIsRejectDialogOpen(false);
-      setRejectReason("");
-    } catch (error) {
-      const err = error as ApiErrorResponse;
-      console.error(err);
-      toast.error(err.response?.data?.message || "Thao tác thất bại");
-    } finally {
-      setProcessing(false);
-    }
-  };
+    // --- Reject Handler ---
+    const handleReject = async () => {
+        if (!id) return;
+        if (!rejectReason.trim()) {
+            toast.error("Vui lòng nhập lý do từ chối để giảng viên biết cần sửa gì.");
+            return;
+        }
+        try {
+            setProcessing(true);
+            await api.post(`/courses/admin/reject/${id}`, { reason: rejectReason });
+            toast.success("Đã từ chối khóa học.");
+            setCourse(prev => prev ? { ...prev, status: 'Archived' } : null);
+            setIsRejectDialogOpen(false);
+            setRejectReason("");
+        } catch (error) {
+            const err = error as ApiErrorResponse;
+            console.error(err);
+            toast.error(err.response?.data?.message || "Thao tác thất bại");
+        } finally {
+            setProcessing(false);
+        }
+    };
   if (loading) return (
       <div className="flex h-screen items-center justify-center">
           <Loader2 className="animate-spin text-primary" size={40} />
@@ -262,14 +264,23 @@ export default function AdminCourseDetailPage() {
                 <Badge 
                     className={
                         course.status === 'Published' ? "bg-green-600 hover:bg-green-700" : 
-                        course.status === 'Pending' ? "bg-amber-500 hover:bg-amber-600" : "bg-gray-500"
+                        course.status === 'Pending' ? "bg-amber-500 hover:bg-amber-600" : 
+                        course.status === 'Draft' ? "bg-gray-500" : 
+                        course.status === 'Archived' ? "bg-red-600 hover:bg-red-700" : "bg-gray-500"
                     }
                 >
                     {course.status === 'Published' ? "Published" : 
                      course.status === 'Pending' ? "Pending" : 
-                     course.status === 'Draft' ? "Draft" : "Archived"}
+                     course.status === 'Draft' ? "Draft" : 
+                     course.status === 'Archived' ? "Archived" : "Khác"}
                 </Badge>
             </div>
+                    {/* Hiển thị note cho giảng viên khi bị từ chối */}
+                    {course.status === 'Archived' && (
+                        <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">  
+                            {course.admin_note && <div>Lý do từ chối: <span className="font-semibold">{course.admin_note}</span></div>}
+                        </div>
+                    )}
           </div>
         </div>
 
@@ -291,45 +302,51 @@ export default function AdminCourseDetailPage() {
             </div>
 
             {/* Approve/Reject Buttons */}
-            {course.status === 'Pending' && (
+            {(course.status === 'Pending' || (course.status === 'Archived' && course.rejectedAt && (() => {
+                const now = new Date();
+                const rejectedAt = new Date(course.rejectedAt);
+                const diffMs = now.getTime() - rejectedAt.getTime();
+                const diffDays = diffMs / (1000 * 60 * 60 * 24);
+                return diffDays <= 3;
+            })())) && (
                 <>
                     <Separator orientation="vertical" className="h-8 mx-2 hidden sm:block" />
-                    
-                    {/* Dialog Từ Chối */}
-                    <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="destructive" disabled={processing} size="sm">
-                                <XCircle className="mr-2 h-4 w-4" /> 
-                                <span className="hidden sm:inline">Từ chối</span>
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle className="text-red-600">Từ chối duyệt khóa học?</DialogTitle>
-                                <DialogDescription>Khóa học sẽ bị chuyển về trạng thái <b>Nháp (Draft)</b> để giảng viên chỉnh sửa lại.</DialogDescription>
-                            </DialogHeader>
-                            <div className="py-4 space-y-2">
-                            <Label htmlFor="reason" className="font-semibold">Lý do từ chối <span className="text-red-500">*</span></Label>
-                            <Textarea 
-                                id="reason"
-                                placeholder="Ví dụ: Video bài 3 bị mất tiếng, nội dung chương 2 chưa chi tiết..."
-                                value={rejectReason}
-                                onChange={(e) => setRejectReason(e.target.value)}
-                                className="min-h-[100px]"
-                            />
-                        </div>
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)} disabled={processing}>Hủy bỏ</Button>
-                                <Button variant="destructive" onClick={handleReject} disabled={processing}>Xác nhận từ chối</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-
+                    {/* Chỉ hiện nút từ chối khi Pending */}
+                    {course.status === 'Pending' && (
+                        <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="destructive" disabled={processing} size="sm">
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    <span className="hidden sm:inline">Từ chối</span>
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle className="text-red-600">Từ chối duyệt khóa học?</DialogTitle>
+                                    <DialogDescription>Khóa học sẽ bị chuyển về trạng thái <b>Nháp (Draft)</b> để giảng viên chỉnh sửa lại.</DialogDescription>
+                                </DialogHeader>
+                                <div className="py-4 space-y-2">
+                                    <Label htmlFor="reason" className="font-semibold">Lý do từ chối <span className="text-red-500">*</span></Label>
+                                    <Textarea
+                                        id="reason"
+                                        placeholder="Ví dụ: Video bài 3 bị mất tiếng, nội dung chương 2 chưa chi tiết..."
+                                        value={rejectReason}
+                                        onChange={(e) => setRejectReason(e.target.value)}
+                                        className="min-h-[100px]"
+                                    />
+                                </div>
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)} disabled={processing}>Hủy bỏ</Button>
+                                    <Button variant="destructive" onClick={handleReject} disabled={processing}>Xác nhận từ chối</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    )}
                     {/* Dialog Duyệt */}
                     <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
                         <DialogTrigger asChild>
                             <Button className="bg-green-600 hover:bg-green-700" disabled={processing} size="sm">
-                                <CheckCircle className="mr-2 h-4 w-4" /> 
+                                <CheckCircle className="mr-2 h-4 w-4" />
                                 <span className="hidden sm:inline">Duyệt</span>
                             </Button>
                         </DialogTrigger>
@@ -362,7 +379,7 @@ export default function AdminCourseDetailPage() {
       <div className="container mx-auto p-4 md:p-8">
         
         {/* MARKETING / LANDING PAGE === */}
-        {viewMode === 'marketing' && (
+            {viewMode === 'marketing' && (
             <div className="animate-in fade-in zoom-in-95 duration-300">
                 <CourseHeader
                     category_name={categoryName}
@@ -398,7 +415,7 @@ export default function AdminCourseDetailPage() {
                                 </TabsContent>
 
                                 <TabsContent value="instructor" className="mt-6">
-                                    <InstructorInfo instructor={course.instructor as unknown as InstructorWithData} />
+                                    <InstructorInfo instructor={course.instructor as unknown as InstructorWithData} isPreviewMode={true} />
                                 </TabsContent>
 
                                 <TabsContent value="reviews" className="mt-6">
