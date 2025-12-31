@@ -188,7 +188,6 @@ export default function BecomeInstructorPage() {
 
     setShowHistoryDialog(true);
     setLoadingHistory(true);
-
     try {
       const response = await api.get('/instructor-qualifications/my-qualifications');
       if (response.data && Array.isArray(response.data.data)) {
@@ -227,7 +226,7 @@ export default function BecomeInstructorPage() {
         return (
           <Badge className="bg-red-100 text-red-700 hover:bg-red-200">
             <XCircle className="w-3 h-3 mr-1" />
-            Từ chối
+            Bị từ chối
           </Badge>
         );
       default:

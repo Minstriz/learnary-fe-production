@@ -4,18 +4,18 @@ import Hero from "@/components/Hero";
 import ListTopic from "@/components/ListTopic";
 import CourseListWithFilters from "@/components/CourseListWithFilters";
 import { useIsMobile } from "@/hooks/useIsMobile";
-
+/* import { useAuth } from "@/app/context/AuthContext"; */
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const isMobile = useIsMobile()
+/*   const user = useAuth() */
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 500);
-
+    
     return () => clearTimeout(timer);
   }, []);
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">

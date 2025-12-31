@@ -37,13 +37,15 @@ export default function SignUpPage() {
     }
     setIsSubmitting(true);
     try {
-      await api.post(`/auth/register`, { 
+      const res = await api.post(`/auth/register`, { 
         fullName, 
         email, 
         password 
       });
-      toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
-      router.push('/login');
+      if(res) {
+        router.push('/verify-email')
+        toast.success('Đăng ký thành công! Bạn sẽ được chuyển đến trang xác thực email.');
+      }
     } catch (err) {
       if (isAxiosError(err)) {
         setError(err.response?.data?.message || err.response?.data?.error || 'Email này đã được sử dụng.');

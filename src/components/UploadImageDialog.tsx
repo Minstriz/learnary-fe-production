@@ -20,7 +20,7 @@ export function ImageUploadDialog({ currentImageUrl, onUploadSuccess, courseId, 
     const [previewUrl, setPreviewUrl] = useState<string | "">(currentImageUrl || "");
     const [isUpLoading, setIsUpLoading] = useState<boolean>(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const allowedExt = ['jpd','png','jpeg']
+    const allowedExt = ['jpg','png','jpeg','webp']
     const allowedMime = ['image/jpeg', 'image/png','image/jpg']
     const uploadFile = async (file: File) => {
         setIsUpLoading(true)
