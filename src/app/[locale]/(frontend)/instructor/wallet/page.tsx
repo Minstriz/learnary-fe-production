@@ -156,7 +156,7 @@ export default function MyWalletPage() {
         const withdrawAmount = Number(amount);
 
         // Validate cơ bản
-        if (withdrawAmount < 5000) return toast.error("Tối thiểu rút 50.000 đ");
+        if (withdrawAmount < 50000) return toast.error("Tối thiểu rút 50.000 đ");
         if (withdrawAmount > wallet.balance) return toast.error("Số dư không đủ!");
         
         // Kiểm tra thông tin ngân hàng

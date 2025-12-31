@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from '@/app/context/AuthContext';
-import { Toaster } from "sonner";
+import { AuthProvider } from "./context/AuthContext";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -17,7 +16,7 @@ export const metadata: Metadata = {
   title: "Learnary",
   description: "Nơi tốt nhất để bạn bắt đầu mọi thứ",
   icons: {
-    icon:"/Logo/small-logo-nobg.svg"
+    icon: "/Logo/small-logo-nobg.svg"
   }
 };
 
@@ -34,7 +33,6 @@ export default function RootLayout({
         <AuthProvider>
           {children}
         </AuthProvider>
-        <Toaster position="top-right" richColors/>
       </body>
     </html>
   );

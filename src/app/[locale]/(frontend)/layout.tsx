@@ -1,7 +1,7 @@
 "use client";
 import NavbarWrapper from "@/components/NavbarWrapper";
 import { useParams } from "next/navigation";
-/* import Footer from "@/components/Footer"; */
+ import Footer from "@/components/Footer"
 
 // Layout này CHỈ áp dụng cho các trang user (FE)
 export default function FrontendLayout({
@@ -15,12 +15,14 @@ export default function FrontendLayout({
 
   return (
     <div className="min-h-screen flex flex-col">
-      <NavbarWrapper locale={locale}>
+      <div className="flex-1 flex flex-col">
+        <NavbarWrapper locale={locale}>
         <main className="flex-1">
           {children}
         </main>
       </NavbarWrapper>
-     {/*  <Footer /> */}
+      </div>
+      <Footer />
     </div>
   );
 }

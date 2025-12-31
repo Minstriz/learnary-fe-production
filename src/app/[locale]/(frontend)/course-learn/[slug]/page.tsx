@@ -286,6 +286,8 @@ const CourseDetailPage = () => {
                     <Video
                       key={currentLesson.lesson_id}
                       video_url={currentLesson.video_url}
+                      lesson_id={currentLesson.lesson_id}
+                      is_completed={currentLesson.isCompleted}
                       onCompleted={handleVideoComplete}
                     />
                   ) : (

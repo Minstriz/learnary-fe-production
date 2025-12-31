@@ -11,14 +11,13 @@ import { useAuth } from "@/app/context/AuthContext";
 import { Chapter, Lesson, Question, Option } from '@/type/course.type';
 import { InstructorWithData } from '@/type/user.type';
 // Import các component UI
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart2, Users, PlayCircle, Lock, FileQuestion, Eye, PauseCircle, Loader2, AlertCircle, ChevronLeft, LayoutTemplate, MonitorPlay } from 'lucide-react';
+import { PlayCircle, Lock, FileQuestion, Eye, PauseCircle, Loader2, AlertCircle, ChevronLeft, LayoutTemplate, MonitorPlay } from 'lucide-react';
 import Video from '@/components/Video';
 import { toast } from "sonner";
 // Import course components
@@ -421,51 +420,6 @@ export default function CourseDetailPage() {
               })}
             </Accordion>
           </div>
-        </div>
-
-        {/* SIDEBAR PHẢI */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="sticky top-24 shadow-md border-t-4 border-t-primary">
-            <CardHeader className="pb-2">
-              <h3 className="text-3xl font-bold text-center text-primary">
-                {course.price > 0 ? `${Number(course.price).toLocaleString('vi-VN')} đ` : 'Miễn phí'}
-              </h3>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <Button size="lg" className="w-full text-lg font-semibold">Đăng ký học ngay</Button>
-              <div className="space-y-3 text-sm text-muted-foreground bg-muted/30 p-4 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <BarChart2 className="h-5 w-5 text-primary/70" />
-                  <span>Trình độ: <span className="font-medium text-foreground">{course.level?.level_name}</span></span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Users className="h-5 w-5 text-primary/70" />
-                  <span>Học viên: <span className="font-medium text-foreground">1,234</span></span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm">
-            <CardHeader className="flex flex-row items-center gap-4 pb-2">
-              <div className="relative h-16 w-16 min-w-16">
-                {/* <Image
-                    src={course.instructor?.user?.avatar || '/images/temp/Profile-PNG-Photo.png'}
-                    alt={course.instructor?.user?.fullName || 'Giảng viên'}
-                    fill
-                    className="rounded-full object-cover border-2 border-primary/10"
-                  /> */}
-              </div>
-              <div className="overflow-hidden">
-                <CardTitle className="text-lg truncate">{course.instructor?.user?.fullName || 'Thông tin giảng viên'}</CardTitle>
-                <Badge variant="secondary" className="mt-1">Giảng viên</Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground line-clamp-4 italic">
-                {course.instructor?.user?.bio || 'Giảng viên chưa cập nhật thông tin giới thiệu.'}
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

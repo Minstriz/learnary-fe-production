@@ -126,7 +126,7 @@ export default function MyComboPage() {
         <div className="flex w-full justify-center">
           <h1 className="text-3xl font-bold font-roboto-condensed-bold self-center">Combo Khóa Học của bạn</h1>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)} className="hover:bg-blue-600 hover:text-white bg-white border border-blue-600 text-blue-700 cursor-pointer">
+        <Button onClick={() => setCreateDialogOpen(true)} className="hover:bg-pink-600 hover:text-white bg-white border border-pink-600 text-pink-700 cursor-pointer">
           <Plus className="h-4 w-4 mr-2" />
           Tạo Combo Mới
         </Button>
@@ -140,7 +140,7 @@ export default function MyComboPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-700">{combos.length}</div>
+            <div className="text-2xl font-bold text-pink-700">{combos.length}</div>
           </CardContent>
         </Card>
 
@@ -151,25 +151,11 @@ export default function MyComboPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-700">
+            <div className="text-2xl font-bold text-pink-700">
               {combos.reduce((sum, combo) => sum + (combo.hasCourseGroup?.length || 0), 0)}
             </div>
           </CardContent>
         </Card>
-
-        {/* <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-xl text-gray-700 font-roboto-condensed-bold">
-              Giảm Giá Trung Bình
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-700" >
-              {combos.length > 0 ? Math.round(combos.reduce((sum, c) => sum + c.discount, 0) / combos.length) : 0}
-              %
-            </div>
-          </CardContent>
-        </Card> */}
       </div>
 
       {combos.length === 0 ? (

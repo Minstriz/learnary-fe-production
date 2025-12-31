@@ -68,10 +68,10 @@ const ListComboCourse: React.FC<ListComboCourseProps> = ({ title, combos }) => {
     </div>
   ) : (
     <div>
-      <div className="title w-full font-roboto-condensed-bold text-2xl pl-5 pb-5 pt-5">{title}</div>
+      <div className="title w-full font-roboto-condensed-bold text-2xl pl-2 pb-2 pt-5">{title}</div>
       <div className="flex flex-wrap gap-4 p-2">
         {combosData.map((combo) => (
-          <div key={combo.group_id} className="w-full sm:w-1/2 lg:w-1/4">
+          <div key={combo.group_id} className="sm:w-1/2 lg:w-1/4">
             <ComboCourse combo={combo} />
           </div>
         ))}

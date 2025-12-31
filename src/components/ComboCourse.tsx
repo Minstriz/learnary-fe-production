@@ -26,7 +26,7 @@ interface ComboCourseProps {
 const ComboCourse: React.FC<ComboCourseProps> = ({ combo }) => {
   const isMobile = useIsMobile();
 
-  const wrapperClass = `w-[350px] h-[350px] border-2 p-3 transition-transform duration-300 hover:shadow-lg hover:scale-102 flex flex-col gap-0 ${isMobile ? "rounded-2xl h-[405px]" : "rounded-3xl cursor-pointer"
+  const wrapperClass = `w-[320px] h-[300px] border-2 p-3 transition-transform duration-300 hover:shadow-lg hover:border-pink-200 hover:scale-102 flex flex-col justify-between gap-0 ${isMobile ? "rounded-2xl h-[300px]" : "rounded-3xl cursor-pointer"
     }`;
 
   const imageClass = `w-full h-full object-cover ${isMobile ? "rounded-t-3xl" : "rounded-t-3xl"
@@ -38,7 +38,7 @@ const ComboCourse: React.FC<ComboCourseProps> = ({ combo }) => {
 
   const buttonWrapperClass = `w-full flex pl-2 ${isMobile ? " justify-end gap-2" : " justify-end justify-items-center items-center pr-2 gap-2"}`;
 
-  const imageWidth = 350;
+/*   const imageWidth = 350; */
   const imageHeight = isMobile ? 150 : 150;
 
   // Tính toán giá
@@ -67,14 +67,15 @@ const ComboCourse: React.FC<ComboCourseProps> = ({ combo }) => {
           <div className={wrapperClass}>
             <div className="relative" style={{ height: imageHeight, width: "100%" }}>
               <Image
-                width={`${imageWidth}`}
-                height={`${imageHeight}`}
+              /*   width={`${imageWidth}`}
+                height={`${imageHeight}`} */
+                fill
                 src={firstCourseThumbnail || PLACEHOLDER_THUMBNAIL}
                 alt={combo.name ?? "Combo thumbnail"}
                 className={imageClass}
               />
               <div className="absolute top-2 left-2 z-10">
-                <Badge className="bg-purple-600">
+                <Badge className="bg--600">
                   <Package className="w-3 h-3 mr-1" />
                   <p className="text-sm text-white font-roboto-condensed">
                     {combo.type === "Combo" ? "COMBO" : "NHÓM"}
@@ -90,7 +91,7 @@ const ComboCourse: React.FC<ComboCourseProps> = ({ combo }) => {
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 justify-between h-full">
+            <div className="flex flex-col gap-4 h-full">
               <div className="flex items-start justify-between pl-2 pt-1 gap-2">
                 <div className="flex-1">
                   <h3 className="text-xl font-roboto-condensed-bold">
@@ -106,12 +107,12 @@ const ComboCourse: React.FC<ComboCourseProps> = ({ combo }) => {
                   </Badge>
                 </div>
               </div>
-              <div className="flex flex-col gap-3">
-                <div className="course-card-price-container flex flex-col items-end gap-1">
+              <div className="flex flex-col gap-3 mt-5">
+                <div className="course-card-price-container flex justify-end gap-1">
                   <span className="text-sm text-gray-400 line-through font-roboto">
                     {formatPriceVND(originalPrice)}
                   </span>
-                  <span className="font-roboto-condensed-bold text-red-500 text-3xl">
+                  <span className="font-roboto-condensed-bold text-red-500 text-2xl">
                     {formatPriceVND(discountedPrice)}
                   </span>
                 </div>
@@ -120,7 +121,7 @@ const ComboCourse: React.FC<ComboCourseProps> = ({ combo }) => {
                     <Heart className="text-pink-600 group-hover:text-white"></Heart>
                   </Button> */}
                   <Button asChild className="bg-pink-600 hover:bg-pink-500 transition-colors">
-                    <Link href={`/combo/${combo.group_id}`}>
+                    <Link href={`/combo/${combo.group_id}`} className="text-[13px]">
                       Xem chi tiết
                     </Link>
                   </Button>

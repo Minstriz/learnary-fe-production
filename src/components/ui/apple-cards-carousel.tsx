@@ -114,7 +114,7 @@ export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
         >
           <div
             className={cn(
-              "absolute left-0 z-[1000] h-auto w-[5%] overflow-hidden bg-gradient-to-l",
+              "absolute left-0 z-1000 h-auto w-[5%] overflow-hidden bg-linear-to-l",
             )}
           ></div>
 
@@ -200,7 +200,7 @@ export const Card = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 h-full w-full bg-black/80 backdrop-blur-lg"
+              className="fixed inset-0 h-full w-full bg-black/80 backdrop-blur-lg cursor-pointer"
             />
             <motion.div
               initial={{ opacity: 0 }}
@@ -208,7 +208,7 @@ export const Card = ({
               exit={{ opacity: 0 }}
               ref={containerRef}
               layoutId={layout ? `card-${card.title}` : undefined}
-              className="relative z-[60] mx-auto my-10 h-fit max-w-xl rounded-3xl bg-white p-4 font-sans md:p-10 dark:bg-neutral-900"
+              className="relative z-60 mx-auto my-10 h-fit max-w-xl rounded-3xl bg-white p-4 font-sans md:p-10 dark:bg-neutral-900"
             >
               <button
                 className="sticky top-4 right-0 ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-black dark:bg-white"
@@ -229,7 +229,7 @@ export const Card = ({
                 />
                 <motion.p
                   layoutId={layout ? `title-${card.title}` : undefined}
-                  className="relative z-10 mt-2 max-w-xs text-left font-sans text-xl font-semibold [text-wrap:balance] text-white md:text-xl drop-shadow-2xl px-2 py-1"
+                  className="relative z-10 mt-2 max-w-xs text-left font-sans text-xl font-semibold text-balance text-white md:text-xl drop-shadow-2xl px-2 py-1"
                 >
                   {card.title}
                 </motion.p>
@@ -242,11 +242,11 @@ export const Card = ({
       <motion.button
         layoutId={layout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
-        className="group relative z-10 flex h-80 w-56 flex-col items-start justify-start overflow-hidden rounded-3xl bg-gray-100 md:h-[20rem] md:w-66 dark:bg-neutral-900 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
+        className="group relative z-10 flex h-80 w-56 flex-col items-start justify-start overflow-hidden rounded-3xl bg-gray-100 md:h-40 md:w-66 dark:bg-neutral-900 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
       >
    {/*      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-full bg-gradient-to-b from-black/50 via-transparent to-transparent transition-all duration-300 group-hover:backdrop-blur-sm" /> */}
         <div className="absolute inset-0 z-20 transition-all duration-100 group-hover:backdrop-blur-md" />
-        <div className="relative z-40 p-8 flex flex-col justify-between h-full">
+        <div className="relative z-40 p-8 flex flex-col justify-between h-full cursor-pointer">
           <motion.p
             layoutId={layout ? `category-${card.category}` : undefined}
             className="inline-block w-auto max-w-max text-left font-roboto-condensed-bold text-sm font-medium md:text-base bg-white px-2 text-black rounded-full"
@@ -255,7 +255,7 @@ export const Card = ({
           </motion.p>
           <motion.p
             layoutId={layout ? `title-${card.title}` : undefined}
-            className="mt-2 max-w-xs text-left font-sans text-xl font-semibold [text-wrap:balance] text-white md:text-xl drop-shadow-2xl group-hover:drop-shadow-2xl group-hover:text-white text-shadow-strong"
+            className="mt-2 max-w-xs text-left font-sans text-xl font-semibold text-balance text-white md:text-xl drop-shadow-2xl group-hover:drop-shadow-2xl group-hover:text-white text-shadow-strong"
           >
             {card.title}
           </motion.p>
@@ -264,7 +264,7 @@ export const Card = ({
           src={card.src}
           alt={card.title}
           fill
-          className="absolute inset-0 z-10 object-cover transition-all duration-100 group-hover:scale-105"
+          className="absolute inset-0 z-10 object-cover transition-all duration-100 group-hover:scale-105 cursor-pointer"
         />
       </motion.button>
     </>

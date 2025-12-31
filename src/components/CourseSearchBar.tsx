@@ -21,9 +21,8 @@ const CourseSearchBar: React.FC<CourseSearchBarProps> = ({
   onMaxPriceChange,
 }) => {
   return (
-    <div className="w-full bg-white p-6 rounded-lg shadow-md mb-6">
+    <div className="w-full bg-white p-6 rounded-lg mb-6">
       <div className="flex flex-col md:flex-row gap-4">
-        {/* Search by name */}
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           <Input
@@ -35,7 +34,6 @@ const CourseSearchBar: React.FC<CourseSearchBarProps> = ({
           />
         </div>
 
-        {/* Price range filters */}
         <div className="flex gap-2 items-center">
           <span className="text-sm text-gray-600 whitespace-nowrap">Giá từ:</span>
           <Input
