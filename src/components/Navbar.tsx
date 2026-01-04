@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useAccountStatus } from "@/hooks/useAccountStatus";
 
-export const NavbarLinks = (userRole?: string, accountStatus?: string) => {
+export const NavbarLinks = (userRole?: string, accountStatus?: string, isActive?:boolean) => {
   const t = useTranslations("Navbar");
   const baseLinks = [
     {
@@ -30,13 +30,13 @@ export const NavbarLinks = (userRole?: string, accountStatus?: string) => {
       href: "/",
     },
   ];
-  const learnerLink = userRole && accountStatus !== "Locked" ? [
+  const learnerLink = userRole && accountStatus == "Active" && isActive == true ? [
     {
       name: t("learn-are"),
       href: "/learn-area"
     }
   ] : [];
-  const instructorLink = userRole === "INSTRUCTOR" && accountStatus !== "Freezed" ? [
+  const instructorLink = userRole === "INSTRUCTOR" && accountStatus == "Active" && isActive == true ? [
     {
       name: t("instructor"),
       href: "/instructor"
@@ -48,7 +48,7 @@ export const NavbarLinks = (userRole?: string, accountStatus?: string) => {
       href: "/admin-side"
     }
   ] : [];
-  const becomeLecturerLink = (!userRole || (userRole !== "INSTRUCTOR" && userRole !== "ADMIN")) && accountStatus !== "Freezed" ? [
+  const becomeLecturerLink = (!userRole || (userRole !== "INSTRUCTOR" && userRole !== "ADMIN")) && accountStatus !=="Freezed" ? [
     {
       name: t("become-lecturer"),
       href: "/become-lecturer",
@@ -63,7 +63,7 @@ function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { isLoggedIn, user, logout, isLoading } = useAuth();
   const { accountStatus } = useAccountStatus();
-  const links = NavbarLinks(user?.role, accountStatus?.status);
+  const links = NavbarLinks(user?.role, accountStatus?.status, user?.isActive);
   const t = useTranslations("Navbar");
   async function handleLogout(): Promise<void> {
     try {
@@ -83,7 +83,7 @@ function Navbar() {
       return (
         <>
           {/* Tài khoản Freezed không thấy profile icon */}
-          {accountStatus?.status !== 'Freezed' && (
+          {accountStatus?.status == 'Active' && (
             <Link href="/profile" title={user.fullName}>
               {user.avatar ? (
                 <div className="relative inline-flex h-fit w-fit rounded-full overflow-hidden group">
@@ -117,13 +117,13 @@ function Navbar() {
             </Link >
           )}
           {/* Tài khoản Freezed không thấy chat icon */}
-          {accountStatus?.status !== 'Freezed' && (
+          {accountStatus?.status == 'Active' && (
             <Link href="/chat" title={"Tin nhắn của bạn"}>
               <MessageCircle className="h-6 w-6 cursor-pointer hover:text-pink-600"></MessageCircle>
             </Link>
           )}
           {/* Tài khoản Freezed không thấy favorite icon */}
-          {accountStatus?.status !== 'Freezed' && (
+          {accountStatus?.status == 'Active' && (
             <Link href="/my-favorite" title={"Giỏ hàng"}>
               <Heart className="h-6 w-6 cursor-pointer hover:text-pink-600"></Heart>
             </Link>

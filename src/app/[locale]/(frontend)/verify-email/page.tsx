@@ -57,7 +57,6 @@ export default function VerifyEmailPage() {
                 }, 1500)
             }
         } catch {
-            // console.log(error);
             toast.error( "Mã OTP không hợp lệ hoặc đã hết hạn");
             setOtp("") 
         } finally {
@@ -74,11 +73,11 @@ export default function VerifyEmailPage() {
         }
     }, [countDown])
 
-    useEffect(() => {
+/*     useEffect(() => {
         if (otp.length === 6) {
             handleVerify();
         }
-    }, [otp, handleVerify])
+    }, [otp, handleVerify]) */
 
     const handleResend = async () => {
         if (!userId) return;
