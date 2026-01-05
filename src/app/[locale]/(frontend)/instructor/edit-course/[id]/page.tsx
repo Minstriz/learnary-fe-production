@@ -15,13 +15,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, ChevronLeft, Save, Send, PlusCircle, Trash2, GripVertical, Video, FileQuestion, Plus, X, Pencil, LayoutList } from 'lucide-react';
+import { Loader2, ChevronLeft, Save, Send, PlusCircle, Trash2, GripVertical, Video, FileQuestion, Plus, X, Pencil, LayoutList, Download, Upload, FileSpreadsheet } from 'lucide-react';
 import { VideoUploadDialog } from '@/components/VideoUploadDialog';
 import { useAuth } from '@/app/context/AuthContext';
 import { formatNumberWithDots, parseNumberFromDots } from '@/utils/convert_price';
 import { slugify } from '@/utils/utils';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { parseExcelToQuiz, downloadQuizTemplate, exportQuizToExcel } from '@/utils/quiz-excel-utils';
+
 type Category = { category_id: string; category_name: string; };
 type Level = { level_id: string; level_name: string; };
 type Option = { option_id?: string; option_content: string; is_correct: boolean; };
@@ -792,6 +794,7 @@ function QuizEditDialog({ quiz, onSave, disabled }: QuizEditDialogProps) {
     const [localQuiz, setLocalQuiz] = useState<Quiz>(
         quiz || { title: "Bài kiểm tra", questions: [] }
     );
+    const [isImporting, setIsImporting] = useState(false);
 
     // Reset state khi mở dialog nếu quiz props thay đổi
     useEffect(() => {
@@ -806,6 +809,44 @@ function QuizEditDialog({ quiz, onSave, disabled }: QuizEditDialogProps) {
         });
     };
 
+    const handleImportExcel = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setIsImporting(true);
+        try {
+            const questions = await parseExcelToQuiz(file);
+            updateLocalQuiz(q => {
+                q.questions = questions;
+            });
+            toast.success(`Đã import thành công ${questions.length} câu hỏi từ Excel!`);
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Có lỗi xảy ra khi import file Excel');
+        } finally {
+            setIsImporting(false);
+            // reset input để có thể upload lại cùng file
+            event.target.value = '';
+        }
+    };
+
+    const handleExportExcel = () => {
+        try {
+            exportQuizToExcel(localQuiz);
+            toast.success('Đã xuất quiz ra file Excel thành công!');
+        } catch {
+            toast.error('Có lỗi xảy ra khi xuất file Excel');
+        }
+    };
+
+    const handleDownloadTemplate = () => {
+        try {
+            downloadQuizTemplate();
+            toast.success('Đã tải xuống file mẫu thành công!');
+        } catch {
+            toast.error('Có lỗi xảy ra khi tải file mẫu');
+        }
+    };
+
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -817,6 +858,65 @@ function QuizEditDialog({ quiz, onSave, disabled }: QuizEditDialogProps) {
                 <DialogHeader>
                     <DialogTitle>{quiz ? 'Chỉnh sửa bài kiểm tra' : 'Tạo bài kiểm tra mới'}</DialogTitle>
                 </DialogHeader>
+                <div className="flex flex-wrap gap-2 pb-4 border-b">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownloadTemplate}
+                        disabled={disabled}
+                        className="flex items-center gap-2"
+                    >
+                        <Download className="w-4 h-4" />
+                        Tải file mẫu
+                    </Button>
+                    
+                    <label className="relative">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={disabled || isImporting}
+                            className="flex items-center gap-2 cursor-pointer"
+                            asChild
+                        >
+                            <span>
+                                {isImporting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Đang import...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload className="w-4 h-4" />
+                                        Import từ Excel
+                                    </>
+                                )}
+                            </span>
+                        </Button>
+                        <input
+                            type="file"
+                            accept=".xlsx,.xls"
+                            onChange={handleImportExcel}
+                            disabled={disabled || isImporting}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                    </label>
+
+                    {localQuiz.questions.length > 0 && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleExportExcel}
+                            disabled={disabled}
+                            className="flex items-center gap-2"
+                        >
+                            <FileSpreadsheet className="w-4 h-4" />
+                            Xuất ra Excel
+                        </Button>
+                    )}
+                </div>
 
                 <div className="flex-1 py-4 space-y-6 overflow-y-auto pr-2">
                     <div className="space-y-2">
@@ -839,6 +939,7 @@ function QuizEditDialog({ quiz, onSave, disabled }: QuizEditDialogProps) {
                                 <div className="pr-10">
                                     <Input
                                         className="font-medium bg-white"
+                                        value={q.title}
                                         placeholder={`Câu hỏi ${qIdx + 1}`}
                                         onChange={e => updateLocalQuiz(draft => draft.questions[qIdx].title = e.target.value)}
                                         disabled={disabled}

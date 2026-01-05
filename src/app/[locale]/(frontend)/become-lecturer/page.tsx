@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useAuth } from "@/app/context/AuthContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import api from "@/app/lib/axios";
@@ -94,8 +95,11 @@ export default function BecomeInstructorPage() {
 
   useEffect(() => {
     const fetchExistingQualifications = async () => {
-      if (!user) return;
-      setIsLoading(true)
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
       try {
         const response = await api.get('/instructor-qualifications/my-qualifications');
         if (response.data && Array.isArray(response.data.data)) {
@@ -109,15 +113,19 @@ export default function BecomeInstructorPage() {
         }
       } catch (error) {
         console.error("Lỗi khi tải bằng cấp hiện có:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchExistingQualifications();
-    setIsLoading(false)
   }, [user]);
 
   useEffect(() => {
-    setIsLoading(true)
     const fetchSpecializations = async () => {
+      if (!user) {
+        setLoadingSpecializations(false);
+        return;
+      }
       try {
         setLoadingSpecializations(true);
         const response = await api.get('/specializations');
@@ -136,8 +144,7 @@ export default function BecomeInstructorPage() {
       }
     };
     fetchSpecializations();
-    setIsLoading(false)
-  }, []);
+  }, [user]);
 
   const handleInputChange = (field: keyof InstructorQualificationForm, value: string) => {
     setQualification(prev => ({
@@ -424,18 +431,30 @@ export default function BecomeInstructorPage() {
           variant="outline"
           size={isMobile ? "sm" : "default"}
           onClick={handleViewHistory}
-          className="font-roboto-bold border-purple-300 text-purple-600 hover:bg-purple-50 cursor-pointer mt-5 ">
+          disabled={!user}
+          className="font-roboto-bold border-purple-300 text-purple-600 hover:bg-purple-50 cursor-pointer mt-5 disabled:opacity-50 disabled:cursor-not-allowed">
           <History className="w-4 h-4 mr-2" />
           Lịch sử đăng ký
         </Button>
       </div>
 
-      <Alert className="max-w-screen mx-auto mb-6 border-blue-200 bg-blue-50">
-        <AlertCircle className="h-4 w-4 text-blue-600" />
-        <AlertDescription className="font-roboto text-blue-900">
-          Bạn có thể upload tối đa <strong>6 ảnh</strong> minh chứng (JPG, PNG, PDF), mỗi file tối đa <strong>10MB</strong>. <strong>Bạn chỉ có thể tạo 1 đơn đăng ký đang chờ phê duyệt</strong>
-        </AlertDescription>
-      </Alert>
+      {!user && (
+        <Alert className="max-w-screen mx-auto mb-6 border-red-200 bg-red-50">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="font-roboto text-red-900">
+            <strong>Bạn cần đăng nhập để đăng ký trở thành giảng viên!</strong> Vui lòng <Link href="/login" className="underline font-bold hover:text-red-700">đăng nhập</Link> hoặc <Link href="/register" className="underline font-bold hover:text-red-700">đăng ký tài khoản</Link> để tiếp tục.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {user && (
+        <Alert className="max-w-screen mx-auto mb-6 border-blue-200 bg-blue-50">
+          <AlertCircle className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="font-roboto text-blue-900">
+            Bạn có thể upload tối đa <strong>6 ảnh</strong> minh chứng (JPG, PNG, PDF), mỗi file tối đa <strong>10MB</strong>. <strong>Bạn chỉ có thể tạo 1 đơn đăng ký đang chờ phê duyệt</strong>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {hasPendingQualification && (
         <Alert className="max-w-screen mx-auto mb-6 border-amber-500 bg-amber-50">
@@ -446,7 +465,7 @@ export default function BecomeInstructorPage() {
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className={`max-w-screen mx-auto ${isMobile ? 'space-y-4' : 'space-y-6'} ${hasPendingQualification ? 'opacity-60 pointer-events-none' : ''}`}>
+      <form onSubmit={handleSubmit} className={`max-w-screen mx-auto ${isMobile ? 'space-y-4' : 'space-y-6'} ${!user || hasPendingQualification ? 'opacity-60 pointer-events-none' : ''}`}>
         <Card className="border-2 border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="flex flex-col h-fit p-5 bg-linear-to-r from-purple-100 to-blue-100">
             <div className="flex items-center gap-3">
@@ -697,10 +716,12 @@ export default function BecomeInstructorPage() {
         <div className="flex justify-center pt-4">
           <Button
             type="submit"
-            disabled={isSubmitting || hasPendingQualification}
-            className={`bg-linear-to-r from-purple-600 cursor-pointer to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-roboto-bold ${isMobile ? 'w-full' : 'w-auto px-12'} py-6 text-lg shadow-lg ${hasPendingQualification ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={!user || isSubmitting || hasPendingQualification}
+            className={`bg-linear-to-r from-purple-600 cursor-pointer to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-roboto-bold ${isMobile ? 'w-full' : 'w-auto px-12'} py-6 text-lg shadow-lg ${!user || hasPendingQualification ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            {isSubmitting ? (
+            {!user ? (
+              "Vui lòng đăng nhập"
+            ) : isSubmitting ? (
               <div className="flex items-center">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                 Đang xử lý...

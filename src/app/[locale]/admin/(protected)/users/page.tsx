@@ -65,6 +65,7 @@ const UserSchema = z.object({
    bio: z.string().nullable(),
    last_login: z.string().nullable(),
    isActive: z.boolean(),
+   status: z.enum(["Active", "Locked", "Freezed"]).nullable().optional(),
 });
 
 const EditUserSchema = z.object({
@@ -179,6 +180,7 @@ export default function UserManagement() {
             bio: string | null,
             isActive: boolean,
             last_login: string | null,
+            accountSecurities?: { status: string },
          }) => ({
             user_id: item.user_id?.trim() || "",
             email: item.email?.trim() || "",
@@ -195,6 +197,7 @@ export default function UserManagement() {
             bio: item.bio?.trim() || null,
             last_login: item.last_login?.trim() || null,
             isActive: item.isActive,
+            status: item.accountSecurities?.status || null,
          }));
          setUser(mappedData);
       } catch (error) {
@@ -324,7 +327,7 @@ export default function UserManagement() {
          toast.error("Lưu thông tin tài khoản thất bại");
       }
    }
-   
+
    const openActionDialog = (userId: string, type: 'lock' | 'freeze' | 'active') => {
       setActionUserId(userId);
       setActionType(type);
@@ -350,7 +353,7 @@ export default function UserManagement() {
             user_id: actionUserId,
             reason: actionReason || 'Mở lại tài khoản'
          });
-         const actionText = actionType === 'lock' ? 'khóa' : actionType === 'freeze' ? 'đóng băng': 'mở lại';
+         const actionText = actionType === 'lock' ? 'khóa' : actionType === 'freeze' ? 'đóng băng' : 'mở lại';
          toast.success(`${actionText.charAt(0).toUpperCase() + actionText.slice(1)} tài khoản thành công`);
          closeActionDialog();
          await fetchUsers();
@@ -363,17 +366,15 @@ export default function UserManagement() {
    }
 
    const filteredUsers = users.filter((user) => {
-      const matchSearch =
-         user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase());
       const matchActive = filterActive === null || filterActive === user.isActive === true;
       return matchSearch && matchActive;
    });
 
-   const labeledRole: Record<UserRole,"destructive" | "outline" | "default"> = {
-      ADMIN:"destructive",
-      INSTRUCTOR:"default",
-      LEARNER:"outline",
+   const labeledRole: Record<UserRole, "destructive" | "outline" | "default"> = {
+      ADMIN: "destructive",
+      INSTRUCTOR: "default",
+      LEARNER: "outline",
    }
 
 
@@ -441,6 +442,7 @@ export default function UserManagement() {
                      <TableHead>Người dùng</TableHead>
                      <TableHead>Role</TableHead>
                      <TableHead>Email</TableHead>
+                     <TableHead>Trạng thái</TableHead>
                      <TableHead className="text-right">Hành động</TableHead>
                   </TableRow>
                </TableHeader>
@@ -469,7 +471,7 @@ export default function UserManagement() {
                            <div className="flex items-center gap-3">
                               <div>
                                  <Badge variant={labeledRole[user.role]}>
-                                       {user.role}
+                                    {user.role}
                                  </Badge>
                               </div>
                            </div>
@@ -490,6 +492,28 @@ export default function UserManagement() {
                            </div>
                         </TableCell>
 
+                        <TableCell>
+                           {user.status === "Active" && (
+                              <Badge variant="default" className="bg-green-600">
+                                 Hoạt động
+                              </Badge>
+                           )}
+                           {user.status === "Locked" && (
+                              <Badge variant="destructive" className="bg-red-600">
+                                 Bị khóa
+                              </Badge>
+                           )}
+                           {user.status === "Freezed" && (
+                              <Badge variant="default" className="bg-blue-600">
+                                 Đóng băng
+                              </Badge>
+                           )}
+                           {!user.status && (
+                              <Badge variant="outline" className="bg-gray-100">
+                                 Chưa xác định
+                              </Badge>
+                           )}
+                        </TableCell>
                         <TableCell className="text-right">
                            <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -502,19 +526,19 @@ export default function UserManagement() {
                                     Xem chi tiết
                                  </DropdownMenuItem>
                                  <DropdownMenuItem>Xem khóa học</DropdownMenuItem>
-                                 <DropdownMenuItem 
+                                 <DropdownMenuItem
                                     onClick={() => openActionDialog(user.user_id, 'lock')}
                                     className="text-red-600"
                                  >
                                     Khóa tài khoản
                                  </DropdownMenuItem>
-                                 <DropdownMenuItem 
+                                 <DropdownMenuItem
                                     onClick={() => openActionDialog(user.user_id, 'freeze')}
                                     className="text-orange-600"
                                  >
                                     Đóng băng tài khoản
                                  </DropdownMenuItem>
-                                 <DropdownMenuItem 
+                                 <DropdownMenuItem
                                     onClick={() => openActionDialog(user.user_id, 'active')}
                                     className="text-green-600"
                                  >
@@ -850,8 +874,8 @@ export default function UserManagement() {
                      <Button variant="outline" onClick={closeActionDialog} disabled={isSubmittingAction}>
                         Hủy
                      </Button>
-                     <Button 
-                        onClick={handleAccountAction} 
+                     <Button
+                        onClick={handleAccountAction}
                         disabled={isSubmittingAction}
                         variant={actionType === 'lock' ? 'destructive' : 'default'}
                      >

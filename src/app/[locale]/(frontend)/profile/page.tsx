@@ -27,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner";
 import Link from "next/link";
 import axios from "axios";
+import { TransactionHistory } from "@/components/TransactionHistory";
 
 
 type UserProps = {
@@ -459,6 +460,8 @@ export default function ProfilePage() {
                           <TabsTrigger value="instructor-profile" className='p-3 cursor-pointer hover:bg-gray-200'>Hồ sơ giảng viên</TabsTrigger>
                         )}
 
+                        <TabsTrigger value="transaction-history" className='p-3 cursor-pointer hover:bg-gray-200'>Lịch sử giao dịch</TabsTrigger>
+
                         <TabsTrigger value="account-setting" className='p-3 cursor-pointer hover:bg-gray-200'>Tài khoản</TabsTrigger>
                       </TabsList>
                     </div>
@@ -725,6 +728,13 @@ export default function ProfilePage() {
                         </div>
                       </TabsContent>
                     )}
+
+                    <TabsContent value="transaction-history">
+                      <div className="mt-6 bg-white rounded-2xl border-2 border-gray-200 shadow-sm">
+                        <TransactionHistory userId={userInfo.user_id} />
+                      </div>
+                    </TabsContent>
+
                     <TabsContent value="account-setting">
                       <div className="mt-6 bg-white rounded-2xl border-2 border-gray-200 shadow-sm p-6">
                         <h3 className="font-bold text-xl text-gray-900 mb-6">Tài khoản</h3>
