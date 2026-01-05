@@ -27,7 +27,7 @@ export type Course = {
   description?: string,
   thumbnail?: string,
   price?: number,
-  sale_off?: boolean,
+  sale_off?: number,
   hot?: boolean,
   tag?: boolean,
   available_language?: string;

@@ -52,6 +52,8 @@ type Course = {
     level_id: string;
     chapter: Chapter[];
     admin_note?: string | null;
+    sale_off?: number | null;
+    createdAt?: string;
     updatedAt?: string;
 };
 
@@ -71,7 +73,16 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [newlyCreatedChapters, setNewlyCreatedChapters] = useState<string[]>([]);
     const [newlyCreatedLessons, setNewlyCreatedLessons] = useState<string[]>([]);
+    // State cho giảm giá
+    const [discountPercent, setDiscountPercent] = useState<number>(0);
     const { user, isLoggedIn, isLoading: isAuthLoading } = useAuth();
+
+    // Tính giá sau khi giảm
+    const discountedPrice = useMemo(() => {
+        if (!course) return 0;
+        if (!discountPercent || discountPercent <= 0) return course.price;
+        return Math.max(0, Math.round(course.price * (1 - discountPercent / 100)));
+    }, [course, discountPercent]);
 
     useEffect(() => {
         if (isAuthLoading) return;
@@ -121,6 +132,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 } else {
                     setEditLocked(false);
                 }
+                // Đồng bộ discountPercent với sale_off
+                setDiscountPercent(courseData.sale_off ?? 0);
             } catch (err) {
                 console.error(err);
                 toast.info("Không thể tải dữ liệu. Vui lòng thử lại.");
@@ -330,10 +343,12 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         if (!course) return;
         setIsSaving(true);
         try {
+            // Luôn đồng bộ sale_off với discountPercent trước khi gửi lên API
+            const courseToSave = { ...course, sale_off: discountPercent };
             if (action === 'save') {
                 if (course.status === 'Published') {
                     // Chỉ cho phép lưu thay đổi giá và level khi Published
-                    await api.put(`/courses/draft/${courseId}`, course);
+                    await api.put(`/courses/draft/${courseId}`, courseToSave);
                     setHasUnsavedChanges(false);
                     setNewlyCreatedChapters([]);
                     setNewlyCreatedLessons([]);
@@ -343,7 +358,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         toast.warning("Chỉ có thể lưu nháp khi chưa có video nào.");
                         return;
                     }
-                    await api.put(`/courses/draft/${courseId}`, course);
+                    await api.put(`/courses/draft/${courseId}`, courseToSave);
                     setHasUnsavedChanges(false);
                     setNewlyCreatedChapters([]);
                     setNewlyCreatedLessons([]);
@@ -366,7 +381,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     return;
                 }
 
-                const finalPayload = JSON.parse(JSON.stringify(course)) as Course;
+                const finalPayload = JSON.parse(JSON.stringify(courseToSave)) as Course;
                 finalPayload.chapter.forEach((chap: Chapter) => {
                     chap.lessons.forEach((lesson: Lesson & { video_url?: string }) => {
                         if (videoStaging[lesson.lesson_id]) {
@@ -542,6 +557,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                     </SelectContent>
                                 </Select>
                             </div>
+                            {/* Giá gốc */}
                             <div className="space-y-2">
                                 <div className='flex gap-1'>
                                     <Label className='text-blue-700 font-roboto-condensed-bold'>Giá của khóa học</Label>
@@ -559,6 +575,45 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                         }
                                     }}
                                     placeholder="0"
+                                />
+                            </div>
+                            {/* % Giảm giá */}
+                            <div className="space-y-2 mt-2">
+                                <div className='flex gap-1'>
+                                    <Label className='text-blue-700 font-roboto-condensed-bold'>% Giảm giá</Label>
+                                </div>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    max={100}
+                                    step={10}
+                                    value={discountPercent}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        if (val === '') {
+                                            setDiscountPercent(0);
+                                            updateCourseState(d => { d.sale_off = 0; });
+                                            return;
+                                        }
+                                        let num = parseInt(val, 10);
+                                        if (isNaN(num) || num < 0) num = 0;
+                                        if (num > 100) num = 100;
+                                        setDiscountPercent(num);
+                                        updateCourseState(d => { d.sale_off = num; });
+                                    }}
+                                    placeholder="0"
+                                    
+                                />
+                            </div>
+                            {/* Giá sau khi giảm */}
+                            <div className="space-y-2 mt-2">
+                                <div className='flex gap-1'>
+                                    <Label className='text-blue-700 font-roboto-condensed-bold'>Giá sau khi giảm</Label>
+                                </div>
+                                <Input
+                                    type="text"
+                                    value={formatNumberWithDots(discountedPrice)}
+                                    disabled
                                 />
                             </div>
                             <div className="space-y-2">

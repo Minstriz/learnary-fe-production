@@ -69,7 +69,7 @@ type CourseData = {
   admin_note?: string;
   price: number;
   original_price?: number;
-  sale_off?: boolean;
+  sale_off?: number | null; // phần trăm giảm giá
   status: "Draft" | "Published" | "Pending" | "Archived";
   category_name: string;
   category?: { category_name: string };
@@ -436,8 +436,8 @@ export default function AdminCourseDetailPage() {
                                     course_slug={course.slug || "No Slug Found!"}
                                     thumbnail={course.thumbnail}
                                     price={course.price}
-                                    original_price={course.original_price}
-                                    // sale_off={course.sale_off}
+                                    discounted_price={course.price || 0}
+                                    sale_off={course.sale_off || 0}
                                     includes={mappedIncludes}
                                     isPreviewMode={true}
                                 />

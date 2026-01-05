@@ -22,6 +22,7 @@ interface FavoriteCourse {
         title: string;
         thumbnail: string;
         price: number;
+        sale_off?: number | null;
         status: string;
         slug: string;
         description: string;
@@ -185,9 +186,30 @@ export default function MyFavoritePage() {
                                         {/* Actions */}
                                         <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} items-center justify-between gap-4 mt-4`}>
                                             <div className="flex items-center gap-2">
-                                                <span className="font-roboto-condensed-bold text-2xl md:text-3xl text-pink-600">
-                                                    {formatPriceVND(Number(favorite.course.price))}
-                                                </span>
+                                                {(() => {
+                                                    const saleOff = Number(favorite.course.sale_off);
+                                                    const hasDiscount = !isNaN(saleOff) && saleOff > 0 && saleOff <= 100;
+                                                    const discountedPrice = favorite.course.price - favorite.course.price * saleOff / 100;
+                                                    if (hasDiscount) {
+                                                        return (
+                                                            <>
+                                                                <span className="font-roboto-condensed-bold text-2xl md:text-3xl text-pink-600">
+                                                                    {formatPriceVND(discountedPrice)}
+                                                                </span>
+                                                                <span className="font-roboto-condensed-italic text-gray-500 line-through text-lg md:text-xl ml-2">
+                                                                    {formatPriceVND(Number(favorite.course.price))}
+                                                                </span>
+                                                                <span className="font-roboto-bold text-red-600 ml-2">{saleOff}% OFF</span>
+                                                            </>
+                                                        );
+                                                    } else {
+                                                        return (
+                                                            <span className="font-roboto-condensed-bold text-2xl md:text-3xl text-pink-600">
+                                                                {formatPriceVND(Number(favorite.course.price))}
+                                                            </span>
+                                                        );
+                                                    }
+                                                })()}
                                             </div>
 
                                             <div className="flex gap-2">

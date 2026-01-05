@@ -140,7 +140,7 @@ export default function CourseDetailPage() {
             const response = await api.post('/payment/create-link', {
                 userId: user.id,
                 courseId: courseData.course_id
-            });
+            }); 
             const { qrCode, orderCode, amount } = response.data;
             setOrderCode(orderCode);
             setAmount(amount);
@@ -282,8 +282,8 @@ export default function CourseDetailPage() {
                             course_id={courseData.course_id}
                             thumbnail={courseData.thumbnail || PLACEHOLDER_THUMBNAIL}
                             price={courseData.price || 0}
-                            original_price={undefined}
-                            sale_off={undefined}
+                            discounted_price={courseData.price || 0}
+                            sale_off={courseData.sale_off}
                             includes={includesData}
                             onBuyNow={handleBuyNow}
                             isLoading={isPaying}

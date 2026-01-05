@@ -13,7 +13,7 @@ import FavoriteButton from '@/components/FavoriteButton';
 interface CourseSidebarProps {
   thumbnail?: string | null;
   price: number;
-  original_price?: number;
+  discounted_price?: number;
   sale_off?: number;
   course_slug: string;
   course_id: string;
@@ -27,11 +27,12 @@ interface CourseSidebarProps {
   isPreviewMode?: boolean;
 }
 
-export default function CourseSidebar({ thumbnail, price, includes, onBuyNow, isLoading, isEnrolled, course_slug, course_id, isPreviewMode = false }: CourseSidebarProps) {
+export default function CourseSidebar({ thumbnail, price, includes, onBuyNow, isLoading, isEnrolled, course_slug, course_id, isPreviewMode= false, discounted_price, sale_off }: CourseSidebarProps) {
   const { isLoggedIn } = useAuth();
   const t = useTranslations("Course-Detail-Sidebar");
-/*   original_price = 1200000
-  sale_off = 50 */
+  const saleOff = Number(sale_off);
+  const hasDiscount = !isNaN(saleOff) && saleOff > 0 && saleOff <= 100;
+  discounted_price = price - price * saleOff / 100;
   const getIcon = (iconName: string) => {
     const icons: { [key: string]: React.ReactNode } = {
       PlayCircle: <PlayCircle className="w-5 h-5" />,
@@ -62,13 +63,17 @@ export default function CourseSidebar({ thumbnail, price, includes, onBuyNow, is
       <div className="p-6">
         <div className="mb-4">
           <div className="flex justify-center w-full gap-3">
-            <span className="font-roboto-condensed-bold text-3xl text-red-500">{formatPrice(price)}</span>
-            {/* {original_price && (
-              <div className='flex gap-2'>
-                <span className="font-roboto-condensed-italic text-gray-500 line-through">{formatPrice(original_price)}</span>
-                {sale_off && <span className="font-roboto-bold text-red-600">{sale_off}% OFF</span>}
-              </div>
-            )} */}
+            {hasDiscount ? (
+              <>
+                <span className="font-roboto-condensed-bold text-3xl text-red-500">{formatPrice(discounted_price)}</span>
+                <div className='flex gap-2'>
+                  <span className="font-roboto-condensed-italic text-gray-500 line-through">{formatPrice(price)}</span>
+                  <span className="font-roboto-bold text-red-600">{saleOff}% OFF</span>
+                </div>
+              </>
+            ) : (
+              <span className="font-roboto-condensed-bold text-3xl text-red-500">{formatPrice(price)}</span>
+            )}
           </div>
         </div>
         
