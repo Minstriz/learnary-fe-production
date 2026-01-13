@@ -29,14 +29,12 @@ export default function VerifyEmailPage() {
             try {
                 hasSentOTP.current = true; 
                 await api.post(`/account-securities/resend-otp/${userId}`);
-                toast.success("Mã xác thực đã được gửi đến email của bạn");
-            } catch (error) {
-                console.log(error);
+                toast.success("Đăng ký thành công, vui lòng xác thực email, chúng tôi đã gửi 1 OTP đến email của bạn.");
+            } catch {
                 toast.error( "Lỗi khi gửi mã xác thực");
                 hasSentOTP.current = false;
             }
         };
-        
         sendInitialOTP();
     }, [userId]); 
 
@@ -55,11 +53,10 @@ export default function VerifyEmailPage() {
             if (res.data.success) { 
                 toast.success("Xác thực email thành công!")
                 setTimeout(() => {
-                    router.push('/profile')
+                    router.push('/login')
                 }, 1500)
             }
-        } catch (error) {
-            console.log(error);
+        } catch {
             toast.error( "Mã OTP không hợp lệ hoặc đã hết hạn");
             setOtp("") 
         } finally {
@@ -76,11 +73,11 @@ export default function VerifyEmailPage() {
         }
     }, [countDown])
 
-    useEffect(() => {
+/*     useEffect(() => {
         if (otp.length === 6) {
             handleVerify();
         }
-    }, [otp, handleVerify])
+    }, [otp, handleVerify]) */
 
     const handleResend = async () => {
         if (!userId) return;

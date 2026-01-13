@@ -2,7 +2,6 @@
 
 export type UserRole = 'ADMIN' | 'INSTRUCTOR' | 'LEARNER';
 export type UserGender = 'MALE' | 'FEMALE' | 'OTHER';
-export type UserActiveState = 'ACTIVE' | 'FREEZE' | 'LOCKED';
 
 export type User = {
   user_id: string;
@@ -21,7 +20,7 @@ export type User = {
   nation?: string;
   bio?: string;
   last_login?: string; 
-  is_active: UserActiveState;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 };

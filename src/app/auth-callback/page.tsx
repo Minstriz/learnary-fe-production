@@ -10,7 +10,6 @@ function AuthCallback() {
   const { login } = useAuth(); 
   useEffect(() => {
     const accessToken = searchParams.get('accessToken');
-
     if (accessToken) {
       login(accessToken); 
       router.replace('/');

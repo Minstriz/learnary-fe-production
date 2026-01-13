@@ -39,7 +39,7 @@ type CourseData = {
   admin_note?: string | null;
   price: number;
   original_price?: number;
-  sale_off?: boolean;
+  sale_off?: number | null;
   status: "Draft" | "Published" | "Pending" | "Archived";
   category_name?: string;
   category?: { category_name: string };
@@ -270,7 +270,7 @@ export default function CourseDetailPage() {
                     </TabsContent>
 
                     <TabsContent value="instructor" className="mt-6">
-                      <InstructorInfo instructor={course.instructor} />
+                      <InstructorInfo instructor={course.instructor as unknown as InstructorWithData} isPreviewMode={true} />
                     </TabsContent>
                   </CourseTabs>
                 </div>
@@ -282,7 +282,8 @@ export default function CourseDetailPage() {
                       course_slug={course.slug || ""}
                       thumbnail={course.thumbnail}
                       price={course.price}
-                      original_price={course.original_price}
+                      discounted_price={course.price || 0}
+                      sale_off={course.sale_off || 0}  
                       includes={mappedIncludes}
                       isPreviewMode={true}
                     />

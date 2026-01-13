@@ -39,6 +39,10 @@ const SingleCourseCard: React.FC<SingleCourseCardProps> = ({ course }) => {
   /*   const imageWidth = 350; */
   const imageHeight = isMobile ? 150 : 150;
 
+  const saleOff = Number(dataCourse.sale_off);
+  const hasDiscount = !isNaN(saleOff) && saleOff > 0 && saleOff <= 100;
+  const discountedPrice = (dataCourse.price ?? 0) - (dataCourse.price ?? 0) * saleOff / 100;
+
   return (
     <TooltipProvider>
       <Tooltip>
@@ -82,9 +86,20 @@ const SingleCourseCard: React.FC<SingleCourseCardProps> = ({ course }) => {
                 </div>
               </div>
               <div className="flex flex-col gap-1">
-                <div className="course-card-price-container flex justify-end font-roboto-condensed-bold text-red-500 text-2xl">
-                  {formatPriceVND(dataCourse.price ?? 0)}
-                </div>
+                {hasDiscount ? (
+                  <>
+                    <div className="course-card-price-container flex justify-end font-roboto-condensed-italic text-gray-500 text-1xl line-through">
+                      {formatPriceVND(dataCourse.price ?? 0)}
+                    </div>
+                    <div className="course-card-price-container flex justify-end font-roboto-condensed-bold text-red-500 text-2xl">
+                      {formatPriceVND(discountedPrice)}
+                    </div>
+                  </>
+                ) : (
+                  <div className="course-card-price-container flex justify-end font-roboto-condensed-bold text-red-500 text-2xl">
+                    {formatPriceVND(dataCourse.price ?? 0)}
+                  </div>
+                )}
                 <div className={buttonWrapperClass}>
                   <FavoriteButton courseId={dataCourse.course_id} />
                   <Button asChild className="bg-pink-600 hover:bg-pink-500 transition-colors text-sm">

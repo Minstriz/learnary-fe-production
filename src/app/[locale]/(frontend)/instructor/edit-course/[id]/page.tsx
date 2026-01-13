@@ -15,13 +15,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, ChevronLeft, Save, Send, PlusCircle, Trash2, GripVertical, Video, FileQuestion, Plus, X, Pencil, LayoutList } from 'lucide-react';
+import { Loader2, ChevronLeft, Save, Send, PlusCircle, Trash2, GripVertical, Video, FileQuestion, Plus, X, Pencil, LayoutList, Download, Upload, FileSpreadsheet, HelpCircle } from 'lucide-react';
 import { VideoUploadDialog } from '@/components/VideoUploadDialog';
 import { useAuth } from '@/app/context/AuthContext';
 import { formatNumberWithDots, parseNumberFromDots } from '@/utils/convert_price';
 import { slugify } from '@/utils/utils';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { parseExcelToQuiz, downloadQuizTemplate, exportQuizToExcel } from '@/utils/quiz-excel-utils';
+
 type Category = { category_id: string; category_name: string; };
 type Level = { level_id: string; level_name: string; };
 type Option = { option_id?: string; option_content: string; is_correct: boolean; };
@@ -52,6 +54,8 @@ type Course = {
     level_id: string;
     chapter: Chapter[];
     admin_note?: string | null;
+    sale_off?: number | null;
+    createdAt?: string;
     updatedAt?: string;
 };
 
@@ -71,7 +75,16 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [newlyCreatedChapters, setNewlyCreatedChapters] = useState<string[]>([]);
     const [newlyCreatedLessons, setNewlyCreatedLessons] = useState<string[]>([]);
+    // State cho giảm giá
+    const [discountPercent, setDiscountPercent] = useState<number>(0);
     const { user, isLoggedIn, isLoading: isAuthLoading } = useAuth();
+
+    // Tính giá sau khi giảm
+    const discountedPrice = useMemo(() => {
+        if (!course) return 0;
+        if (!discountPercent || discountPercent <= 0) return course.price;
+        return Math.max(0, Math.round(course.price * (1 - discountPercent / 100)));
+    }, [course, discountPercent]);
 
     useEffect(() => {
         if (isAuthLoading) return;
@@ -121,6 +134,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 } else {
                     setEditLocked(false);
                 }
+                // Đồng bộ discountPercent với sale_off
+                setDiscountPercent(courseData.sale_off ?? 0);
             } catch (err) {
                 console.error(err);
                 toast.info("Không thể tải dữ liệu. Vui lòng thử lại.");
@@ -330,10 +345,12 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         if (!course) return;
         setIsSaving(true);
         try {
+            // Luôn đồng bộ sale_off với discountPercent trước khi gửi lên API
+            const courseToSave = { ...course, sale_off: discountPercent };
             if (action === 'save') {
                 if (course.status === 'Published') {
                     // Chỉ cho phép lưu thay đổi giá và level khi Published
-                    await api.put(`/courses/draft/${courseId}`, course);
+                    await api.put(`/courses/draft/${courseId}`, courseToSave);
                     setHasUnsavedChanges(false);
                     setNewlyCreatedChapters([]);
                     setNewlyCreatedLessons([]);
@@ -343,7 +360,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         toast.warning("Chỉ có thể lưu nháp khi chưa có video nào.");
                         return;
                     }
-                    await api.put(`/courses/draft/${courseId}`, course);
+                    await api.put(`/courses/draft/${courseId}`, courseToSave);
                     setHasUnsavedChanges(false);
                     setNewlyCreatedChapters([]);
                     setNewlyCreatedLessons([]);
@@ -366,7 +383,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     return;
                 }
 
-                const finalPayload = JSON.parse(JSON.stringify(course)) as Course;
+                const finalPayload = JSON.parse(JSON.stringify(courseToSave)) as Course;
                 finalPayload.chapter.forEach((chap: Chapter) => {
                     chap.lessons.forEach((lesson: Lesson & { video_url?: string }) => {
                         if (videoStaging[lesson.lesson_id]) {
@@ -465,6 +482,41 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     </div>
                 </div>
                 <div className="flex gap-2">
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button 
+                                variant="outline" 
+                                size="icon"
+                                className='cursor-pointer hover:bg-red-50 border-red-500 text-red-500'
+                                title="Có thắc mắc về việc kiểm duyệt khóa học của Learnary?"
+                            >
+                                <HelpCircle className="w-5 h-5" />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                            <DialogHeader>
+                                <DialogTitle className="text-red-600">Hỗ trợ kiểm duyệt khóa học</DialogTitle>
+                            </DialogHeader>
+                            <div className="py-4">
+                                <p className="text-gray-700 leading-relaxed">
+                                    Nếu bạn cảm thấy không hài lòng với quyết định kiểm duyệt của Learnary, bạn có thể liên hệ với chúng tôi qua email sau:
+                                </p>
+                                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                                    <a 
+                                        href="mailto:hotrogiangvien-learnary@gmail.com" 
+                                        className="text-red-600 font-semibold hover:underline break-all"
+                                    >
+                                        hotrogiangvien-learnary@gmail.com
+                                    </a>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button variant="outline">Đóng</Button>
+                                </DialogClose>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                     <Link href="/instructor/my-courses">
                         <Button variant="outline" className='cursor-pointer hover:bg-gray-200'>
                             <LayoutList className="w-4 h-4 mr-2" /> Khoá học của tôi
@@ -542,6 +594,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                     </SelectContent>
                                 </Select>
                             </div>
+                            {/* Giá gốc */}
                             <div className="space-y-2">
                                 <div className='flex gap-1'>
                                     <Label className='text-blue-700 font-roboto-condensed-bold'>Giá của khóa học</Label>
@@ -559,6 +612,45 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                         }
                                     }}
                                     placeholder="0"
+                                />
+                            </div>
+                            {/* % Giảm giá */}
+                            <div className="space-y-2 mt-2">
+                                <div className='flex gap-1'>
+                                    <Label className='text-blue-700 font-roboto-condensed-bold'>% Giảm giá</Label>
+                                </div>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    max={100}
+                                    step={10}
+                                    value={discountPercent}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        if (val === '') {
+                                            setDiscountPercent(0);
+                                            updateCourseState(d => { d.sale_off = 0; });
+                                            return;
+                                        }
+                                        let num = parseInt(val, 10);
+                                        if (isNaN(num) || num < 0) num = 0;
+                                        if (num > 100) num = 100;
+                                        setDiscountPercent(num);
+                                        updateCourseState(d => { d.sale_off = num; });
+                                    }}
+                                    placeholder="0"
+                                    
+                                />
+                            </div>
+                            {/* Giá sau khi giảm */}
+                            <div className="space-y-2 mt-2">
+                                <div className='flex gap-1'>
+                                    <Label className='text-blue-700 font-roboto-condensed-bold'>Giá sau khi giảm</Label>
+                                </div>
+                                <Input
+                                    type="text"
+                                    value={formatNumberWithDots(discountedPrice)}
+                                    disabled
                                 />
                             </div>
                             <div className="space-y-2">
@@ -737,6 +829,7 @@ function QuizEditDialog({ quiz, onSave, disabled }: QuizEditDialogProps) {
     const [localQuiz, setLocalQuiz] = useState<Quiz>(
         quiz || { title: "Bài kiểm tra", questions: [] }
     );
+    const [isImporting, setIsImporting] = useState(false);
 
     // Reset state khi mở dialog nếu quiz props thay đổi
     useEffect(() => {
@@ -751,6 +844,44 @@ function QuizEditDialog({ quiz, onSave, disabled }: QuizEditDialogProps) {
         });
     };
 
+    const handleImportExcel = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setIsImporting(true);
+        try {
+            const questions = await parseExcelToQuiz(file);
+            updateLocalQuiz(q => {
+                q.questions = questions;
+            });
+            toast.success(`Đã import thành công ${questions.length} câu hỏi từ Excel!`);
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Có lỗi xảy ra khi import file Excel');
+        } finally {
+            setIsImporting(false);
+            // reset input để có thể upload lại cùng file
+            event.target.value = '';
+        }
+    };
+
+    const handleExportExcel = () => {
+        try {
+            exportQuizToExcel(localQuiz);
+            toast.success('Đã xuất quiz ra file Excel thành công!');
+        } catch {
+            toast.error('Có lỗi xảy ra khi xuất file Excel');
+        }
+    };
+
+    const handleDownloadTemplate = () => {
+        try {
+            downloadQuizTemplate();
+            toast.success('Đã tải xuống file mẫu thành công!');
+        } catch {
+            toast.error('Có lỗi xảy ra khi tải file mẫu');
+        }
+    };
+
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -762,6 +893,65 @@ function QuizEditDialog({ quiz, onSave, disabled }: QuizEditDialogProps) {
                 <DialogHeader>
                     <DialogTitle>{quiz ? 'Chỉnh sửa bài kiểm tra' : 'Tạo bài kiểm tra mới'}</DialogTitle>
                 </DialogHeader>
+                <div className="flex flex-wrap gap-2 pb-4 border-b">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownloadTemplate}
+                        disabled={disabled}
+                        className="flex items-center gap-2"
+                    >
+                        <Download className="w-4 h-4" />
+                        Tải file mẫu
+                    </Button>
+                    
+                    <label className="relative">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={disabled || isImporting}
+                            className="flex items-center gap-2 cursor-pointer"
+                            asChild
+                        >
+                            <span>
+                                {isImporting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Đang import...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload className="w-4 h-4" />
+                                        Import từ Excel
+                                    </>
+                                )}
+                            </span>
+                        </Button>
+                        <input
+                            type="file"
+                            accept=".xlsx,.xls"
+                            onChange={handleImportExcel}
+                            disabled={disabled || isImporting}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                    </label>
+
+                    {localQuiz.questions.length > 0 && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleExportExcel}
+                            disabled={disabled}
+                            className="flex items-center gap-2"
+                        >
+                            <FileSpreadsheet className="w-4 h-4" />
+                            Xuất ra Excel
+                        </Button>
+                    )}
+                </div>
 
                 <div className="flex-1 py-4 space-y-6 overflow-y-auto pr-2">
                     <div className="space-y-2">
@@ -784,6 +974,7 @@ function QuizEditDialog({ quiz, onSave, disabled }: QuizEditDialogProps) {
                                 <div className="pr-10">
                                     <Input
                                         className="font-medium bg-white"
+                                        value={q.title}
                                         placeholder={`Câu hỏi ${qIdx + 1}`}
                                         onChange={e => updateLocalQuiz(draft => draft.questions[qIdx].title = e.target.value)}
                                         disabled={disabled}

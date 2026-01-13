@@ -65,6 +65,7 @@ const UserSchema = z.object({
    bio: z.string().nullable(),
    last_login: z.string().nullable(),
    isActive: z.boolean(),
+   status: z.enum(["Active", "Locked", "Freezed"]).nullable().optional(),
 });
 
 const EditUserSchema = z.object({
@@ -127,6 +128,11 @@ export default function UserManagement() {
    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
    const [dateInputValue, setDateInputValue] = useState<string>("");
    const [avatarTimestamp, setAvatarTimestamp] = useState<number>(Date.now());
+   const [actionDialogOpen, setActionDialogOpen] = useState(false);
+   const [actionType, setActionType] = useState<'lock' | 'freeze' | 'active' | null>(null);
+   const [actionReason, setActionReason] = useState("");
+   const [actionUserId, setActionUserId] = useState<string | null>(null);
+   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
 
    useEffect(() => {
       fetchUsers();
@@ -174,6 +180,7 @@ export default function UserManagement() {
             bio: string | null,
             isActive: boolean,
             last_login: string | null,
+            accountSecurities?: { status: string },
          }) => ({
             user_id: item.user_id?.trim() || "",
             email: item.email?.trim() || "",
@@ -190,6 +197,7 @@ export default function UserManagement() {
             bio: item.bio?.trim() || null,
             last_login: item.last_login?.trim() || null,
             isActive: item.isActive,
+            status: item.accountSecurities?.status || null,
          }));
          setUser(mappedData);
       } catch (error) {
@@ -319,18 +327,54 @@ export default function UserManagement() {
          toast.error("Lưu thông tin tài khoản thất bại");
       }
    }
+
+   const openActionDialog = (userId: string, type: 'lock' | 'freeze' | 'active') => {
+      setActionUserId(userId);
+      setActionType(type);
+      setActionReason("");
+      setActionDialogOpen(true);
+   }
+   const closeActionDialog = () => {
+      setActionDialogOpen(false);
+      setActionUserId(null);
+      setActionType(null);
+      setActionReason("");
+   }
+   const handleAccountAction = async () => {
+      if (!actionUserId || !actionType) return;
+      if ((actionType === 'lock' || actionType === 'freeze') && !actionReason.trim()) {
+         toast.error("Vui lòng nhập lý do");
+         return;
+      }
+      try {
+         setIsSubmittingAction(true);
+         const endpoint = actionType === 'lock' ? '/account-securities/lock-account' : actionType === 'freeze' ? '/account-securities/freeze-account' : '/account-securities/active-account';
+         await api.post(endpoint, {
+            user_id: actionUserId,
+            reason: actionReason || 'Mở lại tài khoản'
+         });
+         const actionText = actionType === 'lock' ? 'khóa' : actionType === 'freeze' ? 'đóng băng' : 'mở lại';
+         toast.success(`${actionText.charAt(0).toUpperCase() + actionText.slice(1)} tài khoản thành công`);
+         closeActionDialog();
+         await fetchUsers();
+      } catch (error) {
+         console.error("Lỗi khi thực hiện hành động:", error);
+         toast.error("Có lỗi xảy ra, vui lòng thử lại");
+      } finally {
+         setIsSubmittingAction(false);
+      }
+   }
+
    const filteredUsers = users.filter((user) => {
-      const matchSearch =
-         user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase());
       const matchActive = filterActive === null || filterActive === user.isActive === true;
       return matchSearch && matchActive;
    });
 
-   const labeledRole: Record<UserRole,"destructive" | "outline" | "default"> = {
-      ADMIN:"destructive",
-      INSTRUCTOR:"default",
-      LEARNER:"outline",
+   const labeledRole: Record<UserRole, "destructive" | "outline" | "default"> = {
+      ADMIN: "destructive",
+      INSTRUCTOR: "default",
+      LEARNER: "outline",
    }
 
 
@@ -398,6 +442,7 @@ export default function UserManagement() {
                      <TableHead>Người dùng</TableHead>
                      <TableHead>Role</TableHead>
                      <TableHead>Email</TableHead>
+                     <TableHead>Trạng thái</TableHead>
                      <TableHead className="text-right">Hành động</TableHead>
                   </TableRow>
                </TableHeader>
@@ -426,7 +471,7 @@ export default function UserManagement() {
                            <div className="flex items-center gap-3">
                               <div>
                                  <Badge variant={labeledRole[user.role]}>
-                                       {user.role}
+                                    {user.role}
                                  </Badge>
                               </div>
                            </div>
@@ -447,6 +492,28 @@ export default function UserManagement() {
                            </div>
                         </TableCell>
 
+                        <TableCell>
+                           {user.status === "Active" && (
+                              <Badge variant="default" className="bg-green-600">
+                                 Hoạt động
+                              </Badge>
+                           )}
+                           {user.status === "Locked" && (
+                              <Badge variant="destructive" className="bg-red-600">
+                                 Bị khóa
+                              </Badge>
+                           )}
+                           {user.status === "Freezed" && (
+                              <Badge variant="default" className="bg-blue-600">
+                                 Đóng băng
+                              </Badge>
+                           )}
+                           {!user.status && (
+                              <Badge variant="outline" className="bg-gray-100">
+                                 Chưa xác định
+                              </Badge>
+                           )}
+                        </TableCell>
                         <TableCell className="text-right">
                            <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -459,6 +526,24 @@ export default function UserManagement() {
                                     Xem chi tiết
                                  </DropdownMenuItem>
                                  <DropdownMenuItem>Xem khóa học</DropdownMenuItem>
+                                 <DropdownMenuItem
+                                    onClick={() => openActionDialog(user.user_id, 'lock')}
+                                    className="text-red-600"
+                                 >
+                                    Khóa tài khoản
+                                 </DropdownMenuItem>
+                                 <DropdownMenuItem
+                                    onClick={() => openActionDialog(user.user_id, 'freeze')}
+                                    className="text-orange-600"
+                                 >
+                                    Đóng băng tài khoản
+                                 </DropdownMenuItem>
+                                 <DropdownMenuItem
+                                    onClick={() => openActionDialog(user.user_id, 'active')}
+                                    className="text-green-600"
+                                 >
+                                    Mở lại tài khoản
+                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                            </DropdownMenu>
                         </TableCell>
@@ -757,6 +842,53 @@ export default function UserManagement() {
                         <p className="text-xl text-red-600">Lỗi khi lấy thông tin người dùng</p>
                      </div>
                   )}
+               </div>
+            </DialogContent>
+         </Dialog>
+
+         <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
+            <DialogContent className="max-w-md">
+               <DialogHeader>
+                  <DialogTitle>
+                     {actionType === 'lock' && 'Khóa tài khoản'}
+                     {actionType === 'freeze' && 'Đóng băng tài khoản'}
+                     {actionType === 'active' && 'Mở lại tài khoản'}
+                  </DialogTitle>
+               </DialogHeader>
+               <div className="space-y-4">
+                  <div>
+                     <Label htmlFor="reason">
+                        Lý do {actionType === 'lock' ? 'khóa' : actionType === 'freeze' ? 'đóng băng' : 'mở lại'} tài khoản
+                        {(actionType === 'lock' || actionType === 'freeze') && <span className="text-red-500">*</span>}
+                     </Label>
+                     <textarea
+                        id="reason"
+                        rows={4}
+                        className="w-full rounded-md border border-gray-300 p-2 mt-1"
+                        value={actionReason}
+                        onChange={(e) => setActionReason(e.target.value)}
+                        placeholder={`Nhập lý do ${actionType === 'lock' ? 'khóa' : actionType === 'freeze' ? 'đóng băng' : 'mở lại'} tài khoản...`}
+                     />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                     <Button variant="outline" onClick={closeActionDialog} disabled={isSubmittingAction}>
+                        Hủy
+                     </Button>
+                     <Button
+                        onClick={handleAccountAction}
+                        disabled={isSubmittingAction}
+                        variant={actionType === 'lock' ? 'destructive' : 'default'}
+                     >
+                        {isSubmittingAction ? (
+                           <>
+                              <Spinner className="mr-2" />
+                              Đang xử lý...
+                           </>
+                        ) : (
+                           'Xác nhận'
+                        )}
+                     </Button>
+                  </div>
                </div>
             </DialogContent>
          </Dialog>

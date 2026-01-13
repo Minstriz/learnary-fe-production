@@ -20,25 +20,23 @@ import {
   Heart,
   MessageCircle,
 } from "lucide-react";
+import { useAccountStatus } from "@/hooks/useAccountStatus";
 
-
-export const NavbarLinks = (userRole?: string) => {
+export const NavbarLinks = (userRole?: string, accountStatus?: string, isActive?:boolean) => {
   const t = useTranslations("Navbar");
-
   const baseLinks = [
     {
       name: t("home"),
       href: "/",
     },
   ];
-  const learnerLink = userRole ? [
+  const learnerLink = userRole && accountStatus == "Active" && isActive == true ? [
     {
       name: t("learn-are"),
       href: "/learn-area"
     }
   ] : [];
-
-  const instructorLink = userRole === "INSTRUCTOR" ? [
+  const instructorLink = userRole === "INSTRUCTOR" && accountStatus == "Active" && isActive == true ? [
     {
       name: t("instructor"),
       href: "/instructor"
@@ -50,13 +48,12 @@ export const NavbarLinks = (userRole?: string) => {
       href: "/admin-side"
     }
   ] : [];
-  const becomeLecturerLink = (!userRole || (userRole !== "INSTRUCTOR" && userRole !== "ADMIN")) ? [
+  const becomeLecturerLink = (!userRole || (userRole !== "INSTRUCTOR" && userRole !== "ADMIN")) && accountStatus !=="Freezed" ? [
     {
       name: t("become-lecturer"),
       href: "/become-lecturer",
     }
   ] : [];
-
   return [...baseLinks, ...learnerLink, ...instructorLink, ...adminLink, ...becomeLecturerLink];
 };
 
@@ -65,7 +62,8 @@ function Navbar() {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const { isLoggedIn, user, logout, isLoading } = useAuth();
-  const links = NavbarLinks(user?.role);
+  const { accountStatus } = useAccountStatus();
+  const links = NavbarLinks(user?.role, accountStatus?.status, user?.isActive);
   const t = useTranslations("Navbar");
   async function handleLogout(): Promise<void> {
     try {
@@ -84,43 +82,52 @@ function Navbar() {
     if (isLoggedIn && user) {
       return (
         <>
-          <Link href="/profile" title={user.fullName}>
-            {user.avatar ? (
-              <div className="relative inline-flex h-fit w-fit rounded-full overflow-hidden group">
-                <div
-                  className="
-                    pointer-events-none
-                    absolute inset-0
-                    before:content-['']
-                    before:absolute
-                    before:inset-0
-                    before:bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.6)_50%,transparent_100%)]
-                    before:bg-size-[200%_200%]
-                    before:bg-position-[-100%_0]
-                    before:transition-[background-position]
-                    before:duration-800
-                    group-hover:before:bg-position-[120%_0]
-                  "
-                />
-                <div className="w-fit h-fit hover:bg-yellow-700 p-2 rounded-full transition duration-200 ease-in-out">
-                  <Avatar>
-                    <AvatarImage src={`${user.avatar}`} alt="Avatar User" />
-                    <AvatarFallback>User Avatar</AvatarFallback>
-                  </Avatar>
+          {/* Tài khoản Freezed không thấy profile icon */}
+          {accountStatus?.status == 'Active' && (
+            <Link href="/profile" title={user.fullName}>
+              {user.avatar ? (
+                <div className="relative inline-flex h-fit w-fit rounded-full overflow-hidden group">
+                  <div
+                    className="
+                      pointer-events-none
+                      absolute inset-0
+                      before:content-['']
+                      before:absolute
+                      before:inset-0
+                      before:bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.6)_50%,transparent_100%)]
+                      before:bg-size-[200%_200%]
+                      before:bg-position-[-100%_0]
+                      before:transition-[background-position]
+                      before:duration-800
+                      group-hover:before:bg-position-[120%_0]
+                    "
+                  />
+                  <div className="w-fit h-fit hover:bg-yellow-700 p-2 rounded-full transition duration-200 ease-in-out">
+                    <Avatar>
+                      <AvatarImage src={`${user.avatar}`} alt="Avatar User" />
+                      <AvatarFallback>User Avatar</AvatarFallback>
+                    </Avatar>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="w-fit h-fit hover:bg-pink-700 p-2 rounded-full group transition duration-200 ease-in-out">
-                <UserIcon className="h-6 w-6 cursor-pointer group-hover:text-white transition duration-200 ease-in-out" />
-              </div>
-            )}
-          </Link >
-          <Link href="/chat" title={"Tin nhắn của bạn"}>
-            <MessageCircle className="h-6 w-6 cursor-pointer hover:text-pink-600"></MessageCircle>
-          </Link>
-          <Link href="/my-favorite" title={"Giỏ hàng"}>
-            <Heart className="h-6 w-6 cursor-pointer hover:text-pink-600"></Heart>
-          </Link>
+              ) : (
+                <div className="w-fit h-fit hover:bg-pink-700 p-2 rounded-full group transition duration-200 ease-in-out">
+                  <UserIcon className="h-6 w-6 cursor-pointer group-hover:text-white transition duration-200 ease-in-out" />
+                </div>
+              )}
+            </Link >
+          )}
+          {/* Tài khoản Freezed không thấy chat icon */}
+          {accountStatus?.status == 'Active' && (
+            <Link href="/chat" title={"Tin nhắn của bạn"}>
+              <MessageCircle className="h-6 w-6 cursor-pointer hover:text-pink-600"></MessageCircle>
+            </Link>
+          )}
+          {/* Tài khoản Freezed không thấy favorite icon */}
+          {accountStatus?.status == 'Active' && (
+            <Link href="/my-favorite" title={"Giỏ hàng"}>
+              <Heart className="h-6 w-6 cursor-pointer hover:text-pink-600"></Heart>
+            </Link>
+          )}
           <Link href="/logout" onClick={handleLogout} title={t("logout")}>
             <ArrowRightOnRectangleIcon className="h-6 w-6 cursor-pointer hover:text-red-600" />
           </Link>

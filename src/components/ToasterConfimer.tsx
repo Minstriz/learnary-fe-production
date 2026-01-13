@@ -32,11 +32,14 @@ export function ToasterConfirm({
             await onConfirm()
             toast.dismiss(t)
           }}
-          className="text-sm px-3 py-1 rounded-md bg-red-600 text-white hover:bg-red-700 cursor-pointer"
+          className="text-sm px-3 py-1 rounded-md bg-green-600 text-white hover:bg-green-700 cursor-pointer"
         >
           {confirmText}
         </button>
       </div>
     </div>
-  ))
+  ), {
+    duration: Infinity,
+    dismissible: false
+  })
 }

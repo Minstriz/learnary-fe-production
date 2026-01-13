@@ -16,6 +16,7 @@ interface AuthUser {
   role: string;
   fullName: string;
   avatar?: string;
+  isActive?: boolean;
 }
 
 interface AuthContextType {
@@ -23,7 +24,7 @@ interface AuthContextType {
   token: string | null;
   isLoggedIn: boolean;
   isLoading: boolean; 
-  login: (accessToken: string) => AuthUser | null;
+  login: (accessToken: string) => Promise<AuthUser | null>;
   logout: () => void;
 }
 
@@ -55,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: decodedUser.role.trim(),
             fullName: decodedUser.fullName.trim(),
             avatar: decodedUser.avatar?.trim(),
+            isActive: decodedUser.isActive,
           };
           setUser(cleanUser);
           setToken(accessToken);
@@ -89,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = useCallback((newAccessToken: string) => { 
+  const login = useCallback(async (newAccessToken: string) => { 
     try {
       const decodedUser = jwtDecode<AuthUser>(newAccessToken);
       const cleanUser: AuthUser = {
@@ -98,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: decodedUser.role.trim(),
         fullName: decodedUser.fullName.trim(),
         avatar: decodedUser.avatar?.trim(),
+        isActive: decodedUser.isActive,
       };
       
       setUser(cleanUser);

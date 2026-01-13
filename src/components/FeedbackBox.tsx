@@ -59,8 +59,11 @@ export default function FeedbackBox({ canFeedback, courseId, onFeedbackSubmitted
             toast.success('Gửi đánh giá thành công!');
             setRating(0);
             setComment('');
-
-            const feedbacksRes = await api.get(`/feedbacks/${courseId}`);
+            const feedbacksRes = await api.get(`/feedbacks/${courseId}`/* , {
+                headers: {
+                    Authorization: '' 
+                }
+            } */);
             if(feedbacksRes) {
                 setFeedbacks(feedbacksRes.data.data);
             } else {
@@ -70,11 +73,35 @@ export default function FeedbackBox({ canFeedback, courseId, onFeedbackSubmitted
                 onFeedbackSubmitted();
             }
         } catch (error) {
-            console.error('Error submitting feedback:', error);
-            if (isAxiosError(error) && error.response?.status === 409) {
-                toast.warning(error.response?.data?.message || 'Bạn đã đánh giá khóa học này rồi');
-            } else if (isAxiosError(error) && error.response?.data?.message) {
-                toast.error(error.response.data.message);
+            if (isAxiosError(error)) {
+                const status = error.response?.status;
+                const message = error.response?.data?.message;
+                if (status === 409) {
+                    toast.warning(message || 'Bạn đã đánh giá khóa học này rồi');
+                } else if (status === 403) {
+                    if (message?.includes('30%') || message?.includes('progress')) {
+                        const progressMatch = message.match(/Current progress: ([\d.]+)%/);
+                        const currentProgress = progressMatch ? progressMatch[1] : null;
+                        if (currentProgress) {
+                            toast.warning(
+                                `Bạn cần hoàn thành ít nhất 30% khóa học để đánh giá. Tiến độ hiện tại: ${currentProgress}%`,
+                                { duration: 5000 }
+                            );
+                        } else {
+                            toast.error('Bạn cần hoàn thành ít nhất 30% khóa học trước khi đánh giá', { duration: 5000 });
+                        }
+                    } else if (message?.includes('đăng ký') || message?.includes('enroll')) {
+                        toast.error('Bạn phải đăng ký khóa học trước khi đánh giá');
+                    } else if (message?.includes('học viên') || message?.includes('learner')) {
+                        toast.error('Bạn phải là học viên để đánh giá khóa học');
+                    } else {
+                        toast.error(message || 'Bạn chưa đủ điều kiện để đánh giá khóa học này');
+                    }
+                } else if (message) {
+                    toast.error(message);
+                } else {
+                    toast.error('Không thể gửi đánh giá. Vui lòng thử lại!');
+                }
             } else {
                 toast.error('Không thể gửi đánh giá. Vui lòng thử lại!');
             }
@@ -89,6 +116,11 @@ export default function FeedbackBox({ canFeedback, courseId, onFeedbackSubmitted
             {canFeedback && (
                 <Card className="border-2 border-blue-200 bg-blue-50/30">
                     <CardContent className="p-6 space-y-4">
+                        <div className="mb-4 p-3 bg-blue-100 border border-blue-300 rounded-md">
+                            <p className="text-sm text-blue-800">
+                                <span className="font-semibold">💡 Lưu ý:</span> Bạn cần hoàn thành ít nhất <span className="font-bold">30% khóa học</span> trước khi có thể đánh giá.
+                            </p>
+                        </div>
                         <div>
                             <Label className="text-base font-semibold mb-2 block">
                                 Đánh giá của bạn

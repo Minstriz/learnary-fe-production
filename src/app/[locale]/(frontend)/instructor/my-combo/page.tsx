@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import CreateComboDialog from "@/components/CreateComboDialog";
-import EditComboDialog from "@/components/EditComboDialog";
 import { Plus, Edit, Trash2, Package, Star, Calendar, Percent, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,11 +23,9 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import Link from "next/link";
 
 export default function MyComboPage() {
+  const router = useRouter();
   const [combos, setCombos] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedCombo, setSelectedCombo] = useState<Group | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [comboToDelete, setComboToDelete] = useState<Group | null>(null);
   const TYPE_KEY = "Combo"
@@ -58,8 +55,7 @@ export default function MyComboPage() {
     }
   };
   const handleEditCombo = (combo: Group) => {
-    setSelectedCombo(combo);
-    setEditDialogOpen(true);
+    router.push(`/instructor/my-combo/create-and-edit-combo?id=${combo.group_id}`);
   };
 
   const handleDeleteClick = (combo: Group) => {
@@ -126,7 +122,7 @@ export default function MyComboPage() {
         <div className="flex w-full justify-center">
           <h1 className="text-3xl font-bold font-roboto-condensed-bold self-center">Combo Khóa Học của bạn</h1>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)} className="hover:bg-pink-600 hover:text-white bg-white border border-pink-600 text-pink-700 cursor-pointer">
+        <Button onClick={() => router.push('/instructor/my-combo/create-and-edit-combo')} className="hover:bg-pink-600 hover:text-white bg-white border border-pink-600 text-pink-700 cursor-pointer">
           <Plus className="h-4 w-4 mr-2" />
           Tạo Combo Mới
         </Button>
@@ -166,7 +162,7 @@ export default function MyComboPage() {
             <p className="text-gray-600 mb-4">
               Bắt đầu tạo combo khóa học đầu tiên của bạn
             </p>
-            <Button onClick={() => setCreateDialogOpen(true)} className="cursor-pointer">
+            <Button onClick={() => router.push('/instructor/my-combo/create-and-edit-combo')} className="cursor-pointer">
               <Plus className="h-4 w-4 mr-2" />
               Tạo Combo Đầu Tiên
             </Button>
@@ -266,19 +262,6 @@ export default function MyComboPage() {
           ))}
         </div>
       )}
-
-      <CreateComboDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onSuccess={fetchCombos}
-      />
-
-      <EditComboDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        onSuccess={fetchCombos}
-        combo={selectedCombo}
-      />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
